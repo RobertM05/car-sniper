@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Deal Sniper MVP</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        input { margin: 5px; }
+        button { margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Car Deal Sniper MVP</h1>
+    <form id="searchForm">
+        <input type="text" id="make" placeholder="Marca" required>
+        <input type="text" id="model" placeholder="Model" required>
+        <input type="number" id="max_price" placeholder="Pret max" required>
+        <button type="submit">Cauta</button>
+    </form>
+    <div id="results"></div>
+
+    <script>
+        const form = document.getElementById("searchForm");
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const make = document.getElementById("make").value;
+            const model = document.getElementById("model").value;
+            const max_price = document.getElementById("max_price").value;
+
+            const res = await fetch(`http://127.0.0.1:8000/search?make=${make}&model=${model}&max_price=${max_price}`);
+            const data = await res.json();
+
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = "";
+
+            data.forEach(car => {
+                const div = document.createElement("div");
+                div.innerHTML = `<strong>${car.title}</strong> - ${car.price} € - <a href="${car.url}" target="_blank">Vezi anunt</a>`;
+                resultsDiv.appendChild(div);
+            });
+        });
+    </script>
+    <h2>Creaza alerta</h2>
+<form id="alertForm">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="text" id="alertMake" placeholder="Marca" required>
+    <input type="text" id="alertModel" placeholder="Model" required>
+    <input type="number" id="alertMaxPrice" placeholder="Pret max" required>
+    <button type="submit">Adauga alerta</button>
+</form>
+<div id="alertResult"></div>
+
+<script>
+const alertForm = document.getElementById("alertForm");
+alertForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const make = document.getElementById("alertMake").value;
+    const model = document.getElementById("alertModel").value;
+    const max_price = document.getElementById("alertMaxPrice").value;
+
+    const res = await fetch("http://127.0.0.1:8000/alert", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({user_email: email, make, model, max_price})
+    });
+
+    const data = await res.json();
+    document.getElementById("alertResult").innerText = "Alertă adăugată!";
+});
+</script>
+
+</body>
+</html>
