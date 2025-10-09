@@ -3,13 +3,32 @@ from bs4 import BeautifulSoup
 
 BASE_URL = "https://www.olx.ro/oferte/q-{}"
 
-def scrape_olx(query: str, page: int = 1, limit: int = 10):
+def scrape_olx(
+    query: str,
+    page: int = 1,
+    limit: int = 10,
+    *,
+    max_price: int | None = None,
+    min_year: int | None = None,
+    max_km: int | None = None,
+):
     """
     Scraper pentru OLX.
     Returneaza o lista de anunturi (titlu, pret, link).
     """
-    url = BASE_URL.format(query.replace(" ", "-")) + f"/?page={page}"
-    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+    # OLX parameters (best-effort; may vary by category/site)
+    # price_to is commonly supported; year/km filters might not apply uniformly
+    params = {"page": str(page)}
+    if max_price is not None:
+        params["search[filter_float_price:to]"] = str(max_price)
+    # Attempted params for year/km (may be ignored by OLX on some categories)
+    if min_year is not None:
+        params["search[filter_float_year:from]"] = str(min_year)
+    if max_km is not None:
+        params["search[filter_float_mileage:to]"] = str(max_km)
+
+    url = BASE_URL.format(query.replace(" ", "-"))
+    response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"}, params=params)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")

@@ -2,9 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import threading, time
 from pydantic import BaseModel
-from .scraper.olx_scraper import scrape_olx
-from .scraper.autovit_scraper import scrape_autovit
-from .functii import search_cars, add_alert, alerts, check_alerts
+from scraper.olx_scraper import scrape_olx
+from scraper.autovit_scraper import scrape_autovit
+from functii import search_cars, add_alert, alerts, check_alerts
 import logging 
 logging.basicConfig(level=logging.INFO)
 
