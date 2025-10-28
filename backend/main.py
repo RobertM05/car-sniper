@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from scraper.olx_scraper import scrape_olx
 from scraper.autovit_scraper import scrape_autovit
 from functii import search_cars, add_alert, alerts, check_alerts
+from car_database import car_db_optimizer, get_optimized_search_params
 import logging 
 logging.basicConfig(level=logging.INFO)
 
@@ -35,10 +36,13 @@ def api_search(
     model: str,
     max_price: int,
     site: str = "olx",
+    min_price: int | None = None,
     max_km: int | None = None,
     min_year: int | None = None,
+    max_year: int | None = None,
     min_cc: int | None = None,
     min_hp: int | None = None,
+    generation: str | None = None,
     limit: int = 50,
     max_pages: int = 5,
 ):
@@ -46,17 +50,21 @@ def api_search(
     Cauta masini pe OLX sau Autovit si filtreaza dupa max_price
     """
     results = search_cars(
-        make,
-        model,
-        max_price,
-        site,
+        make=make,
+        model=model,
+        max_price=max_price,
+        min_price=min_price,
+        site=site,
         max_km=max_km,
         min_year=min_year,
+        max_year=max_year,
         min_cc=min_cc,
         min_hp=min_hp,
+        generation=generation,
         limit=limit,
         max_pages=max_pages,
     )
+
     return {"results": results}
 
 class AlertRequest(BaseModel):
@@ -94,3 +102,233 @@ def run_alerts_scheduler():
         time.sleep(10)
 
 threading.Thread(target=run_alerts_scheduler, daemon=True).start()
+
+# ---------------- Database Optimization Endpoints ----------------
+
+@app.get("/api/model-info/{make}/{model}")
+def get_model_info(make: str, model: str):
+    """
+    Obține informațiile despre un model de mașină din baza de date
+    """
+    model_info = car_db_optimizer.get_model_info(make, model)
+    if model_info:
+        return {"model_info": model_info}
+    return {"error": "Model not found in database"}
+
+@app.get("/api/optimized-search-params/{make}/{model}")
+def get_optimized_params(make: str, model: str, min_year: int = None, max_year: int = None):
+    """
+    Obține parametrii optimizați de căutare pentru un model
+    """
+    optimized_params = get_optimized_search_params(make, model, min_year, max_year)
+    return optimized_params
+
+@app.get("/api/popular-models")
+def get_popular_models(make: str = None, limit: int = 10):
+    """
+    Obține modelele cele mai căutate
+    """
+    popular_models = car_db_optimizer.get_popular_models(make, limit)
+    return {"popular_models": popular_models}
+
+@app.post("/api/populate-sample-data")
+def populate_sample_data():
+    """
+    Populează baza de date cu date de exemplu
+    """
+    car_db_optimizer.populate_sample_data()
+    return {"message": "Sample data populated successfully"}
+
+@app.get("/api/model-year-range/{make}/{model}")
+def get_model_year_range(make: str, model: str):
+    """
+    Obține intervalul de ani pentru un model specific
+    """
+    model_info = car_db_optimizer.get_model_info(make, model)
+    if model_info:
+        return {
+            "make": model_info["make"],
+            "model": model_info["model"],
+            "min_year": model_info["min_year"],
+            "max_year": model_info["max_year"],
+            "generation": model_info["generation"],
+            "body_type": model_info["body_type"]
+        }
+    return {"error": "Model not found in database"}
+
+@app.post("/api/populate-from-scraper")
+def populate_from_scraper(max_brands: int = None, max_models_per_brand: int = None):
+    """
+    Populează baza de date cu date din scraper-ul auto-data.net
+    """
+    try:
+        data = car_db_optimizer.populate_from_scraper(max_brands, max_models_per_brand)
+        return {
+            "message": f"Popularea s-a terminat cu succes. Am procesat {len(data)} modele.",
+            "processed_models": len(data),
+            "sample_data": data[:5] if data else []
+        }
+    except Exception as e:
+        return {"error": f"Eroare la popularea bazei de date: {str(e)}"}
+
+@app.get("/api/test-scraper")
+def test_scraper():
+    """
+    Testează scraper-ul cu primele 2 mărci și 2 modele per marcă
+    """
+    try:
+        from auto_data_scraper import AutoDataScraper
+        scraper = AutoDataScraper()
+        
+        # Testăm doar cu primele 2 mărci și 2 modele per marcă
+        brands = scraper.scrape_brands()[:2]
+        
+        results = []
+        for brand in brands:
+            models = scraper.scrape_models_for_brand(brand['url_marca'], brand['nume_marca'])[:2]
+            for model in models:
+                details = scraper.scrape_model_details(
+                    model['url_model'], 
+                    model['marca'], 
+                    model['model']
+                )
+                if details:
+                    results.append(details)
+        
+        return {
+            "message": "Test scraper completat cu succes",
+            "results": results
+        }
+    except Exception as e:
+        return {"error": f"Eroare la testarea scraper-ului: {str(e)}"}
+
+@app.get("/api/generations/{make}/{model}")
+def get_generations(make: str, model: str):
+    """
+    Obține toate generațiile disponibile pentru un model
+    """
+    try:
+        generations = car_db_optimizer.get_generations_for_model(make, model)
+        return {
+            "make": make,
+            "model": model,
+            "generations": generations
+        }
+    except Exception as e:
+        return {"error": f"Eroare la obținerea generațiilor: {str(e)}"}
+
+@app.get("/api/generation-years/{make}/{model}/{generation}")
+def get_generation_years(make: str, model: str, generation: str):
+    """
+    Obține intervalul de ani pentru o generație specifică
+    """
+    try:
+        min_year, max_year = car_db_optimizer.get_year_range_for_generation(make, model, generation)
+        if min_year and max_year:
+            return {
+                "make": make,
+                "model": model,
+                "generation": generation,
+                "min_year": min_year,
+                "max_year": max_year
+            }
+        else:
+            return {"error": f"Generația {generation} nu a fost găsită pentru {make} {model}"}
+    except Exception as e:
+        return {"error": f"Eroare la obținerea anilor pentru generație: {str(e)}"}
+
+@app.get("/api/optimized-search-with-generation/{make}/{model}")
+def get_optimized_params_with_generation(make: str, model: str, 
+                                        min_year: int = None, 
+                                        max_year: int = None, 
+                                        generation: str = None):
+    """
+    Obține parametrii optimizați de căutare cu suport pentru generații
+    """
+    try:
+        optimized_params = get_optimized_search_params(make, model, min_year, max_year, generation)
+        return optimized_params
+    except Exception as e:
+        return {"error": f"Eroare la obținerea parametrilor optimizați: {str(e)}"}
+
+@app.get("/api/brands")
+def get_brands():
+    """
+    Obține lista cu toate mărcile de mașini disponibile
+    """
+    try:
+        # Lista cu mărcile principale
+        brands = [
+            "Abarth", "AC", "Acura", "Alfa Romeo", "Aston Martin", "Audi", "Bentley", "BMW", 
+            "Bugatti", "Buick", "Cadillac", "Chevrolet", "Chrysler", "Citroen", "Dacia", 
+            "Daewoo", "Daihatsu", "Dodge", "Ferrari", "Fiat", "Ford", "Honda", "Hyundai", 
+            "Infiniti", "Isuzu", "Jaguar", "Jeep", "Kia", "Lamborghini", "Lancia", "Land Rover", 
+            "Lexus", "Lincoln", "Lotus", "Maserati", "Maybach", "Mazda", "McLaren", "Mercedes", 
+            "Mercedes-Benz", "Mini", "Mitsubishi", "Nissan", "Opel", "Peugeot", "Porsche", 
+            "Renault", "Rolls-Royce", "Saab", "Seat", "Skoda", "Smart", "Subaru", "Suzuki", 
+            "Tesla", "Toyota", "Volkswagen", "Volvo"
+        ]
+        
+        return {
+            "brands": sorted(brands),
+            "total": len(brands)
+        }
+    except Exception as e:
+        return {"error": f"Eroare la obținerea mărcilor: {str(e)}"}
+
+@app.get("/api/models/{brand}")
+def get_models_for_brand(brand: str):
+    """
+    Obține lista cu modelele pentru o marcă specifică
+    """
+    try:
+        # Dicționar cu modelele pentru fiecare marcă
+        models_by_brand = {
+            "audi": ["A1", "A3", "A4", "A5", "A6", "A7", "A8", "Q2", "Q3", "Q4", "Q5", "Q7", "Q8", "TT", "R8"],
+            "bmw": ["Seria 1", "Seria 2", "Seria 3", "Seria 4", "Seria 5", "Seria 6", "Seria 7", "Seria 8", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "Z3", "Z4", "i3", "i8"],
+            "mercedes": ["A-Class", "B-Class", "C-Class", "CLA", "CLS", "E-Class", "G-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "S-Class", "SL", "SLC", "V-Class"],
+            "volkswagen": ["Golf", "Polo", "Passat", "Tiguan", "Touareg", "Arteon", "T-Cross", "T-Roc", "ID.3", "ID.4"],
+            "skoda": ["Octavia", "Superb", "Fabia", "Kodiaq", "Kamiq", "Karoq", "Scala"],
+            "seat": ["Ibiza", "Leon", "Ateca", "Tarraco", "Arona"],
+            "ford": ["Fiesta", "Focus", "Mondeo", "Kuga", "EcoSport", "Edge", "Mustang"],
+            "opel": ["Corsa", "Astra", "Insignia", "Crossland", "Grandland", "Mokka"],
+            "renault": ["Clio", "Megane", "Kadjar", "Koleos", "Captur", "Talisman"],
+            "peugeot": ["208", "308", "508", "2008", "3008", "5008"],
+            "citroen": ["C3", "C4", "C5", "C3 Aircross", "C4 Cactus", "C5 Aircross"],
+            "dacia": ["Sandero", "Logan", "Duster", "Lodgy", "Dokker"],
+            "toyota": ["Yaris", "Corolla", "Camry", "RAV4", "Highlander", "Prius", "C-HR"],
+            "honda": ["Civic", "Accord", "CR-V", "HR-V", "Pilot", "Fit"],
+            "nissan": ["Micra", "Sentra", "Altima", "Rogue", "Pathfinder", "Murano"],
+            "hyundai": ["i10", "i20", "i30", "Elantra", "Sonata", "Tucson", "Santa Fe"],
+            "kia": ["Picanto", "Rio", "Ceed", "Optima", "Sportage", "Sorento"],
+            "mazda": ["Mazda2", "Mazda3", "Mazda6", "CX-3", "CX-5", "CX-9"],
+            "subaru": ["Impreza", "Legacy", "Outback", "Forester", "WRX"],
+            "suzuki": ["Swift", "Baleno", "Vitara", "S-Cross", "Jimny"],
+            "volvo": ["V40", "S60", "S90", "XC40", "XC60", "XC90"],
+            "porsche": ["911", "Boxster", "Cayman", "Panamera", "Macan", "Cayenne", "Taycan"],
+            "jaguar": ["XE", "XF", "XJ", "F-PACE", "E-PACE", "I-PACE"],
+            "land rover": ["Defender", "Discovery", "Range Rover", "Range Rover Sport", "Range Rover Evoque"],
+            "tesla": ["Model S", "Model 3", "Model X", "Model Y"],
+            "ferrari": ["488", "F8", "SF90", "Roma", "Portofino"],
+            "lamborghini": ["Huracan", "Aventador", "Urus"],
+            "maserati": ["Ghibli", "Quattroporte", "Levante", "GranTurismo"],
+            "bentley": ["Continental", "Flying Spur", "Bentayga"],
+            "rolls-royce": ["Ghost", "Phantom", "Cullinan", "Wraith", "Dawn"],
+            "mclaren": ["540C", "570S", "600LT", "720S", "Senna"],
+            "aston martin": ["Vantage", "DB11", "DBS", "DBX"],
+            "lotus": ["Elise", "Exige", "Evora", "Emira"]
+        }
+        
+        brand_lower = brand.lower()
+        models = models_by_brand.get(brand_lower, [])
+        
+        if not models:
+            return {"error": f"Nu există modele pentru marca {brand}"}
+        
+        return {
+            "brand": brand,
+            "models": models,
+            "total": len(models)
+        }
+    except Exception as e:
+        return {"error": f"Eroare la obținerea modelelor: {str(e)}"}

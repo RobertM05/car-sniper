@@ -86,6 +86,7 @@ def scrape_autovit(
     max_pages: int = 5,
     enrich: bool = False,
     *,
+    min_price: int | None = None,
     max_price: int | None = None,
     min_year: int | None = None,
     max_km: int | None = None,

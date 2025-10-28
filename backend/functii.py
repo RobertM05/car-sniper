@@ -1,28 +1,44 @@
 from scraper.olx_scraper import scrape_olx
 from scraper.autovit_scraper import scrape_autovit
+from car_database import get_optimized_search_params, car_db_optimizer
 import re
 
 
 def search_cars(
     make: str,
     model: str,
-    max_price: int,
+    generation: str | None = None,
     site: str = "olx",
     *,
+    min_price: int | None = None,
+    max_price: int,
+    min_km: int | None = None,
     max_km: int | None = None,
     min_year: int | None = None,
+    max_year: int | None = None,
     min_cc: int | None = None,
     min_hp: int | None = None,
     limit: int = 50,
     max_pages: int = 5,
 ):
     cars = []
-    query = f"{make} {model}"
+    
+
+    optimized_params = get_optimized_search_params(make, model, min_year, max_year)
+    optimized_min_year = optimized_params['min_year']
+    optimized_max_year = optimized_params['max_year']
+    model_info = optimized_params['model_info']
+    
+ 
+    normalized_model = optimized_params['normalized_model']
+    query = f"{make} {normalized_model}"
+    if generation:
+        query += f" {generation}"
 
     def map_autovit_model(make_text: str, model_text: str) -> str:
         make_lc = (make_text or "").strip().lower()
         model_lc = (model_text or "").strip().lower()
-        # BMW numeric models: 320d -> seria-3, 520d -> seria-5
+
         m = re.match(r"^(x)?(\d)", model_lc)
         if make_lc == "bmw" and m:
             is_x = m.group(1) == "x"
@@ -30,17 +46,18 @@ def search_cars(
             if is_x:
                 return f"x{digit}"
             return f"seria-{digit}"
-        # default: keep original model
+
         return model_lc
 
-    # Fetch cars from specified site(s)
     site_lc = (site or "").lower()
     if site_lc == "olx":
         cars = scrape_olx(
             query,
             limit=limit,
             max_price=max_price,
-            min_year=min_year,
+            min_price=min_price,
+            min_year=optimized_min_year,
+            max_year=optimized_max_year,
             max_km=max_km,
         )
     elif site_lc == "autovit":
@@ -51,7 +68,9 @@ def search_cars(
             limit=limit,
             max_pages=max_pages,
             max_price=max_price,
-            min_year=min_year,
+            min_price=min_price,
+            min_year=optimized_min_year,
+            max_year=optimized_max_year,
             max_km=max_km,
         )
     elif site_lc == "both":
@@ -59,7 +78,9 @@ def search_cars(
             query,
             limit=limit,
             max_price=max_price,
-            min_year=min_year,
+            min_price=min_price,
+            min_year=optimized_min_year,
+            max_year=optimized_max_year,
             max_km=max_km,
         )
         model_for_autovit = map_autovit_model(make, model)
@@ -68,8 +89,11 @@ def search_cars(
             model_for_autovit,
             limit=limit,
             max_pages=max_pages,
+            min_price=min_price,
             max_price=max_price,
-            min_year=min_year,
+            min_year=optimized_min_year,
+            max_year=optimized_max_year,
+            min_km=min_km,
             max_km=max_km,
         )
         cars = cars_olx + cars_autovit
@@ -130,12 +154,14 @@ def search_cars(
         # Apply filters only when values exist
         if price > max_price:
             continue
+        if min_price is not None and price < min_price:
+            continue
         if max_km is not None and km_val is not None and km_val > max_km:
             continue
-        if min_year is not None:
-            # Exclude if year is missing or below the threshold
-            if year_val is None or year_val < min_year:
-                continue
+        if optimized_min_year is not None and year_val is not None and year_val < optimized_min_year:
+            continue
+        if optimized_max_year is not None and year_val is not None and year_val > optimized_max_year:
+            continue
         if min_cc is not None and cc_val is not None and cc_val < min_cc:
             continue
         if min_hp is not None and hp_val is not None and hp_val < min_hp:
