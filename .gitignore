@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.venv/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# Brain / AI
+.gemini/
+.antigravity/
+.agent/
+task.md
+implementation_plan.md
+walkthrough.md
+
+# Application Data
+
+# Debug / Scratch files
+debug_*.py
+test_*.py
+verify_*.py
+
