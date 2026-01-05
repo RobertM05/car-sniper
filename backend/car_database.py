@@ -14,6 +14,73 @@ class CarDatabaseOptimizer:
     def __init__(self, db_path: str = "../database/db.sqlite"):
         self.db_path = db_path
         self.init_database()
+
+    def format_brand_name(self, brand: str) -> str:
+        """Formatează numele mărcii pentru afișare"""
+        brand = brand.lower().strip()
+        
+        special_cases = {
+            "bmw": "BMW",
+            "vw": "VW",
+            "volkswagen": "Volkswagen",
+            "mercedes": "Mercedes-Benz",
+            "mercedes-benz": "Mercedes-Benz",
+            "mercedesbenz": "Mercedes-Benz",
+            "mg": "MG",
+            "gmc": "GMC",
+            "acura": "Acura",
+            "alfa romeo": "Alfa Romeo",
+            "aston martin": "Aston Martin",
+            "land rover": "Land Rover",
+            "range rover": "Range Rover",
+            "rolls-royce": "Rolls-Royce",
+            "seat": "SEAT", # Uneori scris SEAT
+            "fiat": "FIAT", # Uneori scris FIAT
+            "mini": "MINI"
+        }
+        
+        return special_cases.get(brand, brand.title())
+
+    def format_model_name(self, model: str) -> str:
+        """Formatează numele modelului pentru afișare"""
+        model = model.lower().strip()
+        
+        # Remove years (19xx or 20xx) if they appear as standalone words
+        model = re.sub(r"\b(19|20)\d{2}\b", "", model).strip()
+        
+        # Înlocuiește cratimele cu spații, păstrând cratimele pentru anumite cazuri dacă e nevoie
+        # Deocamdată simplu: replace - with space
+        model = model.replace("-", " ")
+        
+        words = model.split()
+        formatted_words = []
+        
+        for word in words:
+            if word in ["bmw", "vw", "gti", "gtd", "amg", "rs", "wrx", "sti", "cr-v", "hr-v", "rav4", "mx-5", "cx-3", "cx-5", "cx-30", "cx-60", "cx-90"]:
+                formatted_words.append(word.upper())
+            elif word.startswith("mk") and word[2:].isdigit(): # Mk7, Mk8
+                formatted_words.append("Mk" + word[2:])
+            elif word in ["ii", "iii", "iv", "v", "vi", "vii", "viii", "ix", "x"]: # Numerale romane
+                formatted_words.append(word.upper())
+            elif word in ["cdi", "tdi", "tfsi", "tsi", "fsi", "d", "i", "e", "h"]: # Sufixe motorizari izolate
+                formatted_words.append(word.upper())
+            elif word == "seria":
+                formatted_words.append("Seria")
+            elif word == "clasa":
+                formatted_words.append("Clasa")
+            elif word == "class":
+                formatted_words.append("Class")
+            else:
+                formatted_words.append(word.title())
+                
+        # Reconstruct string
+        formatted_model = " ".join(formatted_words)
+        
+        # Ajustări fine finale post-join
+        if "Seria " in formatted_model and formatted_model[-1].isdigit():
+             pass # E ok, gen "Seria 3"
+             
+        return formatted_model
     
     def init_database(self):
         """Inițializează baza de date cu tabela pentru modelele de mașini"""
@@ -51,9 +118,177 @@ class CarDatabaseOptimizer:
                 avg_km REAL
             )
         """)
+
+        # Creează tabela pentru alerte
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_email TEXT NOT NULL,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                max_price INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_checked TIMESTAMP
+            )
+        """)
+
+        # Creează tabela pentru anunțuri (Ads)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS ads (
+                id TEXT PRIMARY KEY,       -- Unic, bazat pe link hash sau ID site
+                source TEXT,               -- OLX, Autovit
+                title TEXT,
+                price INTEGER,
+                currency TEXT DEFAULT 'EUR',
+                link TEXT UNIQUE,
+                image TEXT,
+                make TEXT,
+                model TEXT,
+                year INTEGER,
+                km INTEGER,
+                fuel TEXT,
+                transmission TEXT,
+                body_type TEXT,
+                city TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                active BOOLEAN DEFAULT 1
+            )
+        """)
+        
+        # Index pentru viteza
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)")
         
         conn.commit()
         conn.close()
+
+    def delete_ad(self, ad_id: str):
+        """Sterge un anunț din baza de date"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM ads WHERE id = ?", (ad_id,))
+        conn.commit()
+        conn.close()
+
+    def upsert_ad(self, ad_data: dict):
+        """Introduce sau actualizează un anunț în baza de date"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        # Generare ID simplu dacă nu există (hash la link)
+        import hashlib
+        link = ad_data.get("link", "")
+        if not ad_data.get("id"):
+            ad_id = hashlib.md5(link.encode()).hexdigest()
+        else:
+            ad_id = ad_data["id"]
+
+        # Parse price safe
+        try:
+             price_val = int(ad_data.get("price", 0))
+        except:
+             price_val = 0
+
+        cursor.execute("""
+            INSERT INTO ads (
+                id, source, title, price, link, image, make, model, year, km, 
+                fuel, transmission, body_type, city, last_seen, active, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)
+            ON CONFLICT(link) DO UPDATE SET
+                price = excluded.price,
+                last_seen = CURRENT_TIMESTAMP,
+                active = 1,
+                updated_at = CURRENT_TIMESTAMP,
+                image = COALESCE(excluded.image, ads.image) 
+        """, (
+            ad_id,
+            ad_data.get("subsource") or ad_data.get("source", "Unknown"),
+            ad_data.get("title"),
+            price_val,
+            link,
+            ad_data.get("image"),
+            ad_data.get("make"),
+            ad_data.get("model"),
+            ad_data.get("year"),
+            ad_data.get("km"),
+            ad_data.get("fuel"),
+            ad_data.get("transmission"),
+            ad_data.get("body_type"),
+            ad_data.get("city")
+        ))
+        
+        conn.commit()
+        conn.close()
+        return ad_id
+
+    def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, 
+                     min_year=None, max_year=None, min_km=None, max_km=None, limit=100,
+                     sort_by="price", order="asc") -> List[Dict]:
+        """Caută anunțuri în baza de date locală"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        query = "SELECT * FROM ads WHERE active = 1"
+        params = []
+        
+        if make:
+            query += " AND make LIKE ?"
+            params.append(f"%{make}%")
+        if model:
+            # Simplu fuzzy matching
+            query += " AND (model LIKE ? OR title LIKE ?)"
+            params.append(f"%{model}%")
+            params.append(f"%{model}%")
+            
+        if min_price:
+            query += " AND price >= ?"
+            params.append(min_price)
+        
+        if max_price:
+            query += " AND price <= ?"
+            params.append(max_price)
+            
+        if min_year:
+            query += " AND year >= ?"
+            params.append(min_year)
+        if max_year:
+            query += " AND year <= ?"
+            params.append(max_year)
+            
+        if max_km:
+            query += " AND km <= ?"
+            params.append(max_km)
+            
+        query += " ORDER BY created_at DESC LIMIT ?"
+        params.append(limit)
+        
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        
+        ads = []
+        for r in rows:
+            d = dict(r)
+            # Format price for UI compatibility
+            d["price"] = f"{d['price']} €"
+            ads.append(d)
+            
+        conn.close()
+        return ads
+
+    def deactivate_stale_ads(self, hours_threshold=24):
+        """Marchează ca inactive anunțurile care nu au fost văzute recent"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE ads SET active = 0 WHERE last_seen < datetime('now', '-{hours_threshold} hours')")
+        count = cursor.rowcount
+        conn.commit()
+        conn.close()
+        return count
+
     
     def add_car_model(self, make: str, model: str, min_year: int = None, 
                      max_year: int = None, generation: str = None, 
@@ -346,6 +581,32 @@ class CarDatabaseOptimizer:
             }
             for r in results
         ]
+
+    def get_model_stats(self, make: str, model: str) -> Optional[Dict]:
+        """Obține statistici pentru un model specific"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT make, model, search_count, avg_price, avg_year, avg_km, last_searched
+            FROM search_stats 
+            WHERE make = ? AND model = ?
+        """, (make.lower(), model.lower()))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {
+                'make': result[0],
+                'model': result[1],
+                'search_count': result[2],
+                'avg_price': result[3],
+                'avg_year': result[4],
+                'avg_km': result[5],
+                'last_searched': result[6]
+            }
+        return None
     
     def populate_sample_data(self):
         """Populează baza de date cu date de exemplu"""
@@ -392,6 +653,70 @@ class CarDatabaseOptimizer:
         
         print(f"Popularea s-a terminat. Am procesat {len(data)} modele.")
         return data
+
+    def add_alert(self, user_email: str, make: str, model: str, max_price: int):
+        """Adaugă o alertă nouă în baza de date"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            INSERT INTO alerts (user_email, make, model, max_price, last_checked)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        """, (user_email, make, model, max_price))
+        
+        # Get the ID of the new row
+        alert_id = cursor.lastrowid
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "id": alert_id,
+            "user_email": user_email,
+            "make": make,
+            "model": model,
+            "max_price": max_price
+        }
+
+    def get_alerts(self):
+        """Obține toate alertele active"""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row  # Pentru a accesa coloanele prin nume
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM alerts")
+        rows = cursor.fetchall()
+        
+        alerts = []
+        for row in rows:
+            alerts.append(dict(row))
+            
+        conn.close()
+        return alerts
+
+    def get_all_brands(self) -> List[str]:
+        """Obține toate mărcile distincte din baza de date"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT DISTINCT make FROM car_models ORDER BY make ASC")
+        rows = cursor.fetchall()
+        
+        brands = [self.format_brand_name(row[0]) for row in rows if row[0]]
+        conn.close()
+        return sorted(list(set(brands)))
+
+    def get_models(self, make: str) -> List[str]:
+        """Obține toate modelele pentru o marcă din baza de date"""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT DISTINCT model FROM car_models WHERE make = ? ORDER BY model ASC", (make.lower(),))
+        rows = cursor.fetchall()
+        
+        models = [self.format_model_name(row[0]) for row in rows if row[0]]
+        conn.close()
+        return sorted(list(set(models)))
 
 
 # Instanță globală pentru optimizator
