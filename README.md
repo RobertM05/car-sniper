@@ -1,234 +1,89 @@
-# 🚗 Car Sniper - Sistem de Optimizare Căutări Auto
+# Car Sniper
 
-## Descriere
+Car Sniper is a high-performance, real-time car search aggregator designed to unify listing data from major platforms (OLX, Autovit) into a single, cohesive interface. It features advanced data normalization, validation, and automated repair logic to ensure data accuracy.
 
-Car Sniper este un sistem complet de căutare și optimizare pentru mașini second-hand, care integrează scraping-ul de pe site-uri precum OLX și Autovit cu o bază de date optimizată pentru informații despre modelele de mașini.
+## key Features
 
-## ✨ Funcționalități Principale
+### 1. Unified Search Engine
+- **Aggregated Results**: Fetches data concurrently from multiple sources using asynchronous I/O.
+- **Normalization**: Standardizes prices, dates, and vehicle specifications across different platforms.
+- **Deduplication**: Automatically identifies and merges duplicate listings based on unique platform identifiers.
 
-### 1. **Căutare Optimizată cu Filtre**
-- ✅ Pret minim și maxim
-- ✅ An minim și maxim  
-- ✅ Kilometraj maxim
-- ✅ Capacitate cilindrică minimă
-- ✅ Putere minimă (CP)
+### 2. Live Data Validation (Auto-Repair)
+The system implements a robust validation layer that intercepts search results in real-time:
+- **Missing Asset Recovery**: Detects listings with missing images and performs a deep-fetch to recover them from meta tags, JSON-LD schema, or gallery selectors.
+- **Price Verification**: Correlates the displayed price with the internal structured data of the source page to correct parsing errors (e.g., correcting 9,000 EUR to 91,000 EUR for luxury vehicles).
+- **Stale Data Pruning**: Automatically filters out listings that return 404 errors or redirects, ensuring only active ads are displayed.
 
-### 2. **Bază de Date Auto Optimizată**
-- 📊 Informații despre modelele de mașini
-- 📅 Anii de producție (min/max)
-- 🏷️ Generații de modele
-- 🚙 Tipuri de caroserie
-- ⚙️ Tipuri de motoare
-- 📈 Statistici de căutare
+### 3. Performance
+- **Asynchronous Architecture**: Built on Python `asyncio` and `aiohttp` for non-blocking network operations.
+- **In-Memory Caching**: Implements LRU caching for search queries to reduce latency for repeated requests.
+- **Optimized Frontend**: React-based UI with efficient state management and responsive design.
 
-### 3. **Scraper Auto-Data.net**
-- 🌐 Scraping automat de pe auto-data.net
-- 📋 Extragere mărci și modele
-- 🔍 Detalii despre specificații
-- 📊 Populare automată a bazei de date
+## Technical Stack
 
-### 4. **Optimizare Inteligentă**
-- 🎯 Matching automat între căutări și baza de date
-- 🔧 Normalizare nume modele (BMW 320d → seria-3)
-- 📊 Parametrii optimizați pentru fiecare model
-- 📈 Statistici de utilizare
+### Backend
+- **Framework**: FastAPI (Python 3.10+)
+- **Scraping**: Aiohttp, BeautifulSoup4
+- **Database**: SQLite (for persistent configuration and analytics)
+- **Utilities**: Pydantic for data validation
 
-## 🏗️ Arhitectura Sistemului
+### Frontend
+- **Framework**: React.js (Vite)
+- **Styling**: Modern CSS3 with responsive layouts
+- **State Management**: React Hooks
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Frontend      │    │     Backend      │    │   Database      │
-│   (React)       │◄──►│   (FastAPI)      │◄──►│   (SQLite)      │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌──────────────────┐
-                       │   Scrapers       │
-                       │ OLX + Autovit    │
-                       │ + Auto-Data.net  │
-                       └──────────────────┘
-```
+## Installation
 
-## 📁 Structura Proiectului
+### Prerequisites
+- Python 3.10 or higher
+- Node.js 16 or higher
 
-```
-car-sniper/
-├── backend/
-│   ├── car_database.py      # Modul optimizare bază de date
-│   ├── auto_data_scraper.py # Scraper auto-data.net
-│   ├── functii.py           # Funcții principale de căutare
-│   ├── main.py              # API FastAPI
-│   ├── scraper/
-│   │   ├── olx_scraper.py   # Scraper OLX
-│   │   └── autovit_scraper.py # Scraper Autovit
-│   └── test_system.py       # Script de test
-├── frontend/
-│   └── car-sniper/          # Aplicația React
-├── database/
-│   └── db.sqlite            # Baza de date SQLite
-└── requirements.txt
-```
+### Setup
 
-## 🚀 Instalare și Configurare
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd car-sniper
+   ```
 
-### 1. Instalare Dependențe
+2. **Backend Setup**
+   ```bash
+   cd backend
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   cd ..
+   ```
 
-```bash
-# Backend
-cd backend
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# sau venv\Scripts\activate  # Windows
-pip install -r requirements.txt
+3. **Frontend Setup**
+   ```bash
+   cd frontend/car-sniper
+   npm install
+   cd ../..
+   ```
 
-# Frontend
-cd frontend/car-sniper
-npm install
-```
+## Usage
 
-### 2. Inițializare Bază de Date
+The project includes a unified startup script for convenience.
 
-```bash
-cd backend
-source venv/bin/activate
-python -c "from car_database import car_db_optimizer; car_db_optimizer.populate_sample_data()"
-```
+1. **Start the Application**
+   ```bash
+   ./start.sh
+   ```
+   This command will:
+   - Launch the FastAPI backend on port 8000.
+   - Launch the React frontend development server on port 5173.
 
-### 3. Pornire Servicii
+2. **Access the Interface**
+   Open your browser and navigate to `http://localhost:5173`.
 
-```bash
-# Backend (terminal 1)
-cd backend
-source venv/bin/activate
-uvicorn main:app --reload
+## Configuration
 
-# Frontend (terminal 2)
-cd frontend/car-sniper
-npm run dev
-```
+Environment variables and secrets are managed via `.env` files (not included in version control).
 
-## 🔧 Utilizare
+### Important Note on Scrapers
+The scraping modules are designed to respect rate limits. The `start.sh` script is currently configured to run in "Live Search Mode" (Direct Scraping) for maximum data freshness. Background crawling features can be enabled by uncommenting the relevant section in `start.sh`.
 
-### API Endpoints Principale
-
-#### Căutare Mașini
-```http
-GET /api/search?make=bmw&model=seria-3&max_price=15000&min_price=5000&min_year=2015&max_year=2020
-```
-
-#### Informații Model
-```http
-GET /api/model-info/bmw/seria-3
-```
-
-#### Parametrii Optimizați
-```http
-GET /api/optimized-search-params/bmw/seria-3?min_year=2015&max_year=2020
-```
-
-#### Populare Bază de Date
-```http
-POST /api/populate-from-scraper?max_brands=5&max_models_per_brand=3
-```
-
-#### Test Scraper
-```http
-GET /api/test-scraper
-```
-
-### Exemple de Utilizare
-
-#### 1. Căutare Simplă
-```python
-from functii import search_cars
-
-results = search_cars(
-    make="bmw",
-    model="320d", 
-    max_price=15000,
-    min_price=5000,
-    site="both",
-    min_year=2015,
-    max_year=2020
-)
-```
-
-#### 2. Optimizare cu Bază de Date
-```python
-from car_database import get_optimized_search_params
-
-params = get_optimized_search_params("bmw", "320d", 2015, 2020)
-print(f"Ani optimizați: {params['min_year']} - {params['max_year']}")
-```
-
-#### 3. Scraping Auto-Data.net
-```python
-from auto_data_scraper import AutoDataScraper
-
-scraper = AutoDataScraper()
-brands = scraper.scrape_brands()
-models = scraper.scrape_models_for_brand(brands[0]['url_marca'], brands[0]['nume_marca'])
-```
-
-## 🧪 Testare
-
-Rulează scriptul de test pentru a verifica funcționalitatea completă:
-
-```bash
-cd backend
-source venv/bin/activate
-python test_system.py
-```
-
-## 📊 Funcționalități Avansate
-
-### 1. **Normalizare Modele**
-- BMW 320d → seria-3
-- Audi A4 → a4  
-- Mercedes C220d → c
-
-### 2. **Optimizare Parametrii**
-- Combină preferințele utilizatorului cu informațiile din baza de date
-- Ajustează automat intervalul de ani pentru fiecare model
-- Elimină căutările irelevante
-
-### 3. **Statistici de Utilizare**
-- Urmărește modelele cele mai căutate
-- Calculează prețuri și kilometraj mediu
-- Optimizează rezultatele bazate pe istoricul de căutări
-
-### 4. **Scraping Inteligent**
-- Rate limiting pentru a respecta termenii de utilizare
-- Parsing robust pentru diverse formate de date
-- Gestionare erori și retry logic
-
-## 🔮 Dezvoltări Viitoare
-
-- [ ] Integrare cu mai multe site-uri de anunțuri
-- [ ] Machine Learning pentru predicții de preț
-- [ ] Notificări push pentru anunțuri noi
-- [ ] Comparare modele și recomandări
-- [ ] Dashboard admin pentru gestionare date
-- [ ] API pentru aplicații mobile
-
-## 🤝 Contribuții
-
-Contribuțiile sunt binevenite! Pentru a contribui:
-
-1. Fork repository-ul
-2. Creează un branch pentru feature (`git checkout -b feature/AmazingFeature`)
-3. Commit modificările (`git commit -m 'Add some AmazingFeature'`)
-4. Push la branch (`git push origin feature/AmazingFeature`)
-5. Deschide un Pull Request
-
-## 📄 Licență
-
-Acest proiect este licențiat sub MIT License - vezi fișierul [LICENSE](LICENSE) pentru detalii.
-
-## 📞 Contact
-
-Pentru întrebări sau sugestii, deschide un issue pe GitHub sau contactează-mă direct.
-
----
-
-**Car Sniper** - Găsește mașina perfectă cu optimizare inteligentă! 🚗✨
+## License
+Proprietary software. All rights reserved.
