@@ -265,12 +265,6 @@ async def search_cars(
                 
             loose_filtered.append(car)
 
-            loose_filtered.append(car)
-
-    final_results = strict_filtered if strict_filtered else (loose_filtered if model else [])
-
-            loose_filtered.append(car)
-
     final_results = strict_filtered if strict_filtered else (loose_filtered if model else [])
 
     # Enhanced Validation & Repair Logic

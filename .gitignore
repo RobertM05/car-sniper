@@ -26,3 +26,17 @@ debug_*.py
 test_*.py
 verify_*.py
 
+
+# Local Configs & DB
+db.sqlite
+*.sqlite
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# System
+.DS_Store
+
+# Debug Scripts
+run_autovit_test.py
