@@ -37,7 +37,7 @@ async def api_search(
     make: str,
     model: str,
     max_price: int,
-    site: str = "olx",
+    site: str = "both",
     min_price: int | None = None,
     max_km: int | None = None,
     min_year: int | None = None,
@@ -52,6 +52,9 @@ async def api_search(
     """
     Cauta masini pe OLX sau Autovit si filtreaza dupa max_price
     """
+    # Force deeper scan for Autovit/OLX to ensure full results (User requested limit 100 pages)
+    if max_pages < 100:
+        max_pages = 100
     # Direct Scraping Mode
     # Bypasses database cache to ensure real-time data accuracy.
     
