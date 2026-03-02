@@ -5,7 +5,7 @@ const PriceStats = ({ stats, currentSearch }) => {
 
     const { avg_price, avg_year, avg_km, search_count } = stats;
 
-    // Format price
+
     const formatPrice = (price) => {
         return new Intl.NumberFormat('ro-RO', {
             style: 'currency',
@@ -18,12 +18,12 @@ const PriceStats = ({ stats, currentSearch }) => {
         <div className="glass-panel" style={{
             marginBottom: '2rem',
             padding: '1.5rem',
-            background: 'rgba(59, 130, 246, 0.1)', // Light blue tint
+            background: 'rgba(59, 130, 246, 0.1)',
             border: '1px solid rgba(59, 130, 246, 0.3)'
         }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--text-primary)' }}>
-                    📊 Analiză Piață: {currentSearch.make} {currentSearch.model}
+                    Analiză Piață: {currentSearch.make} {currentSearch.model}
                 </h3>
                 <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                     Bazat pe {search_count} căutări anterioare
