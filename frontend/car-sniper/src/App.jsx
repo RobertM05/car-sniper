@@ -7,8 +7,10 @@ import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
 import "./App.css";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
 const App = () => {
-  // Centralized State
+
   const [formData, setFormData] = useState({
     make: "",
     model: "",
@@ -25,7 +27,7 @@ const App = () => {
     maxPages: "5"
   });
 
-  // Dropdown Data
+
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
   const [generations, setGenerations] = useState([]);
@@ -33,22 +35,22 @@ const App = () => {
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingGenerations, setLoadingGenerations] = useState(false);
 
-  // Search & UI State
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [results, setResults] = useState([]);
   const [stats, setStats] = useState(null);
 
-  // Pagination & Sorting State
+
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
-  const [sortBy, setSortBy] = useState("price-asc"); // price-asc, price-desc, year-desc, year-asc, km-asc
+  const [sortBy, setSortBy] = useState("price-asc");
 
-  // Data Fetching
+
   const fetchBrands = async () => {
     setLoadingBrands(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/brands');
+      const response = await fetch(`${API_BASE_URL}/api/brands`);
       const data = await response.json();
       if (data.brands) setBrands(data.brands);
     } catch (err) {
@@ -65,7 +67,7 @@ const App = () => {
     }
     setLoadingModels(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/models/${encodeURIComponent(brand)}`);
+      const response = await fetch(`${API_BASE_URL}/api/models/${encodeURIComponent(brand)}`);
       const data = await response.json();
       setModels(data.models || []);
     } catch (err) {
@@ -83,7 +85,7 @@ const App = () => {
     }
     setLoadingGenerations(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/generations/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+      const response = await fetch(`${API_BASE_URL}/api/generations/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
       const data = await response.json();
       setGenerations(data.generations || []);
     } catch (err) {
@@ -94,7 +96,7 @@ const App = () => {
     }
   };
 
-  // Effects
+
   useEffect(() => {
     fetchBrands();
   }, []);
@@ -117,17 +119,17 @@ const App = () => {
     }
   }, [formData.make, formData.model]);
 
-  // Search Handler
+
   const handleSearch = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     setResults([]);
-    setCurrentPage(1); // Reset to page 1 on new search
+    setCurrentPage(1);
 
     try {
       const params = new URLSearchParams();
-      // Map formData to API params
+
       if (formData.make) params.append("make", formData.make);
       if (formData.model) params.append("model", formData.model);
       if (formData.generation) params.append("generation", formData.generation);
@@ -140,7 +142,7 @@ const App = () => {
       params.append("limit", formData.limit);
       params.append("max_pages", formData.maxPages);
 
-      const url = `http://127.0.0.1:8000/api/search?${params.toString()}`;
+      const url = `${API_BASE_URL}/api/search?${params.toString()}`;
 
       const res = await fetch(url);
       if (!res.ok) {
@@ -151,10 +153,10 @@ const App = () => {
       const data = await res.json();
       setResults(Array.isArray(data.results) ? data.results : []);
 
-      // Fetch stats for this model
+
       if (formData.make && formData.model) {
         try {
-          const statsRes = await fetch(`http://127.0.0.1:8000/api/stats/${formData.make}/${formData.model}`);
+          const statsRes = await fetch(`${API_BASE_URL}/api/stats/${formData.make}/${formData.model}`);
           if (statsRes.ok) {
             const statsData = await statsRes.json();
             if (!statsData.error) {
@@ -178,12 +180,12 @@ const App = () => {
     }
   };
 
-  // Alert Handler
+
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const handleCreateAlert = async (email) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/alert", {
+      const response = await fetch(`${API_BASE_URL}/api/alert`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -203,7 +205,7 @@ const App = () => {
     }
   };
 
-  // Logic for Sorting
+
   const getSortedResults = () => {
     const sorted = [...results];
     switch (sortBy) {
@@ -222,7 +224,7 @@ const App = () => {
     }
   };
 
-  // Logic for Pagination
+
   const sortedResults = getSortedResults();
   const indexOfLastCar = currentPage * itemsPerPage;
   const indexOfFirstCar = indexOfLastCar - itemsPerPage;
@@ -230,13 +232,13 @@ const App = () => {
 
   const paginate = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo({ top: 800, behavior: 'smooth' }); // Auto-scroll to results
+    window.scrollTo({ top: 800, behavior: 'smooth' });
   };
 
   return (
     <div className="container">
       <div className="hero-section">
-        <h1 className="hero-title">Car Sniper 🎯</h1>
+        <h1 className="hero-title">Car Sniper</h1>
         <p className="hero-subtitle">
           Găsește cea mai bună ofertă din mii de anunțuri verificate de pe OLX și Autovit.
         </p>
@@ -265,7 +267,7 @@ const App = () => {
 
       {error && <div className="error-message">{error}</div>}
 
-      {/* Results Area */}
+
       <div id="results-area">
         {loading ? (
           <div className="results-grid">

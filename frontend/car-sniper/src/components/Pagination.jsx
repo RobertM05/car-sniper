@@ -4,11 +4,11 @@ const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
     const pageNumbers = [];
     const totalPages = Math.ceil(totalCars / carsPerPage);
 
-    // Logic to show limited page numbers (e.g., current - 2 to current + 2)
+
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, currentPage + 2);
 
-    // Adjust if near start or end
+
     if (currentPage <= 3) {
         endPage = Math.min(5, totalPages);
     }

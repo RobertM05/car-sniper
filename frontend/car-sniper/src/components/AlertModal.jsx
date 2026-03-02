@@ -34,7 +34,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                 width: '90%',
                 position: 'relative'
             }}>
-                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>🔔 Setează Alertă</h2>
+                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Setează Alertă</h2>
 
                 <div style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
                     Vei primi notificări când apare:

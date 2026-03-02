@@ -1,89 +1,111 @@
-# Car Sniper
+# Car Sniper - Advanced Auto Search Engine
 
-Car Sniper is a high-performance, real-time car search aggregator designed to unify listing data from major platforms (OLX, Autovit) into a single, cohesive interface. It features advanced data normalization, validation, and automated repair logic to ensure data accuracy.
+## Description
 
-## key Features
+Car Sniper is a robust search engine and aggregation tool for second-hand vehicles. It integrates headless scraping from platforms like OLX and Autovit, utilizing a highly optimized internal database mapping architecture to translate complex car model names into platform-specific URL slugs.
 
-### 1. Unified Search Engine
-- **Aggregated Results**: Fetches data concurrently from multiple sources using asynchronous I/O.
-- **Normalization**: Standardizes prices, dates, and vehicle specifications across different platforms.
-- **Deduplication**: Automatically identifies and merges duplicate listings based on unique platform identifiers.
+## Core Features
 
-### 2. Live Data Validation (Auto-Repair)
-The system implements a robust validation layer that intercepts search results in real-time:
-- **Missing Asset Recovery**: Detects listings with missing images and performs a deep-fetch to recover them from meta tags, JSON-LD schema, or gallery selectors.
-- **Price Verification**: Correlates the displayed price with the internal structured data of the source page to correct parsing errors (e.g., correcting 9,000 EUR to 91,000 EUR for luxury vehicles).
-- **Stale Data Pruning**: Automatically filters out listings that return 404 errors or redirects, ensuring only active ads are displayed.
+### 1. Optimized Search Parameters
+- Minimum and Maximum Price filters
+- Production Year bounding
+- Maximum Mileage (KM) caps
+- Engine Capacity (CC) and Horsepower (HP) targets
 
-### 3. Performance
-- **Asynchronous Architecture**: Built on Python `asyncio` and `aiohttp` for non-blocking network operations.
-- **In-Memory Caching**: Implements LRU caching for search queries to reduce latency for repeated requests.
-- **Optimized Frontend**: React-based UI with efficient state management and responsive design.
+### 2. Comprehensive Database Mapping
+- Translates over 600 complex vehicle names directly to backend URLs for immediate fetching.
+- Supports highly specific generation mapping for all major brands.
+- Price, year, and mileage statistics aggregated from search history logic.
 
-## Technical Stack
+### 3. Integrated Web Scraping Architecture
+- Asynchronous API endpoints fetching live JSON from backend platform APIs.
+- Playwright integration for edge-case URL verification and dynamic content rendering.
+- Robust exception handling and rate-limit bypassing algorithms.
 
-### Backend
-- **Framework**: FastAPI (Python 3.10+)
-- **Scraping**: Aiohttp, BeautifulSoup4
-- **Database**: SQLite (for persistent configuration and analytics)
-- **Utilities**: Pydantic for data validation
+## System Architecture
 
-### Frontend
-- **Framework**: React.js (Vite)
-- **Styling**: Modern CSS3 with responsive layouts
-- **State Management**: React Hooks
+```text
++-----------------+    +------------------+    +-----------------+
+|   Frontend      |    |     Backend      |    |   Database      |
+|   (React/Vite)  |<-->|   (FastAPI)      |<-->|   (SQLite)      |
++-----------------+    +------------------+    +-----------------+
+                              |
+                              v
+                       +------------------+
+                       |   Scrapers       |
+                       | OLX + Autovit    |
+                       +------------------+
+```
 
-## Installation
+## Project Structure
 
-### Prerequisites
-- Python 3.10 or higher
-- Node.js 16 or higher
+```text
+car-sniper/
+|-- backend/
+|   |-- car_database.py      # Core database optimization module
+|   |-- functii.py           # Core search algorithms and slug translations
+|   |-- main.py              # FastAPI application initialization
+|   |-- scraper/
+|   |   |-- olx_scraper.py   # OLX asynchronous request engine
+|   |   |-- autovit_playwright.py # Autovit headless browser scraper
+|   |   |-- autovit_scraper.py # Fallback API search handler
+|-- frontend/
+|   |-- car-sniper/          # React Vite application
+|-- database/
+|   |-- db.sqlite            # Internal application states
+|-- requirements.txt
+```
 
-### Setup
+## Installation & Environment Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd car-sniper
-   ```
+### 1. Install Dependencies
 
-2. **Backend Setup**
-   ```bash
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   cd ..
-   ```
+```bash
+# Backend Setup
+cd backend
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-3. **Frontend Setup**
-   ```bash
-   cd frontend/car-sniper
-   npm install
-   cd ../..
-   ```
+# Playwright Dependencies (Required for Autovit Scraper)
+playwright install chromium
 
-## Usage
+# Frontend Setup
+cd frontend/car-sniper
+npm install
+```
 
-The project includes a unified startup script for convenience.
+### 2. Running the Services
 
-1. **Start the Application**
-   ```bash
-   ./start.sh
-   ```
-   This command will:
-   - Launch the FastAPI backend on port 8000.
-   - Launch the React frontend development server on port 5173.
+```bash
+# Terminal 1: Initialize the FastAPI Application
+cd backend
+source venv/bin/activate
+uvicorn main:app --reload
 
-2. **Access the Interface**
-   Open your browser and navigate to `http://localhost:5173`.
+# Terminal 2: Initialize the React Frontend
+cd frontend/car-sniper
+npm run dev
+```
 
-## Configuration
+## Advanced Functionality
 
-Environment variables and secrets are managed via `.env` files (not included in version control).
+### 1. Model Normalization Algorithm
+- BMW 320d -> seria-3
+- Audi A4 -> a4  
+- Mercedes C220d -> c
 
-### Important Note on Scrapers
-The scraping modules are designed to respect rate limits. The `start.sh` script is currently configured to run in "Live Search Mode" (Direct Scraping) for maximum data freshness. Background crawling features can be enabled by uncommenting the relevant section in `start.sh`.
+### 2. Intelligent Rate Limiting
+- Built-in asynchronous sleep routines mapping pagination behavior to mimic human interaction.
+
+## Deployment Notes (Vercel)
+
+The frontend is ready for Vercel deployment. Ensure you define `VITE_API_URL` within your Vercel Production Environment Variables, pointing to the external IP where the FastAPI backend is hosted (e.g., Render, Railway).
 
 ## License
-Proprietary software. All rights reserved.
+
+This project is licensed under the MIT License - see the LICENSE file for more details.
+
+---
+
+**Car Sniper** - Aggregating targeted automated search results with intelligent database mappings.
