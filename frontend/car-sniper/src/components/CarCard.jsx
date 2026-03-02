@@ -1,7 +1,7 @@
 import React from 'react';
 
 const CarCard = ({ car }) => {
-    // Format price
+
     let displayPrice = "";
     const rawPrice = parseInt(String(car.price).replace(/\D/g, '')) || 0;
 
@@ -44,17 +44,17 @@ const CarCard = ({ car }) => {
                 <div className="car-specs">
                     {car.year && (
                         <span className="spec-chip">
-                            📅 {car.year}
+                            {car.year}
                         </span>
                     )}
                     {car.km && (
                         <span className="spec-chip">
-                            🛣️ {car.km} km
+                            {car.km} km
                         </span>
                     )}
                     {car.fuel && (
                         <span className="spec-chip">
-                            ⛽ {car.fuel}
+                            {car.fuel}
                         </span>
                     )}
                 </div>
@@ -74,7 +74,7 @@ const CarCard = ({ car }) => {
                 </div>
             </div>
 
-            {/* Full card clickable overlay for better UX on mobile */}
+
             <a
                 href={car.url || car.link}
                 target="_blank"

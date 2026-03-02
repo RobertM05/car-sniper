@@ -154,7 +154,7 @@ const SearchForm = ({
         className="submit-btn"
         title={(!formData.make || !formData.model) ? "Selectează Marca și Modelul" : ""}
       >
-        {loading ? "Se caută..." : "🔍 Caută Mașina Perfectă"}
+        {loading ? "Se caută..." : "Caută Mașina Perfectă"}
       </button>
 
       <button
@@ -170,7 +170,7 @@ const SearchForm = ({
         }}
         title={(!formData.make || !formData.model) ? "Selectează Marca și Modelul" : ""}
       >
-        🔔 Setează Alertă Preț
+        Setează Alertă Preț
       </button>
     </form>
   );
