@@ -5,6 +5,7 @@ import AlertModal from "./components/AlertModal";
 import PriceStats from "./components/PriceStats";
 import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
+import emptyStateImg from "./assets/empty-state.png";
 import "./App.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
@@ -308,6 +309,14 @@ const App = () => {
                 paginate={paginate}
                 currentPage={currentPage}
               />
+            )}
+
+            {results.length === 0 && !error && formData.make && (
+              <div style={{ textAlign: 'center', padding: '4rem 2rem', color: 'var(--text-secondary)' }}>
+                <img src={emptyStateImg} alt="No results found" style={{ width: '100%', maxWidth: '400px', borderRadius: '16px', marginBottom: '2rem', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
+                <h3>Nu am găsit nicio mașină</h3>
+                <p>Încearcă să modifici filtrele pentru a vedea mai multe rezultate.</p>
+              </div>
             )}
           </>
         )}

@@ -10,13 +10,6 @@ venv/
 node_modules/
 dist/
 
-# Brain / AI
-.gemini/
-.antigravity/
-.agent/
-task.md
-implementation_plan.md
-walkthrough.md
 
 # Debug / Scratch files
 debug_*.py
