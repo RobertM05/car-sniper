@@ -44,9 +44,18 @@ body {
 
 .hero-section {
   text-align: center;
-  padding: 4rem 1rem;
-  margin-bottom: 2rem;
+  padding: 6rem 1rem;
+  margin-bottom: 3rem;
   position: relative;
+  background-image:
+    linear-gradient(to bottom, rgba(10, 10, 10, 0.4), var(--bg-dark)),
+    url('./assets/hero-bg.png');
+  background-size: cover;
+  background-position: center;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
 }
 
 .hero-title {
@@ -322,10 +331,20 @@ body {
 
 
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-secondary) 25%, #2d3b52 50%, var(--bg-secondary) 75%);
+  background: linear-gradient(90deg, rgba(30, 30, 40, 0.8) 25%, rgba(60, 60, 80, 0.8) 50%, rgba(30, 30, 40, 0.8) 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
   border-radius: 8px;
+}
+
+.skeleton-img {
+  background-image:
+    linear-gradient(90deg, rgba(10, 15, 30, 0.7) 25%, rgba(30, 45, 80, 0.7) 50%, rgba(10, 15, 30, 0.7) 75%),
+    url('./assets/skeleton-blueprint.png');
+  background-size: 200% 100%, cover;
+  background-position: 0% 0%, center;
+  background-blend-mode: overlay;
+  animation: loading 2s infinite;
 }
 
 @keyframes loading {
