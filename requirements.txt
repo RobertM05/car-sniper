@@ -7,5 +7,4 @@ pandas
 python-dotenv
 bcrypt
 resend
-playwright
 pydantic
