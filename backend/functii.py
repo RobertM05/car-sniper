@@ -201,6 +201,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     if site_lc in ['autovit', 'both']:
         tasks.append(scrape_autovit(make=make, model=autovit_model_slug, limit=limit, max_pages=max_pages, max_price=max_price, min_price=min_price, min_year=optimized_min_year, max_year=optimized_max_year, max_km=max_km, sort_order=sort))
     results_list = await asyncio.gather(*tasks, return_exceptions=True)
+    cars = []
     for res in results_list:
         if isinstance(res, list):
             cars.extend(res)
