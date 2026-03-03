@@ -9,8 +9,12 @@ class CarDatabaseOptimizer:
 
     def __init__(self, db_path: str=None):
         if db_path is None:
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            self.db_path = os.path.join(base_dir, 'database', 'db.sqlite')
+            if os.environ.get("VERCEL"):
+                self.db_path = "/tmp/db.sqlite"
+            else:
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                self.db_path = os.path.join(base_dir, 'database', 'db.sqlite')
+                os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         else:
             self.db_path = db_path
         self.init_database()
