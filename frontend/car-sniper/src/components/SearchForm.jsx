@@ -1,177 +1,189 @@
-import React from 'react';
+import React, { useState } from "react";
+import { useLanguage } from "../LanguageContext";
 
 const SearchForm = ({
   formData,
   setFormData,
   brands,
   models,
-  generations,
   loadingBrands,
   loadingModels,
-  loadingGenerations,
   onSubmit,
   loading,
   onAlertClick
 }) => {
+  const { t } = useLanguage();
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [name]: value };
+      if (name === "make") {
+        newData.model = "";
+        newData.generation = "";
+      }
+      if (name === "model") {
+        newData.generation = "";
+      }
+      return newData;
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit();
   };
 
   return (
-    <form onSubmit={onSubmit} className="glass-panel search-form-grid">
-      <div className="form-group">
-        <label>Marca</label>
-        <select
-          name="make"
-          value={formData.make}
-          onChange={handleChange}
-          className="form-control"
-        >
-          <option value="">Selectează marca</option>
-          {brands.map((brand) => (
-            <option key={brand} value={brand}>{brand}</option>
-          ))}
-        </select>
-        {loadingBrands && <small className="text-secondary">Se încarcă...</small>}
-      </div>
+    <form onSubmit={handleSubmit} className="search-form-grid glass-panel" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
-      <div className="form-group">
-        <label>Model</label>
-        <select
-          name="model"
-          value={formData.model}
-          onChange={handleChange}
-          disabled={!formData.make || loadingModels}
-          className="form-control"
-        >
-          <option value="">Selectează modelul</option>
-          {models.map((m) => (
-            <option key={m} value={m}>{m}</option>
-          ))}
-        </select>
-        {loadingModels && <small className="text-secondary">Se încarcă...</small>}
-      </div>
-
-      {generations.length > 0 && (
+      {/* Top Row: 4 Columns */}
+      <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
         <div className="form-group">
-          <label>Generația</label>
+          <label>{t('search', 'make')}</label>
           <select
-            name="generation"
-            value={formData.generation}
+            name="make"
+            value={formData.make}
             onChange={handleChange}
-            disabled={!formData.model || loadingGenerations}
+            disabled={loadingBrands}
             className="form-control"
           >
-            <option value="">Oricare</option>
-            {generations.map((g) => (
-              <option key={g.generation} value={g.generation}>
-                {g.generation} ({g.min_year}-{g.max_year})
-              </option>
+            <option value="">{t('search', 'anyMake')}</option>
+            {brands.map((b) => (
+              <option key={b} value={b}>{b}</option>
             ))}
           </select>
         </div>
+
+        <div className="form-group">
+          <label>{t('search', 'model')}</label>
+          <select
+            name="model"
+            value={formData.model}
+            onChange={handleChange}
+            disabled={!formData.make || loadingModels}
+            className="form-control"
+          >
+            <option value="">{t('search', 'anyModel')}</option>
+            {models.map((m) => (
+              <option key={m} value={m}>{m}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>{t('search', 'minPrice')}</label>
+          <input
+            type="number"
+            name="minPrice"
+            value={formData.minPrice}
+            onChange={handleChange}
+            placeholder="0"
+            className="form-control"
+          />
+        </div>
+
+        <div className="form-group">
+          <label>{t('search', 'maxPrice')}</label>
+          <input
+            type="number"
+            name="maxPrice"
+            value={formData.maxPrice}
+            onChange={handleChange}
+            placeholder="100000"
+            className="form-control"
+          />
+        </div>
+      </div>
+
+      {/* Advanced Row: 4 Columns */}
+      {showAdvanced && (
+        <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
+          <div className="form-group">
+            <label>{t('search', 'minYear')}</label>
+            <input
+              type="number"
+              name="minYear"
+              value={formData.minYear}
+              onChange={handleChange}
+              placeholder="2010"
+              className="form-control"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>{t('search', 'maxYear')}</label>
+            <input
+              type="number"
+              name="maxYear"
+              value={formData.maxYear}
+              onChange={handleChange}
+              placeholder="2024"
+              className="form-control"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>{t('search', 'maxKm')}</label>
+            <input
+              type="number"
+              name="maxKm"
+              value={formData.maxKm}
+              onChange={handleChange}
+              placeholder="200000"
+              className="form-control"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>{t('search', 'limit')}</label>
+            <select
+              name="limit"
+              value={formData.limit}
+              onChange={handleChange}
+              className="form-control"
+            >
+              <option value="50">{t('search', 'fast')}</option>
+              <option value="100">{t('search', 'normal')}</option>
+              <option value="300">{t('search', 'extended')}</option>
+              <option value="1000">{t('search', 'all')}</option>
+            </select>
+          </div>
+        </div>
       )}
 
-      <div className="form-group">
-        <label>Preț Min (€)</label>
-        <input
-          type="number"
-          name="minPrice"
-          value={formData.minPrice}
-          onChange={handleChange}
-          placeholder="0"
-          className="form-control"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Preț Max (€)</label>
-        <input
-          type="number"
-          name="maxPrice"
-          value={formData.maxPrice}
-          onChange={handleChange}
-          placeholder="50000"
-          className="form-control"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>An Min</label>
-        <input
-          type="number"
-          name="minYear"
-          value={formData.minYear}
-          onChange={handleChange}
-          placeholder="2010"
-          className="form-control"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>An Max</label>
-        <input
-          type="number"
-          name="maxYear"
-          value={formData.maxYear}
-          onChange={handleChange}
-          placeholder="2024"
-          className="form-control"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Km Max</label>
-        <input
-          type="number"
-          name="maxKm"
-          value={formData.maxKm}
-          onChange={handleChange}
-          placeholder="200000"
-          className="form-control"
-        />
-      </div>
-
-      <div className="form-group">
-        <label>Limită Anunțuri</label>
-        <select
-          name="limit"
-          value={formData.limit}
-          onChange={handleChange}
-          className="form-control"
+      {/* Action Buttons Centered Below */}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', width: '100%', paddingTop: showAdvanced ? '1.5rem' : '1rem' }}>
+        <button
+          type="button"
+          onClick={onAlertClick}
+          disabled={!formData.make || !formData.model}
+          className="submit-btn"
+          style={{ background: 'transparent', border: '1px solid var(--primary-color)', color: 'var(--primary-color)' }}
         >
-          <option value="50">Rapid (50)</option>
-          <option value="100">Normal (100)</option>
-          <option value="300">Extins (300)</option>
-          <option value="1000">Maxim (Toate)</option>
-        </select>
+          {t('search', 'setAlert')}
+        </button>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="submit-btn"
+          style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
+        >
+          {loading ? t('search', 'searching') : t('search', 'searchBtn')}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="submit-btn"
+          style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}
+        >
+          {t('search', 'advanced')}
+        </button>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading || !formData.make || !formData.model}
-        className="submit-btn"
-        title={(!formData.make || !formData.model) ? "Selectează Marca și Modelul" : ""}
-      >
-        {loading ? "Se caută..." : "Caută Mașina Perfectă"}
-      </button>
-
-      <button
-        type="button"
-        onClick={onAlertClick}
-        disabled={!formData.make || !formData.model}
-        className="submit-btn"
-        style={{
-          marginTop: '0.5rem',
-          background: 'transparent',
-          border: '2px solid rgba(56, 189, 248, 0.5)',
-          color: 'var(--primary-color)'
-        }}
-        title={(!formData.make || !formData.model) ? "Selectează Marca și Modelul" : ""}
-      >
-        Setează Alertă Preț
-      </button>
     </form>
   );
 };

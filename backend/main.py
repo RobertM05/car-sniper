@@ -2,6 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import threading, time
 from pydantic import BaseModel
+import os
+from dotenv import load_dotenv
+
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path=env_path)
+
 from scraper.olx_scraper import scrape_olx
 from functii import search_cars, add_alert, check_alerts
 from car_database import car_db_optimizer, get_optimized_search_params
@@ -44,11 +50,63 @@ class AlertRequest(BaseModel):
     user_email: str
     make: str
     model: str
-    max_price: int
+    min_price: int | None = None
+    max_price: int | None = None
+    min_year: int | None = None
+    max_year: int | None = None
+    max_km: int | None = None
+
+import threading
+from mailer import send_alert_email, send_contact_email
+
+class ContactRequest(BaseModel):
+    name: str
+    phone: str
+    company_email: str
+    company_name: str
+    has_website: str
+    website_ip: str | None = None
+
+@app.post('/api/contact')
+def api_submit_contact(req: ContactRequest):
+    threading.Thread(
+        target=send_contact_email,
+        args=(req.name, req.phone, req.company_email, req.company_name, req.has_website, req.website_ip),
+        daemon=True
+    ).start()
+    
+    return {'status': 'success'}
+
+from fastapi import HTTPException
+
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+
+@app.post('/api/auth/register')
+def api_auth_register(req: AuthRequest):
+    result = car_db_optimizer.register_user(req.email, req.password)
+    if not result['success']:
+        raise HTTPException(status_code=400, detail=result['error'])
+    return result
+
+@app.post('/api/auth/login')
+def api_auth_login(req: AuthRequest):
+    result = car_db_optimizer.verify_login(req.email, req.password)
+    if not result['success']:
+        raise HTTPException(status_code=400, detail=result['error'])
+    return result
 
 @app.post('/api/alert')
 def api_create_alert(req: AlertRequest):
-    alert = add_alert(req.user_email, req.make, req.model, req.max_price)
+    alert = add_alert(req.user_email, req.make, req.model, req.min_price, req.max_price, req.min_year, req.max_year, req.max_km)
+    
+    threading.Thread(
+        target=send_alert_email,
+        args=(req.user_email, req.make, req.model, req.max_price),
+        daemon=True
+    ).start()
+    
     return {'alert': alert}
 
 @app.get('/api/scrape')
@@ -152,6 +210,14 @@ def get_models_for_brand(brand: str):
         return {'brand': car_db_optimizer.format_brand_name(brand), 'models': sorted(list(set(models))), 'total': len(models)}
     except Exception as e:
         return {'error': f'Eroare la obținerea modelelor: {str(e)}'}
+
+@app.get('/api/generations/{make}/{model}')
+def get_generations(make: str, model: str):
+    try:
+        generations = car_db_optimizer.get_generations_for_model(make, model)
+        return {'generations': generations or []}
+    except Exception as e:
+        return {'error': f'Eroare la obținerea generațiilor: {str(e)}', 'generations': []}
 
 @app.get('/api/stats/{make}/{model}')
 def get_model_stats(make: str, model: str):

@@ -1,12 +1,14 @@
 import React from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const CarCard = ({ car }) => {
+    const { t } = useLanguage();
 
     let displayPrice = "";
     const rawPrice = parseInt(String(car.price).replace(/\D/g, '')) || 0;
 
     if (rawPrice === 0) {
-        displayPrice = "Preț la cerere";
+        displayPrice = t('card', 'priceOnRequest');
     } else {
         displayPrice = new Intl.NumberFormat('ro-RO', {
             style: 'currency',
@@ -37,9 +39,14 @@ const CarCard = ({ car }) => {
             </div>
 
             <div className="car-content">
-                <h3 className="car-title" title={car.title || car.name}>
-                    {car.title || car.name || "Anunț fără titlu"}
-                </h3>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                    <h3 className="car-title" title={car.title || car.name}>
+                        {car.title || car.name || t('card', 'noTitle')}
+                    </h3>
+                    <div className={`price ${rawPrice === 0 ? 'text-warning' : ''}`}>
+                        {displayPrice}
+                    </div>
+                </div>
 
                 <div className="car-specs">
                     {car.year && (
@@ -57,20 +64,6 @@ const CarCard = ({ car }) => {
                             {car.fuel}
                         </span>
                     )}
-                </div>
-
-                <div className="car-footer">
-                    <div className={`price ${rawPrice === 0 ? 'text-warning' : ''}`}>
-                        {displayPrice}
-                    </div>
-                    <a
-                        href={car.url || car.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="view-btn"
-                    >
-                        Vezi Anunț <span>→</span>
-                    </a>
                 </div>
             </div>
 
