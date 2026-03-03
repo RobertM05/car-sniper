@@ -3,11 +3,16 @@ import json
 from typing import Dict, List, Optional, Tuple
 import re
 import bcrypt
+import os
 
 class CarDatabaseOptimizer:
 
-    def __init__(self, db_path: str='../database/db.sqlite'):
-        self.db_path = db_path
+    def __init__(self, db_path: str=None):
+        if db_path is None:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            self.db_path = os.path.join(base_dir, 'database', 'db.sqlite')
+        else:
+            self.db_path = db_path
         self.init_database()
 
     def format_brand_name(self, brand: str) -> str:
