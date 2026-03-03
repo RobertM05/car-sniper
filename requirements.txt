@@ -1,7 +1,11 @@
 fastapi
 uvicorn
-sqlaclhemy
+sqlalchemy
 requests
 beautifulsoup4
 pandas
 python-dotenv
+bcrypt
+resend
+playwright
+pydantic
