@@ -2,6 +2,7 @@ import sqlite3
 import json
 from typing import Dict, List, Optional, Tuple
 import re
+import bcrypt
 
 class CarDatabaseOptimizer:
 
@@ -45,9 +46,19 @@ class CarDatabaseOptimizer:
     def init_database(self):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+        
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                hashed_password TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
         cursor.execute('\n            CREATE TABLE IF NOT EXISTS car_models (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                make TEXT NOT NULL,\n                model TEXT NOT NULL,\n                model_variants TEXT,  -- JSON cu variantele modelului\n                min_year INTEGER,\n                max_year INTEGER,\n                generation TEXT,      -- Generația modelului\n                body_type TEXT,      -- sedan, suv, hatchback, etc.\n                engine_types TEXT,   -- JSON cu tipurile de motor\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                UNIQUE(make, model)\n            )\n        ')
         cursor.execute('\n            CREATE TABLE IF NOT EXISTS search_stats (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                make TEXT,\n                model TEXT,\n                search_count INTEGER DEFAULT 1,\n                last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                avg_price REAL,\n                avg_year REAL,\n                avg_km REAL\n            )\n        ')
-        cursor.execute('\n            CREATE TABLE IF NOT EXISTS alerts (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                user_email TEXT NOT NULL,\n                make TEXT NOT NULL,\n                model TEXT NOT NULL,\n                max_price INTEGER,\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                last_checked TIMESTAMP\n            )\n        ')
+        cursor.execute('\n            CREATE TABLE IF NOT EXISTS alerts (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                user_email TEXT NOT NULL,\n                make TEXT NOT NULL,\n                model TEXT NOT NULL,\n                min_price INTEGER,\n                max_price INTEGER,\n                min_year INTEGER,\n                max_year INTEGER,\n                max_km INTEGER,\n                active BOOLEAN DEFAULT 1,\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                last_checked TIMESTAMP\n            )\n        ')
         cursor.execute("\n            CREATE TABLE IF NOT EXISTS ads (\n                id TEXT PRIMARY KEY,       -- Unic, bazat pe link hash sau ID site\n                source TEXT,               -- OLX, Autovit\n                title TEXT,\n                price INTEGER,\n                currency TEXT DEFAULT 'EUR',\n                link TEXT UNIQUE,\n                image TEXT,\n                make TEXT,\n                model TEXT,\n                year INTEGER,\n                km INTEGER,\n                fuel TEXT,\n                transmission TEXT,\n                body_type TEXT,\n                city TEXT,\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                active BOOLEAN DEFAULT 1\n            )\n        ")
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
@@ -279,14 +290,21 @@ class CarDatabaseOptimizer:
         print(f'Popularea s-a terminat. Am procesat {len(data)} modele.')
         return data
 
-    def add_alert(self, user_email: str, make: str, model: str, max_price: int):
+    def add_alert(self, user_email: str, make: str, model: str, min_price: int=None, max_price: int=None, min_year: int=None, max_year: int=None, max_km: int=None):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('\n            INSERT INTO alerts (user_email, make, model, max_price, last_checked)\n            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)\n        ', (user_email, make, model, max_price))
+        cursor.execute('\n            INSERT INTO alerts (user_email, make, model, min_price, max_price, min_year, max_year, max_km, active, last_checked)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)\n        ', (user_email, make, model, min_price, max_price, min_year, max_year, max_km))
         alert_id = cursor.lastrowid
         conn.commit()
         conn.close()
-        return {'id': alert_id, 'user_email': user_email, 'make': make, 'model': model, 'max_price': max_price}
+        return {'id': alert_id, 'user_email': user_email, 'make': make, 'model': model, 'min_price': min_price, 'max_price': max_price, 'min_year': min_year, 'max_year': max_year, 'max_km': max_km, 'active': 1}
+
+    def deactivate_alert(self, alert_id: int):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute('UPDATE alerts SET active = 0 WHERE id = ?', (alert_id,))
+        conn.commit()
+        conn.close()
 
     def get_alerts(self):
         conn = sqlite3.connect(self.db_path)
@@ -299,6 +317,44 @@ class CarDatabaseOptimizer:
             alerts.append(dict(row))
         conn.close()
         return alerts
+
+    def _hash_password(self, password: str) -> str:
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+    def register_user(self, email: str, password: str) -> dict:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        try:
+            hashed = self._hash_password(password)
+            cursor.execute('INSERT INTO users (email, hashed_password) VALUES (?, ?)', (email, hashed))
+            user_id = cursor.lastrowid
+            conn.commit()
+            return {"success": True, "id": user_id, "email": email}
+        except sqlite3.IntegrityError:
+            return {"success": False, "error": "Email already registered"}
+        finally:
+            conn.close()
+
+    def verify_login(self, email: str, password: str) -> dict:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT id, email, hashed_password FROM users WHERE email = ?', (email,))
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user:
+            return {"success": False, "error": "User not found"}
+            
+        try:
+            if bcrypt.checkpw(password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
+                return {"success": True, "id": user["id"], "email": user["email"]}
+            else:
+                return {"success": False, "error": "Incorrect password"}
+        except ValueError:
+            return {"success": False, "error": "Incorrect password or outdated security hash"}
 
     def get_all_brands(self) -> List[str]:
         conn = sqlite3.connect(self.db_path)

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
+    const { t } = useLanguage();
     const [email, setEmail] = useState("");
     const [loading, setLoading] = useState(false);
 
@@ -34,10 +36,10 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                 width: '90%',
                 position: 'relative'
             }}>
-                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Setează Alertă</h2>
+                <h2 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>{t('alert', 'title')}</h2>
 
                 <div style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
-                    Vei primi notificări când apare:
+                    {t('alert', 'desc')}
                     <div style={{
                         marginTop: '0.5rem',
                         padding: '0.75rem',
@@ -47,13 +49,13 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                         fontWeight: '600'
                     }}>
                         {searchParams.make} {searchParams.model}<br />
-                        Sub {searchParams.maxPrice || '15000'} €
+                        {t('alert', 'under')} {searchParams.maxPrice || '15000'} €
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                        <label>Email-ul tău</label>
+                        <label>{t('alert', 'email')}</label>
                         <input
                             type="email"
                             required
@@ -78,7 +80,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                                 flex: 1
                             }}
                         >
-                            Anulează
+                            {t('alert', 'cancel')}
                         </button>
                         <button
                             type="submit"
@@ -86,7 +88,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                             className="submit-btn"
                             style={{ marginTop: 0, flex: 1 }}
                         >
-                            {loading ? "Se salvează..." : "Salvează"}
+                            {loading ? t('alert', 'saving') : t('alert', 'save')}
                         </button>
                     </div>
                 </form>

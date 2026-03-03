@@ -30,7 +30,7 @@ async def scrape_autovit_playwright(make: str, model: str, limit: int=100, max_p
                 params.append('search[advanced_search_expanded]=true')
             url = f"{base_url}?{'&'.join(params)}"
             try:
-                print(f'🌐 Playwright: Loading page {page_num}...')
+                print(f'Playwright: Loading page {page_num}...')
                 await page.goto(url, timeout=30000)
                 await page.wait_for_load_state('networkidle')
                 json_ld_script = await page.query_selector('script#__NEXT_DATA__')
@@ -102,7 +102,7 @@ async def scrape_autovit_playwright(make: str, model: str, limit: int=100, max_p
             await asyncio.sleep(1)
         ads_without_image = [r for r in results if not r.get('image')]
         if ads_without_image:
-            print(f'🖼 Fetching images for {len(ads_without_image)} ads without images...')
+            print(f'Fetching images for {len(ads_without_image)} ads without images...')
 
             async def fetch_image_for_ad(ad):
                 try:

@@ -6,6 +6,11 @@ import time
 import functools
 import json
 import asyncio
+import os
+from dotenv import load_dotenv
+
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path=env_path)
 _SEARCH_CACHE = {}
 _CACHE_TTL = 600
 
@@ -422,9 +427,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 unique_list.append(c)
             else:
                 removed_duplicates.append((c.get('title', '?')[:40], c.get('subsource', '?'), lnk[:60]))
-    print(f'📋 After deduplication: {len(unique_list)} (removed {len(removed_duplicates)} duplicates)')
+    print(f'After deduplication: {len(unique_list)} (removed {len(removed_duplicates)} duplicates)')
     if removed_duplicates:
-        print(f'\n🔄 REMOVED DUPLICATES ({len(removed_duplicates)} total):')
+        print(f'\nREMOVED DUPLICATES ({len(removed_duplicates)} total):')
         for (title, source, link) in removed_duplicates[:15]:
             print(f'  [{source}] {title} → {link}...')
         if len(removed_duplicates) > 15:
@@ -458,43 +463,84 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
 
 def add_alert(user_email: str, make: str, model: str, max_price: int):
     return car_db_optimizer.add_alert(user_email, make, model, max_price)
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 import os
+import resend
 
 def send_email_notification(to_email: str, car_list: list, search_details: str):
-    sender_email = os.environ.get('SENDER_EMAIL')
-    sender_password = os.environ.get('SENDER_PASSWORD')
-    if not sender_email or not sender_password:
+    resend.api_key = os.environ.get("RESEND_API_KEY", "")
+    
+    if not resend.api_key:
+        print("Eroare: RESEND_API_KEY nu este setat pentru trimiterea mașinilor găsite.")
         return
-    subject = f'Car Sniper: {len(car_list)} mașini regăsite pentru {search_details}'
-    html_content = f'<h2>Salut! Am găsit {len(car_list)} mașini pentru căutarea ta ({search_details}):</h2><br>'
+
+    subject = f'CarSniper: {len(car_list)} oferte noi pentru {search_details}'
+    
+    html_content = f"""
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #ffffff; border-radius: 10px;">
+        <h2 style="color: #38bdf8; text-align: center;">Vânătoare încheiată cu succes!</h2>
+        <p style="font-size: 16px; line-height: 1.5; text-align: center;">Am găsit <strong>{len(car_list)}</strong> mașini noi pentru căutarea ta ({search_details}):</p>
+        <div style="margin-top: 30px;">
+    """
+    
     for car in car_list:
-        html_content += f"""\n        <div style="border:1px solid \n            <h3><a href='{car.get('link') or car.get('url')}'>{car.get('title')}</a></h3>\n            <p><strong>Preț: {car.get('price')}</strong> | An: {car.get('year') or '?'} | Km: {car.get('km') or '?'}</p>\n        </div>\n        """
-    msg = MIMEMultipart()
-    msg['From'] = sender_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(html_content, 'html'))
+        link = car.get('link') or car.get('url')
+        html_content += f"""
+        <div style="background-color: #121212; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #38bdf8; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="margin-top: 0; font-size: 18px;">
+                <a href="{link}" style="color: #38bdf8; text-decoration: none;">{car.get('title')}</a>
+            </h3>
+            <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 14px; color: #e4e4e7;">
+                <li><strong>Preț:</strong> <span style="color: #4ade80; font-weight: bold;">{car.get('price')}</span></li>
+                <li><strong>An:</strong> {car.get('year') or '?'}</li>
+                <li><strong>Km:</strong> {car.get('km') or '?'}</li>
+            </ul>
+        </div>
+        """
+        
+    html_content += """
+        </div>
+        <p style="font-size: 12px; color: #a1a1aa; text-align: center; margin-top: 30px; border-top: 1px solid #27272a; padding-top: 20px;">
+            Aceasta este o notificare generată automat de algoritmul CarSniper.
+        </p>
+    </div>
+    """
+
+    params = {
+        "from": "CarSniper Alerts <onboarding@resend.dev>",
+        "to": [to_email],
+        "subject": subject,
+        "html": html_content
+    }
+
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)
-        server.starttls()
-        server.login(sender_email, sender_password)
-        server.send_message(msg)
-        server.quit()
-        print(f'Email trimis cu succes către {to_email}')
+        email = resend.Emails.send(params)
+        print(f"Notificare cu {len(car_list)} mașini trimisă către {to_email} (ID: {email['id']})")
     except Exception as e:
-        print(f' Eroare la trimiterea emailului: {e}')
+        print(f"Eroare la trimiterea emailului cu mașini via Resend: {e}")
 
 async def check_alerts():
     alerts = car_db_optimizer.get_alerts()
-    print(f'[Scheduler] Verific {len(alerts)} alerte...')
-    for alert in alerts:
+    active_alerts = [a for a in alerts if a.get('active', 1) == 1]
+    print(f'[Scheduler] Verific {len(active_alerts)} alerte active (din {len(alerts)} totale)...')
+    
+    for alert in active_alerts:
         try:
-            results = await search_cars(make=alert['make'], model=alert['model'], max_price=alert['max_price'], site='both', limit=10)
+            results = await search_cars(
+                make=alert['make'], 
+                model=alert['model'], 
+                min_price=alert.get('min_price'),
+                max_price=alert.get('max_price'), 
+                min_year=alert.get('min_year'),
+                max_year=alert.get('max_year'),
+                max_km=alert.get('max_km'),
+                site='both', 
+                limit=5
+            )
+            
             if results:
-                print(f"ALERT MATCH for {alert['user_email']}: Found {len(results)} cars.")
+                print(f"ALERT MATCH for {alert['user_email']}: Found {len(results)} cars. Deactivating alert...")
                 send_email_notification(alert['user_email'], results, f"{alert['make']} {alert['model']}")
+                car_db_optimizer.deactivate_alert(alert['id'])
+                
         except Exception as e:
             print(f"Eroare la verificarea alertei {alert['id']}: {e}")
