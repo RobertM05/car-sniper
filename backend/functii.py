@@ -462,8 +462,8 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         car_db_optimizer.update_search_stats(make=make, model=model, avg_price=avg_price, avg_year=avg_year, avg_km=avg_km)
     return final_results[:limit]
 
-def add_alert(user_email: str, make: str, model: str, max_price: int):
-    return car_db_optimizer.add_alert(user_email, make, model, max_price)
+def add_alert(user_email: str, make: str, model: str, min_price: int=None, max_price: int=None, min_year: int=None, max_year: int=None, max_km: int=None):
+    return car_db_optimizer.add_alert(user_email, make, model, min_price, max_price, min_year, max_year, max_km)
 import os
 import resend
 
