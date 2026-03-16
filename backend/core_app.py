@@ -129,12 +129,7 @@ async def api_scrape(site: str='olx', make: str='audi', model: str='a4', page: i
         return {'error': "Site necunoscut. Foloseste 'olx' sau 'autovit'."}
     return {'results': results}
 
-def run_alerts_scheduler():
-    while True:
-        logging.info('[Scheduler] Verific alertele...')
-        asyncio.run(check_alerts())
-        time.sleep(10)
-threading.Thread(target=run_alerts_scheduler, daemon=True).start()
+
 
 @app.get('/api/model-info/{make}/{model}')
 def get_model_info(make: str, model: str):
