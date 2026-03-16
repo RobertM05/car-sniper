@@ -1,9 +1,7 @@
 fastapi
 uvicorn
-sqlalchemy
 requests
 beautifulsoup4
-pandas
 python-dotenv
 bcrypt
 resend
