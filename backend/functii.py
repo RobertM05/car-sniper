@@ -208,6 +208,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         else:
             print(f'Scraper error: {res}')
     strict_filtered = []
+    loose_filtered = []
     filter_stats = {'price_parse': 0, 'make_fail': 0, 'bad_keyword': 0, 'price_over': 0, 'price_under': 0, 'passed': 0}
     skipped_ads = []
     for car in cars:
