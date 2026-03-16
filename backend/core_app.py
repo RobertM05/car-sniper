@@ -20,6 +20,15 @@ app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, 
 def root():
     return {'message': 'Car Sniper API running!'}
 
+from fastapi import Request
+from fastapi.responses import PlainTextResponse
+import traceback
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    err_str = traceback.format_exc()
+    return PlainTextResponse(str(err_str), status_code=500)
+
 @app.get('/api/decode-vin/{vin}')
 def decode_vin(vin: str):
     return {'vin': vin, 'make': 'BMW', 'model': '330e', 'year': 2019}
