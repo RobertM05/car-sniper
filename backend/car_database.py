@@ -1,4 +1,5 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import json
 from typing import Dict, List, Optional, Tuple
 import re
@@ -9,15 +10,16 @@ class CarDatabaseOptimizer:
 
     def __init__(self, db_path: str=None):
         if db_path is None:
-            if os.environ.get("VERCEL"):
-                self.db_path = "/tmp/db.sqlite"
-            else:
-                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                self.db_path = os.path.join(base_dir, 'database', 'db.sqlite')
-                os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+            # Preluam de la Vercel sau din mediul local. Daca lipsește, dăm un fallback simulat.
+            self.db_path = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/car_sniper")
         else:
             self.db_path = db_path
+            
         self.init_database()
+
+    def get_connection(self):
+        # Using RealDictCursor allows us to fetch rows as dictionaries, similar to sqlite3.Row
+        return psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
 
     def format_brand_name(self, brand: str) -> str:
         brand = brand.lower().strip()
@@ -53,37 +55,108 @@ class CarDatabaseOptimizer:
         return formatted_model
 
     def init_database(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
-                hashed_password TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        
-        cursor.execute('\n            CREATE TABLE IF NOT EXISTS car_models (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                make TEXT NOT NULL,\n                model TEXT NOT NULL,\n                model_variants TEXT,  -- JSON cu variantele modelului\n                min_year INTEGER,\n                max_year INTEGER,\n                generation TEXT,      -- Generația modelului\n                body_type TEXT,      -- sedan, suv, hatchback, etc.\n                engine_types TEXT,   -- JSON cu tipurile de motor\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                UNIQUE(make, model)\n            )\n        ')
-        cursor.execute('\n            CREATE TABLE IF NOT EXISTS search_stats (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                make TEXT,\n                model TEXT,\n                search_count INTEGER DEFAULT 1,\n                last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                avg_price REAL,\n                avg_year REAL,\n                avg_km REAL\n            )\n        ')
-        cursor.execute('\n            CREATE TABLE IF NOT EXISTS alerts (\n                id INTEGER PRIMARY KEY AUTOINCREMENT,\n                user_email TEXT NOT NULL,\n                make TEXT NOT NULL,\n                model TEXT NOT NULL,\n                min_price INTEGER,\n                max_price INTEGER,\n                min_year INTEGER,\n                max_year INTEGER,\n                max_km INTEGER,\n                active BOOLEAN DEFAULT 1,\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                last_checked TIMESTAMP\n            )\n        ')
-        cursor.execute("\n            CREATE TABLE IF NOT EXISTS ads (\n                id TEXT PRIMARY KEY,       -- Unic, bazat pe link hash sau ID site\n                source TEXT,               -- OLX, Autovit\n                title TEXT,\n                price INTEGER,\n                currency TEXT DEFAULT 'EUR',\n                link TEXT UNIQUE,\n                image TEXT,\n                make TEXT,\n                model TEXT,\n                year INTEGER,\n                km INTEGER,\n                fuel TEXT,\n                transmission TEXT,\n                body_type TEXT,\n                city TEXT,\n                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n                active BOOLEAN DEFAULT 1\n            )\n        ")
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
-        cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)')
-        conn.commit()
-        conn.close()
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT UNIQUE NOT NULL,
+                    hashed_password TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS car_models (
+                    id SERIAL PRIMARY KEY,
+                    make TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    model_variants TEXT,
+                    min_year INTEGER,
+                    max_year INTEGER,
+                    generation TEXT,
+                    body_type TEXT,
+                    engine_types TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(make, model)
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS search_stats (
+                    id SERIAL PRIMARY KEY,
+                    make TEXT,
+                    model TEXT,
+                    search_count INTEGER DEFAULT 1,
+                    last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    avg_price REAL,
+                    avg_year REAL,
+                    avg_km REAL
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS alerts (
+                    id SERIAL PRIMARY KEY,
+                    user_email TEXT NOT NULL,
+                    make TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    min_price INTEGER,
+                    max_price INTEGER,
+                    min_year INTEGER,
+                    max_year INTEGER,
+                    max_km INTEGER,
+                    active BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_checked TIMESTAMP
+                )
+            ''')
+            
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS ads (
+                    id TEXT PRIMARY KEY,
+                    source TEXT,
+                    title TEXT,
+                    price INTEGER,
+                    currency TEXT DEFAULT 'EUR',
+                    link TEXT UNIQUE,
+                    image TEXT,
+                    make TEXT,
+                    model TEXT,
+                    year INTEGER,
+                    km INTEGER,
+                    fuel TEXT,
+                    transmission TEXT,
+                    body_type TEXT,
+                    city TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    active BOOLEAN DEFAULT TRUE
+                )
+            ''')
+            
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
+            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)')
+            
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Eroare la crearea bazei de date (probabil nu e configurat DATABASE_URL): {e}")
 
     def delete_ad(self, ad_id: str):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM ads WHERE id = ?', (ad_id,))
+        cursor.execute('DELETE FROM ads WHERE id = %s', (ad_id,))
         conn.commit()
         conn.close()
 
     def upsert_ad(self, ad_data: dict):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         import hashlib
         link = ad_data.get('link', '')
@@ -95,42 +168,70 @@ class CarDatabaseOptimizer:
             price_val = int(ad_data.get('price', 0))
         except:
             price_val = 0
-        cursor.execute('\n            INSERT INTO ads (\n                id, source, title, price, link, image, make, model, year, km, \n                fuel, transmission, body_type, city, last_seen, active, updated_at\n            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP)\n            ON CONFLICT(link) DO UPDATE SET\n                price = excluded.price,\n                last_seen = CURRENT_TIMESTAMP,\n                active = 1,\n                updated_at = CURRENT_TIMESTAMP,\n                image = COALESCE(excluded.image, ads.image) \n        ', (ad_id, ad_data.get('subsource') or ad_data.get('source', 'Unknown'), ad_data.get('title'), price_val, link, ad_data.get('image'), ad_data.get('make'), ad_data.get('model'), ad_data.get('year'), ad_data.get('km'), ad_data.get('fuel'), ad_data.get('transmission'), ad_data.get('body_type'), ad_data.get('city')))
+
+        cursor.execute('''
+            INSERT INTO ads (
+                id, source, title, price, link, image, make, model, year, km, 
+                fuel, transmission, body_type, city, last_seen, active, updated_at
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)
+            ON CONFLICT(link) DO UPDATE SET
+                price = EXCLUDED.price,
+                last_seen = CURRENT_TIMESTAMP,
+                active = TRUE,
+                updated_at = CURRENT_TIMESTAMP,
+                image = COALESCE(EXCLUDED.image, ads.image) 
+        ''', (
+            ad_id, 
+            ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
+            ad_data.get('title'), 
+            price_val, 
+            link, 
+            ad_data.get('image'), 
+            ad_data.get('make'), 
+            ad_data.get('model'), 
+            ad_data.get('year'), 
+            ad_data.get('km'), 
+            ad_data.get('fuel'), 
+            ad_data.get('transmission'), 
+            ad_data.get('body_type'), 
+            ad_data.get('city')
+        ))
         conn.commit()
         conn.close()
         return ad_id
 
     def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, min_year=None, max_year=None, min_km=None, max_km=None, limit=100, sort_by='price', order='asc') -> List[Dict]:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = self.get_connection()
         cursor = conn.cursor()
-        query = 'SELECT * FROM ads WHERE active = 1'
+        query = 'SELECT * FROM ads WHERE active = TRUE'
         params = []
         if make:
-            query += ' AND make LIKE ?'
+            query += ' AND make ILIKE %s'
             params.append(f'%{make}%')
         if model:
-            query += ' AND (model LIKE ? OR title LIKE ?)'
+            query += ' AND (model ILIKE %s OR title ILIKE %s)'
             params.append(f'%{model}%')
             params.append(f'%{model}%')
         if min_price:
-            query += ' AND price >= ?'
+            query += ' AND price >= %s'
             params.append(min_price)
         if max_price:
-            query += ' AND price <= ?'
+            query += ' AND price <= %s'
             params.append(max_price)
         if min_year:
-            query += ' AND year >= ?'
+            query += ' AND year >= %s'
             params.append(min_year)
         if max_year:
-            query += ' AND year <= ?'
+            query += ' AND year <= %s'
             params.append(max_year)
         if max_km:
-            query += ' AND km <= ?'
+            query += ' AND km <= %s'
             params.append(max_km)
-        query += ' ORDER BY created_at DESC LIMIT ?'
+        
+        query += ' ORDER BY created_at DESC LIMIT %s'
         params.append(limit)
-        cursor.execute(query, params)
+        
+        cursor.execute(query, tuple(params))
         rows = cursor.fetchall()
         ads = []
         for r in rows:
@@ -141,31 +242,49 @@ class CarDatabaseOptimizer:
         return ads
 
     def deactivate_stale_ads(self, hours_threshold=24):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute(f"UPDATE ads SET active = 0 WHERE last_seen < datetime('now', '-{hours_threshold} hours')")
+        # PostgreSQL syntax for interval
+        cursor.execute("UPDATE ads SET active = FALSE WHERE last_seen < NOW() - CAST(%s AS interval)", (f"{hours_threshold} hours",))
         count = cursor.rowcount
         conn.commit()
         conn.close()
         return count
 
     def add_car_model(self, make: str, model: str, min_year: int=None, max_year: int=None, generation: str=None, body_type: str=None, model_variants: List[str]=None, engine_types: List[str]=None):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         variants_json = json.dumps(model_variants) if model_variants else None
         engines_json = json.dumps(engine_types) if engine_types else None
-        cursor.execute('\n            INSERT OR REPLACE INTO car_models \n            (make, model, model_variants, min_year, max_year, generation, body_type, engine_types, updated_at)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)\n        ', (make.lower(), model.lower(), variants_json, min_year, max_year, generation, body_type, engines_json))
+        
+        cursor.execute('''
+            INSERT INTO car_models 
+            (make, model, model_variants, min_year, max_year, generation, body_type, engine_types, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+            ON CONFLICT (make, model) DO UPDATE SET
+                model_variants = EXCLUDED.model_variants,
+                min_year = EXCLUDED.min_year,
+                max_year = EXCLUDED.max_year,
+                generation = EXCLUDED.generation,
+                body_type = EXCLUDED.body_type,
+                engine_types = EXCLUDED.engine_types,
+                updated_at = CURRENT_TIMESTAMP
+        ''', (make.lower(), model.lower(), variants_json, min_year, max_year, generation, body_type, engines_json))
         conn.commit()
         conn.close()
 
     def get_model_info(self, make: str, model: str) -> Optional[Dict]:
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('\n            SELECT make, model, model_variants, min_year, max_year, generation, body_type, engine_types\n            FROM car_models \n            WHERE make = ? AND model = ?\n        ', (make.lower(), model.lower()))
+        cursor.execute('''
+            SELECT make, model, model_variants, min_year, max_year, generation, body_type, engine_types
+            FROM car_models 
+            WHERE make = %s AND model = %s
+        ''', (make.lower(), model.lower()))
         result = cursor.fetchone()
         conn.close()
         if result:
-            return {'make': result[0], 'model': result[1], 'model_variants': json.loads(result[2]) if result[2] else [], 'min_year': result[3], 'max_year': result[4], 'generation': result[5], 'body_type': result[6], 'engine_types': json.loads(result[7]) if result[7] else []}
+            return {'make': result['make'], 'model': result['model'], 'model_variants': json.loads(result['model_variants']) if result['model_variants'] else [], 'min_year': result['min_year'], 'max_year': result['max_year'], 'generation': result['generation'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}
         return None
 
     def get_generations_for_model(self, make: str, model: str) -> List[Dict]:
@@ -174,13 +293,17 @@ class CarDatabaseOptimizer:
         generations = self._get_model_generations_from_db(make_normalized, model_normalized)
         if generations:
             return generations
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('\n            SELECT generation, min_year, max_year, body_type, engine_types\n            FROM car_models \n            WHERE make = ? AND model = ?\n        ', (make_normalized, model_normalized))
+        cursor.execute('''
+            SELECT generation, min_year, max_year, body_type, engine_types
+            FROM car_models 
+            WHERE make = %s AND model = %s
+        ''', (make_normalized, model_normalized))
         result = cursor.fetchone()
         conn.close()
-        if result and result[0]:
-            return [{'generation': result[0], 'min_year': result[1], 'max_year': result[2], 'body_type': result[3], 'engine_types': json.loads(result[4]) if result[4] else []}]
+        if result and result['generation']:
+            return [{'generation': result['generation'], 'min_year': result['min_year'], 'max_year': result['max_year'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}]
         return []
 
     def _get_model_generations_from_db(self, make: str, model: str) -> List[Dict]:
@@ -254,36 +377,62 @@ class CarDatabaseOptimizer:
         return model_lc
 
     def update_search_stats(self, make: str, model: str, avg_price: float=None, avg_year: float=None, avg_km: float=None):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT id, search_count FROM search_stats WHERE make = ? AND model = ? ORDER BY id DESC LIMIT 1', (make.lower(), model.lower()))
+        cursor.execute('SELECT id, search_count FROM search_stats WHERE make = %s AND model = %s ORDER BY id DESC LIMIT 1', (make.lower(), model.lower()))
         row = cursor.fetchone()
         if row:
-            cursor.execute('\n                UPDATE search_stats \n                SET search_count = search_count + 1,\n                    last_searched = CURRENT_TIMESTAMP,\n                    avg_price = ?, avg_year = ?, avg_km = ?\n                WHERE id = ?\n            ', (avg_price, avg_year, avg_km, row[0]))
+            cursor.execute('''
+                UPDATE search_stats 
+                SET search_count = search_count + 1,
+                    last_searched = CURRENT_TIMESTAMP,
+                    avg_price = %s, avg_year = %s, avg_km = %s
+                WHERE id = %s
+            ''', (avg_price, avg_year, avg_km, row['id']))
         else:
-            cursor.execute('\n                INSERT INTO search_stats \n                (make, model, search_count, last_searched, avg_price, avg_year, avg_km)\n                VALUES (?, ?, 1, CURRENT_TIMESTAMP, ?, ?, ?)\n            ', (make.lower(), model.lower(), avg_price, avg_year, avg_km))
+            cursor.execute('''
+                INSERT INTO search_stats 
+                (make, model, search_count, last_searched, avg_price, avg_year, avg_km)
+                VALUES (%s, %s, 1, CURRENT_TIMESTAMP, %s, %s, %s)
+            ''', (make.lower(), model.lower(), avg_price, avg_year, avg_km))
         conn.commit()
         conn.close()
 
     def get_popular_models(self, make: str=None, limit: int=10) -> List[Dict]:
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         if make:
-            cursor.execute('\n                SELECT make, model, search_count, avg_price, avg_year, avg_km\n                FROM search_stats \n                WHERE make = ?\n                ORDER BY search_count DESC, last_searched DESC\n                LIMIT ?\n            ', (make.lower(), limit))
+            cursor.execute('''
+                SELECT make, model, search_count, avg_price, avg_year, avg_km
+                FROM search_stats 
+                WHERE make = %s
+                ORDER BY search_count DESC, last_searched DESC
+                LIMIT %s
+            ''', (make.lower(), limit))
         else:
-            cursor.execute('\n                SELECT make, model, search_count, avg_price, avg_year, avg_km\n                FROM search_stats \n                ORDER BY search_count DESC, last_searched DESC\n                LIMIT ?\n            ', (limit,))
+            cursor.execute('''
+                SELECT make, model, search_count, avg_price, avg_year, avg_km
+                FROM search_stats 
+                ORDER BY search_count DESC, last_searched DESC
+                LIMIT %s
+            ''', (limit,))
         results = cursor.fetchall()
         conn.close()
-        return [{'make': r[0], 'model': r[1], 'search_count': r[2], 'avg_price': r[3], 'avg_year': r[4], 'avg_km': r[5]} for r in results]
+        return [{'make': r['make'], 'model': r['model'], 'search_count': r['search_count'], 'avg_price': r['avg_price'], 'avg_year': r['avg_year'], 'avg_km': r['avg_km']} for r in results]
 
     def get_model_stats(self, make: str, model: str) -> Optional[Dict]:
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('\n            SELECT make, model, search_count, avg_price, avg_year, avg_km, last_searched\n            FROM search_stats \n            WHERE make = ? AND model = ?\n            ORDER BY id DESC LIMIT 1\n        ', (make.lower(), model.lower()))
+        cursor.execute('''
+            SELECT make, model, search_count, avg_price, avg_year, avg_km, last_searched
+            FROM search_stats 
+            WHERE make = %s AND model = %s
+            ORDER BY id DESC LIMIT 1
+        ''', (make.lower(), model.lower()))
         result = cursor.fetchone()
         conn.close()
         if result:
-            return {'make': result[0], 'model': result[1], 'search_count': result[2], 'avg_price': result[3], 'avg_year': result[4], 'avg_km': result[5], 'last_searched': result[6]}
+            return dict(result)
         return None
 
     def populate_sample_data(self):
@@ -300,30 +449,32 @@ class CarDatabaseOptimizer:
         return data
 
     def add_alert(self, user_email: str, make: str, model: str, min_price: int=None, max_price: int=None, min_year: int=None, max_year: int=None, max_km: int=None):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('\n            INSERT INTO alerts (user_email, make, model, min_price, max_price, min_year, max_year, max_km, active, last_checked)\n            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)\n        ', (user_email, make, model, min_price, max_price, min_year, max_year, max_km))
-        alert_id = cursor.lastrowid
+        cursor.execute('''
+            INSERT INTO alerts (user_email, make, model, min_price, max_price, min_year, max_year, max_km, active, last_checked)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
+            RETURNING id
+        ''', (user_email, make, model, min_price, max_price, min_year, max_year, max_km))
+        row = cursor.fetchone()
+        alert_id = row['id'] if row else None
         conn.commit()
         conn.close()
         return {'id': alert_id, 'user_email': user_email, 'make': make, 'model': model, 'min_price': min_price, 'max_price': max_price, 'min_year': min_year, 'max_year': max_year, 'max_km': max_km, 'active': 1}
 
     def deactivate_alert(self, alert_id: int):
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('UPDATE alerts SET active = 0 WHERE id = ?', (alert_id,))
+        cursor.execute('UPDATE alerts SET active = FALSE WHERE id = %s', (alert_id,))
         conn.commit()
         conn.close()
 
     def get_alerts(self):
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM alerts')
         rows = cursor.fetchall()
-        alerts = []
-        for row in rows:
-            alerts.append(dict(row))
+        alerts = [dict(row) for row in rows]
         conn.close()
         return alerts
 
@@ -332,25 +483,26 @@ class CarDatabaseOptimizer:
         return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
     def register_user(self, email: str, password: str) -> dict:
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         try:
             hashed = self._hash_password(password)
-            cursor.execute('INSERT INTO users (email, hashed_password) VALUES (?, ?)', (email, hashed))
-            user_id = cursor.lastrowid
+            cursor.execute('INSERT INTO users (email, hashed_password) VALUES (%s, %s) RETURNING id', (email, hashed))
+            row = cursor.fetchone()
+            user_id = row['id']
             conn.commit()
             return {"success": True, "id": user_id, "email": email}
-        except sqlite3.IntegrityError:
+        except psycopg2.IntegrityError:
+            conn.rollback() # necesar in Postgres
             return {"success": False, "error": "Email already registered"}
         finally:
             conn.close()
 
     def verify_login(self, email: str, password: str) -> dict:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
+        conn = self.get_connection()
         cursor = conn.cursor()
         
-        cursor.execute('SELECT id, email, hashed_password FROM users WHERE email = ?', (email,))
+        cursor.execute('SELECT id, email, hashed_password FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
         conn.close()
         
@@ -366,22 +518,23 @@ class CarDatabaseOptimizer:
             return {"success": False, "error": "Incorrect password or outdated security hash"}
 
     def get_all_brands(self) -> List[str]:
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT DISTINCT make FROM car_models ORDER BY make ASC')
         rows = cursor.fetchall()
-        brands = [self.format_brand_name(row[0]) for row in rows if row[0]]
+        brands = [self.format_brand_name(row['make']) for row in rows if row['make']]
         conn.close()
         return sorted(list(set(brands)))
 
     def get_models(self, make: str) -> List[str]:
-        conn = sqlite3.connect(self.db_path)
+        conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('SELECT DISTINCT model FROM car_models WHERE make = ? ORDER BY model ASC', (make.lower(),))
+        cursor.execute('SELECT DISTINCT model FROM car_models WHERE make = %s ORDER BY model ASC', (make.lower(),))
         rows = cursor.fetchall()
-        models = [self.format_model_name(row[0]) for row in rows if row[0]]
+        models = [self.format_model_name(row['model']) for row in rows if row['model']]
         conn.close()
         return sorted(list(set(models)))
+        
 car_db_optimizer = CarDatabaseOptimizer()
 
 def get_optimized_search_params(make: str, model: str, user_min_year: int=None, user_max_year: int=None) -> Dict:

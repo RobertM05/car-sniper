@@ -7,3 +7,4 @@ bcrypt
 resend
 pydantic
 aiohttp
+psycopg2-binary
