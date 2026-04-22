@@ -31,19 +31,24 @@ app = FastAPI(title='Car Sniper API')
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
-
+app.add_middleware(
+    CORSMiddleware, 
+    allow_origins=['http://localhost:5173', 'http://localhost:3000', 'https://car-sniper.vercel.app'], 
+    allow_credentials=True, 
+    allow_methods=['*'], 
+    allow_headers=['*']
+)
 @app.get('/')
 def root():
     return {'message': 'Car Sniper API running!'}
 
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse
 import traceback
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    err_str = traceback.format_exc()
-    return PlainTextResponse(str(err_str), status_code=500)
+    logging.error(traceback.format_exc())
+    return JSONResponse({"error": "Internal Server Error"}, status_code=500)
 
 @app.get('/api/decode-vin/{vin}')
 @limiter.limit("10/minute")
