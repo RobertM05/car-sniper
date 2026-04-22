@@ -85,6 +85,11 @@ const App = () => {
 
   useEffect(() => {
     fetchBrands();
+    const storedToken = localStorage.getItem('jwt_token');
+    const storedEmail = localStorage.getItem('user_email');
+    if (storedToken && storedEmail) {
+      setCurrentUser(storedEmail);
+    }
   }, []);
 
   useEffect(() => {
@@ -163,9 +168,20 @@ const App = () => {
 
   const handleCreateAlert = async (email) => {
     try {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) {
+        alert("Eroare de sesiune. Te rugăm să te loghezi din nou.");
+        setCurrentUser(null);
+        setIsAuthOpen(true);
+        return;
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/alert`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           user_email: email,
           make: formData.make,
@@ -178,6 +194,14 @@ const App = () => {
         })
       });
 
+      if (response.status === 401) {
+          localStorage.removeItem('jwt_token');
+          localStorage.removeItem('user_email');
+          setCurrentUser(null);
+          setIsAuthOpen(true);
+          throw new Error("Sesiunea a expirat. Te rugăm să te conectezi din nou.");
+      }
+
       if (!response.ok) throw new Error("Nu s-a putut salva alerta.");
 
       alert("Alertă salvată cu succes! Vei primi notificări pe email.");
@@ -189,6 +213,8 @@ const App = () => {
 
   const handleLogout = (e) => {
     e.preventDefault();
+    localStorage.removeItem('jwt_token');
+    localStorage.removeItem('user_email');
     setCurrentUser(null);
   };
 
@@ -287,7 +313,7 @@ const App = () => {
         <AuthModal
           isOpen={isAuthOpen}
           onClose={() => setIsAuthOpen(false)}
-          onLoginSuccess={(email) => setCurrentUser(email)}
+          onLoginSuccess={(email, token) => setCurrentUser(email)}
         />
 
         {error && <div className="error-message">{error}</div>}

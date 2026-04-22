@@ -111,8 +111,28 @@ def api_submit_contact(request: Request, req: ContactRequest):
     
     return {'status': 'success'}
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import jwt
+import datetime
 
+JWT_SECRET = os.environ.get("JWT_SECRET", "super-secret-fallback-token-sniper-2026")
+JWT_ALGORITHM = "HS256"
+security = HTTPBearer()
+
+def create_access_token(email: str):
+    expire = datetime.datetime.utcnow() + datetime.timedelta(days=30)
+    to_encode = {"sub": email, "exp": expire}
+    return jwt.encode(to_encode, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload.get("sub")
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Sesiune expirata.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token invalid.")
 class AuthRequest(BaseModel):
     email: str
     password: str
@@ -123,6 +143,7 @@ def api_auth_register(request: Request, req: AuthRequest):
     result = car_db_optimizer.register_user(req.email, req.password)
     if not result['success']:
         raise HTTPException(status_code=400, detail=result['error'])
+    result['token'] = create_access_token(req.email)
     return result
 
 @app.post('/api/auth/login')
@@ -131,12 +152,15 @@ def api_auth_login(request: Request, req: AuthRequest):
     result = car_db_optimizer.verify_login(req.email, req.password)
     if not result['success']:
         raise HTTPException(status_code=400, detail=result['error'])
+    result['token'] = create_access_token(req.email)
     return result
 
 @app.post('/api/alert')
 @limiter.limit("5/minute")
-def api_create_alert(request: Request, req: AlertRequest):
-    alert = add_alert(req.user_email, req.make, req.model, req.min_price, req.max_price, req.min_year, req.max_year, req.max_km)
+def api_create_alert(request: Request, req: AlertRequest, user_email: str = Depends(verify_token)):
+    # Overwrite the request email with the verified token email
+    verified_email = user_email
+    alert = add_alert(verified_email, req.make, req.model, req.min_price, req.max_price, req.min_year, req.max_year, req.max_km)
     
     threading.Thread(
         target=send_alert_email,

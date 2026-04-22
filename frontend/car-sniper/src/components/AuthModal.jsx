@@ -34,9 +34,14 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 throw new Error(data.detail || "Eroare de autentificare.");
             }
 
+            if (data.token) {
+                localStorage.setItem('jwt_token', data.token);
+                localStorage.setItem('user_email', data.email);
+            }
+
             setStatus('Succes!');
             setTimeout(() => {
-                onLoginSuccess(data.email);
+                onLoginSuccess(data.email, data.token);
                 onClose();
                 setStatus('');
                 setFormData({ email: '', password: '' });
