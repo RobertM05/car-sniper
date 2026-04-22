@@ -1,9 +1,13 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import threading, time
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 env_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path=env_path)
@@ -13,14 +17,26 @@ from functii import search_cars, add_alert, check_alerts
 from car_database import car_db_optimizer, get_optimized_search_params
 import logging
 logging.basicConfig(level=logging.INFO)
+
+# Custom IP extractor for Vercel (care folosește x-forwarded-for)
+def get_real_ip(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "127.0.0.1"
+
+limiter = Limiter(key_func=get_real_ip)
+
 app = FastAPI(title='Car Sniper API')
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
 
 @app.get('/')
 def root():
     return {'message': 'Car Sniper API running!'}
 
-from fastapi import Request
 from fastapi.responses import PlainTextResponse
 import traceback
 
@@ -30,12 +46,15 @@ async def global_exception_handler(request: Request, exc: Exception):
     return PlainTextResponse(str(err_str), status_code=500)
 
 @app.get('/api/decode-vin/{vin}')
-def decode_vin(vin: str):
+@limiter.limit("10/minute")
+def decode_vin(request: Request, vin: str):
     return {'vin': vin, 'make': 'BMW', 'model': '330e', 'year': 2019}
+
 import asyncio
 
 @app.get('/api/search')
-async def api_search(make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+@limiter.limit("30/minute")
+async def api_search(request: Request, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
     calculated_pages = limit // 30 + 2
     if max_pages < calculated_pages:
         max_pages = min(calculated_pages, 20)
@@ -77,7 +96,8 @@ class ContactRequest(BaseModel):
     website_ip: str | None = None
 
 @app.post('/api/contact')
-def api_submit_contact(req: ContactRequest):
+@limiter.limit("3/minute")
+def api_submit_contact(request: Request, req: ContactRequest):
     threading.Thread(
         target=send_contact_email,
         args=(req.name, req.phone, req.company_email, req.company_name, req.has_website, req.website_ip),
@@ -93,21 +113,24 @@ class AuthRequest(BaseModel):
     password: str
 
 @app.post('/api/auth/register')
-def api_auth_register(req: AuthRequest):
+@limiter.limit("5/minute")
+def api_auth_register(request: Request, req: AuthRequest):
     result = car_db_optimizer.register_user(req.email, req.password)
     if not result['success']:
         raise HTTPException(status_code=400, detail=result['error'])
     return result
 
 @app.post('/api/auth/login')
-def api_auth_login(req: AuthRequest):
+@limiter.limit("5/minute")
+def api_auth_login(request: Request, req: AuthRequest):
     result = car_db_optimizer.verify_login(req.email, req.password)
     if not result['success']:
         raise HTTPException(status_code=400, detail=result['error'])
     return result
 
 @app.post('/api/alert')
-def api_create_alert(req: AlertRequest):
+@limiter.limit("5/minute")
+def api_create_alert(request: Request, req: AlertRequest):
     alert = add_alert(req.user_email, req.make, req.model, req.min_price, req.max_price, req.min_year, req.max_year, req.max_km)
     
     threading.Thread(
@@ -119,49 +142,59 @@ def api_create_alert(req: AlertRequest):
     return {'alert': alert}
 
 @app.get('/api/scrape')
-async def api_scrape(site: str='olx', make: str='audi', model: str='a4', page: int=1):
+@limiter.limit("10/minute")
+async def api_scrape(request: Request, site: str='olx', make: str='audi', model: str='a4', page: int=1):
     results = []
     if site.lower() == 'olx':
         results = await scrape_olx(f'{make} {model}', page=page, limit=20)
     elif site.lower() == 'autovit':
-        results = await scrape_autovit(make, model, page=page, limit=20)
+        # Added a fallback if autovit is not available since import was missing earlier but mentioned:
+        try:
+            from scraper.autovit_scraper import scrape_autovit
+            results = await scrape_autovit(make, model, page=page, limit=20)
+        except ImportError:
+            return {'error': "Autovit scraper lipseste!"}
     else:
         return {'error': "Site necunoscut. Foloseste 'olx' sau 'autovit'."}
     return {'results': results}
 
-
-
 @app.get('/api/model-info/{make}/{model}')
-def get_model_info(make: str, model: str):
+@limiter.limit("30/minute")
+def get_model_info(request: Request, make: str, model: str):
     model_info = car_db_optimizer.get_model_info(make, model)
     if model_info:
         return {'model_info': model_info}
     return {'error': 'Model not found in database'}
 
 @app.get('/api/optimized-search-params/{make}/{model}')
-def get_optimized_params(make: str, model: str, min_year: int=None, max_year: int=None):
+@limiter.limit("30/minute")
+def get_optimized_params(request: Request, make: str, model: str, min_year: int=None, max_year: int=None):
     optimized_params = get_optimized_search_params(make, model, min_year, max_year)
     return optimized_params
 
 @app.get('/api/popular-models')
-def get_popular_models(make: str=None, limit: int=10):
+@limiter.limit("30/minute")
+def get_popular_models(request: Request, make: str=None, limit: int=10):
     popular_models = car_db_optimizer.get_popular_models(make, limit)
     return {'popular_models': popular_models}
 
 @app.post('/api/populate-sample-data')
-def populate_sample_data():
+@limiter.limit("2/minute")
+def populate_sample_data(request: Request):
     car_db_optimizer.populate_sample_data()
     return {'message': 'Sample data populated successfully'}
 
 @app.get('/api/model-year-range/{make}/{model}')
-def get_model_year_range(make: str, model: str):
+@limiter.limit("30/minute")
+def get_model_year_range(request: Request, make: str, model: str):
     model_info = car_db_optimizer.get_model_info(make, model)
     if model_info:
         return {'make': model_info['make'], 'model': model_info['model'], 'min_year': model_info['min_year'], 'max_year': model_info['max_year'], 'generation': model_info['generation'], 'body_type': model_info['body_type']}
     return {'error': 'Model not found in database'}
 
 @app.post('/api/populate-from-scraper')
-def populate_from_scraper(max_brands: int=None, max_models_per_brand: int=None):
+@limiter.limit("1/minute")
+def populate_from_scraper(request: Request, max_brands: int=None, max_models_per_brand: int=None):
     try:
         data = car_db_optimizer.populate_from_scraper(max_brands, max_models_per_brand)
         return {'message': f'Popularea s-a terminat cu succes. Am procesat {len(data)} modele.', 'processed_models': len(data), 'sample_data': data[:5] if data else []}
@@ -169,7 +202,8 @@ def populate_from_scraper(max_brands: int=None, max_models_per_brand: int=None):
         return {'error': f'Eroare la popularea bazei de date: {str(e)}'}
 
 @app.get('/api/test-scraper')
-def test_scraper():
+@limiter.limit("2/minute")
+def test_scraper(request: Request):
     try:
         from auto_data_scraper import AutoDataScraper
         scraper = AutoDataScraper()
@@ -184,6 +218,7 @@ def test_scraper():
         return {'message': 'Test scraper completat cu succes', 'results': results}
     except Exception as e:
         return {'error': f'Eroare la testarea scraper-ului: {str(e)}'}
+
 import json
 import os
 
@@ -193,7 +228,8 @@ def get_autovit_catalog():
         return json.load(f)
 
 @app.get('/api/brands')
-def get_brands():
+@limiter.limit("30/minute")
+def get_brands(request: Request):
     try:
         catalog = get_autovit_catalog()
         brands = list(catalog.keys())
@@ -203,7 +239,8 @@ def get_brands():
         return {'error': f'Eroare la obținerea mărcilor: {str(e)}'}
 
 @app.get('/api/models/{brand}')
-def get_models_for_brand(brand: str):
+@limiter.limit("30/minute")
+def get_models_for_brand(request: Request, brand: str):
     try:
         catalog = get_autovit_catalog()
         target_brand_key = next((k for k in catalog.keys() if k.lower().strip() == brand.lower().strip() or k.lower().replace('-benz', '') == brand.lower().replace('-benz', '')), None)
@@ -216,7 +253,8 @@ def get_models_for_brand(brand: str):
         return {'error': f'Eroare la obținerea modelelor: {str(e)}'}
 
 @app.get('/api/generations/{make}/{model}')
-def get_generations(make: str, model: str):
+@limiter.limit("30/minute")
+def get_generations(request: Request, make: str, model: str):
     try:
         generations = car_db_optimizer.get_generations_for_model(make, model)
         return {'generations': generations or []}
@@ -224,7 +262,8 @@ def get_generations(make: str, model: str):
         return {'error': f'Eroare la obținerea generațiilor: {str(e)}', 'generations': []}
 
 @app.get('/api/stats/{make}/{model}')
-def get_model_stats(make: str, model: str):
+@limiter.limit("30/minute")
+def get_model_stats(request: Request, make: str, model: str):
     s_model = model.lower().replace(' ', '-')
     stats = car_db_optimizer.get_model_stats(make, s_model)
     if not stats:
