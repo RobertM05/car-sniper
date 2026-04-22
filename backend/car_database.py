@@ -251,6 +251,82 @@ class CarDatabaseOptimizer:
         conn.close()
         return count
 
+    def get_cron_groups(self, limit=2):
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT make, model 
+                FROM alerts 
+                WHERE active = TRUE 
+                GROUP BY make, model 
+                ORDER BY MIN(COALESCE(last_checked, '2000-01-01')) ASC
+                LIMIT %s
+            ''', (limit,))
+            groups = cursor.fetchall()
+            cursor.close()
+            return [{'make': r[0], 'model': r[1]} for r in groups]
+        except Exception as e:
+            print(f"Error getting cron groups: {e}")
+            return []
+
+    def get_alerts_for_group(self, make, model):
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, user_email, min_price, max_price, min_year, max_year, max_km 
+                FROM alerts 
+                WHERE active = TRUE AND make = %s AND model = %s
+            ''', (make, model))
+            
+            alerts = cursor.fetchall()
+            cursor.execute('''
+                UPDATE alerts SET last_checked = CURRENT_TIMESTAMP WHERE active = TRUE AND make = %s AND model = %s
+            ''', (make, model))
+            conn.commit()
+            cursor.close()
+            
+            return [{
+                'id': r[0], 'user_email': r[1], 'min_price': r[2], 'max_price': r[3],
+                'min_year': r[4], 'max_year': r[5], 'max_km': r[6]
+            } for r in alerts]
+        except Exception as e:
+            print(f"Error getting alerts for group: {e}")
+            return []
+
+    def insert_cron_ads(self, ads):
+        new_ads = []
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            for ad in ads:
+                ad_id = ad.get('id')
+                if not ad_id:
+                    continue
+                
+                cursor.execute('''
+                    INSERT INTO ads (id, source, title, price, currency, link, image, make, model, year, km, fuel, transmission, body_type, city)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO NOTHING
+                    RETURNING id
+                ''', (
+                    ad_id, ad.get('source'), ad.get('title'), ad.get('price'), ad.get('currency', 'EUR'), ad.get('link'),
+                    ad.get('image'), ad.get('make'), ad.get('model'), ad.get('year'), ad.get('km'),
+                    ad.get('fuel'), ad.get('transmission'), ad.get('body_type'), ad.get('city')
+                ))
+                
+                if cursor.fetchone():
+                    new_ads.append(ad)
+            
+            conn.commit()
+            cursor.close()
+            return new_ads
+        except Exception as e:
+            print(f"Error inserting cron ads: {e}")
+            return []
+
     def add_car_model(self, make: str, model: str, min_year: int=None, max_year: int=None, generation: str=None, body_type: str=None, model_variants: List[str]=None, engine_types: List[str]=None):
         conn = self.get_connection()
         cursor = conn.cursor()

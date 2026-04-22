@@ -97,3 +97,63 @@ def send_contact_email(name: str, phone: str, company_email: str, company_name: 
     except Exception as e:
         print(f"Failed to send contact lead email: {str(e)}")
         return False
+
+def send_new_cars_email(user_email: str, make: str, model: str, cars: list):
+    """
+    Sends a beautiful HTML email to the user with the new matched cars from the background cron job.
+    """
+    resend.api_key = os.environ.get("RESEND_API_KEY", "")
+    
+    if not resend.api_key:
+        print("Warning: RESEND_API_KEY is not set. Cannot send new cars email.")
+        return False
+        
+    try:
+        cars_html = ""
+        for car in cars:
+            price_display = f"{car.get('price', 'N/A')} EUR"
+            km_display = f"{car.get('km', 'N/A')} km"
+            year_display = f"{car.get('year', 'N/A')}"
+            link = car.get('link', '#')
+            image = car.get('image', 'https://via.placeholder.com/150?text=No+Image')
+            
+            cars_html += f"""
+            <div style="background-color: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333;">
+                <img src="{image}" alt="Car" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
+                <div style="margin-top: 15px;">
+                    <h3 style="margin: 0 0 10px 0; color: #ffffff;"><a href="{link}" style="color: #ffffff; text-decoration: none;">{car.get('title', 'Vehicul Nou')}</a></h3>
+                    <p style="margin: 0 0 5px 0; color: #4ade80; font-weight: bold; font-size: 18px;">{price_display}</p>
+                    <p style="margin: 0; color: #a1a1aa; font-size: 14px;">An: {year_display} • Rulaj: {km_display} • {car.get('city', 'N/A')}</p>
+                    <a href="{link}" style="display: block; text-align: center; margin-top: 15px; background-color: #38bdf8; color: #000; padding: 10px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px;">Vezi Anunțul</a>
+                </div>
+            </div>
+            """
+
+        params = {
+            "from": "CarSniper Alerts <onboarding@resend.dev>",
+            "to": [user_email],
+            "subject": f"🔥 {make} {model}: {len(cars)} Anunțuri Recente!",
+            "html": f"""
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #ffffff; border-radius: 10px;">
+                <h2 style="color: #38bdf8; text-align: center;">Am găsit oferte noi!</h2>
+                
+                <p style="font-size: 16px; line-height: 1.5; text-align: center;">Sniperul nostru a identificat <strong style="color: #4ade80;">{len(cars)}</strong> mașini complet noi apărute în ultima perioadă care corespund filtrului tău pentru <strong>{make} {model}</strong>.</p>
+                
+                <div style="margin: 30px 0;">
+                    {cars_html}
+                </div>
+                
+                <p style="font-size: 12px; color: #a1a1aa; text-align: center; margin-top: 30px; border-top: 1px solid #27272a; padding-top: 20px;">
+                    © {make.title()} CarSniper Alerts
+                </p>
+            </div>
+            """
+        }
+
+        email = resend.Emails.send(params)
+        print(f"Cron alert email successfully sent to {user_email}! ID: {email['id']}")
+        return True
+        
+    except Exception as e:
+        print(f"Failed to send cron alert email: {str(e)}")
+        return False

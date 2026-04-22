@@ -298,3 +298,69 @@ def get_model_stats(request: Request, make: str, model: str):
     if not stats:
         return {'error': 'Nu există statistici pentru acest model încă.'}
     return stats
+
+from fastapi import Header
+from mailer import send_new_cars_email
+
+CRON_SECRET_KEY = os.environ.get("CRON_SECRET", "super-secret-cron-key-2026")
+
+@app.get('/api/cron/run')
+@limiter.limit("10/minute")
+async def api_cron_run(request: Request, authorization: str = Header(None)):
+    """
+    Endpoint triggered periodically (e.g. via cron-job.org or Vercel Cron) 
+    to dispatch alerts. Protected by CRON_SECRET.
+    """
+    if not authorization or authorization.replace("Bearer ", "") != CRON_SECRET_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized Cron Trigger")
+        
+    try:
+        groups = car_db_optimizer.get_cron_groups(limit=2)
+        if not groups:
+            return {"status": "no_active_alerts"}
+            
+        dispatched_count = 0
+        
+        for group in groups:
+            make = group['make']
+            model = group['model']
+            
+            results = search_cars(make=make, model=model, min_year=None, max_year=None, min_price=None, max_price=None, max_km=None, site="both", limit=20, max_pages=1)
+            
+            if not results:
+                continue
+                
+            new_cars = car_db_optimizer.insert_cron_ads(results)
+            if not new_cars:
+                continue
+                
+            alerts = car_db_optimizer.get_alerts_for_group(make, model)
+            
+            for alert in alerts:
+                matched_cars = []
+                for car in new_cars:
+                    c_price = car.get('price') or 0
+                    c_year = car.get('year') or 0
+                    c_km = car.get('km') or 0
+                    
+                    if alert['min_price'] and c_price < alert['min_price']: continue
+                    if alert['max_price'] and c_price > alert['max_price']: continue
+                    if alert['min_year'] and c_year < alert['min_year']: continue
+                    if alert['max_year'] and c_year > alert['max_year']: continue
+                    if alert['max_km'] and c_km > alert['max_km']: continue
+                    
+                    matched_cars.append(car)
+                    
+                if matched_cars:
+                    email = alert['user_email']
+                    threading.Thread(
+                        target=send_new_cars_email,
+                        args=(email, make, model, matched_cars),
+                        daemon=True
+                    ).start()
+                    dispatched_count += 1
+                    
+        return {"status": "success", "groups_checked": len(groups), "emails_dispatched": dispatched_count}
+    except Exception as e:
+        print(f"Cron execution failed: {e}")
+        return {"error": str(e)}
