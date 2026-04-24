@@ -1,47 +1,65 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #121212;
-  --bg-card: rgba(18, 18, 18, 0.65);
-
+  /* Ethereal Glass / Premium OLED Dark Theme */
+  --bg-primary: #050505;
+  --bg-secondary: #0a0a0c;
+  
+  /* Double-Bezel Backgrounds */
+  --bg-shell: rgba(255, 255, 255, 0.02);
+  --bg-core: rgba(10, 10, 12, 0.85);
+  
+  /* Typography */
   --text-primary: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-accent: #38bdf8;
-
-  --border-color: rgba(255, 255, 255, 0.1);
-  --primary-color: #38bdf8;
-  --primary-hover: #0ea5e9;
-
-  --active-gradient: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
-  --card-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-
-
-  --transition-speed: 0.3s;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.35);
+  
+  /* Accents */
+  --accent-color: #e2e2e2;
+  --accent-glow: rgba(255, 255, 255, 0.1);
+  --primary-color: #38bdf8; /* Keep brand color but use it sparingly as a glow */
+  
+  /* Borders (Hairlines) */
+  --border-shell: rgba(255, 255, 255, 0.06);
+  --border-core: rgba(255, 255, 255, 0.03);
+  --border-highlight: rgba(255, 255, 255, 0.12);
+  
+  /* Physics / Motion */
+  --spring-easing: cubic-bezier(0.32, 0.72, 0, 1);
+  --transition-fast: 0.3s var(--spring-easing);
+  --transition-slow: 0.7s var(--spring-easing);
+  
+  /* Shadows */
+  --shadow-ambient: 0 20px 40px -10px rgba(0, 0, 0, 0.8);
+  --shadow-inset-top: inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 body {
   margin: 0;
-  font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  /* Premium radial glow background */
+  background-image: 
+    radial-gradient(circle at 15% 0%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 85% 100%, rgba(192, 132, 252, 0.03) 0%, transparent 40%);
+  background-attachment: fixed;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5 {
+h1, h2, h3, h4, h5 {
   margin: 0;
   font-weight: 700;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
 }
 
 a {
   text-decoration: none;
   color: inherit;
-  transition: color var(--transition-speed);
+  transition: all var(--transition-fast);
 }
 
 button {
@@ -51,30 +69,17 @@ button {
   outline: none;
 }
 
-
-.glass-panel {
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-  border-radius: 16px;
-}
-
-
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
+  background: var(--border-shell);
+  border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+  background: var(--text-muted);
 }
