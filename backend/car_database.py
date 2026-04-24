@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Tuple
 import re
 import bcrypt
 import os
+from contextlib import contextmanager
 
 class CarDatabaseOptimizer:
 
@@ -17,9 +18,14 @@ class CarDatabaseOptimizer:
             
         self.init_database()
 
+    @contextmanager
     def get_connection(self):
         # Using RealDictCursor allows us to fetch rows as dictionaries, similar to sqlite3.Row
-        return psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
+        try:
+            yield conn
+        finally:
+            conn.close()
 
     def format_brand_name(self, brand: str) -> str:
         brand = brand.lower().strip()
@@ -56,312 +62,305 @@ class CarDatabaseOptimizer:
 
     def init_database(self):
         try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
             
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS users (
-                    id SERIAL PRIMARY KEY,
-                    email TEXT UNIQUE NOT NULL,
-                    hashed_password TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            ''')
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS users (
+                        id SERIAL PRIMARY KEY,
+                        email TEXT UNIQUE NOT NULL,
+                        hashed_password TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                ''')
             
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS car_models (
-                    id SERIAL PRIMARY KEY,
-                    make TEXT NOT NULL,
-                    model TEXT NOT NULL,
-                    model_variants TEXT,
-                    min_year INTEGER,
-                    max_year INTEGER,
-                    generation TEXT,
-                    body_type TEXT,
-                    engine_types TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UNIQUE(make, model)
-                )
-            ''')
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS car_models (
+                        id SERIAL PRIMARY KEY,
+                        make TEXT NOT NULL,
+                        model TEXT NOT NULL,
+                        model_variants TEXT,
+                        min_year INTEGER,
+                        max_year INTEGER,
+                        generation TEXT,
+                        body_type TEXT,
+                        engine_types TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(make, model)
+                    )
+                ''')
             
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS search_stats (
-                    id SERIAL PRIMARY KEY,
-                    make TEXT,
-                    model TEXT,
-                    search_count INTEGER DEFAULT 1,
-                    last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    avg_price REAL,
-                    avg_year REAL,
-                    avg_km REAL
-                )
-            ''')
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS search_stats (
+                        id SERIAL PRIMARY KEY,
+                        make TEXT,
+                        model TEXT,
+                        search_count INTEGER DEFAULT 1,
+                        last_searched TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        avg_price REAL,
+                        avg_year REAL,
+                        avg_km REAL
+                    )
+                ''')
             
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS alerts (
-                    id SERIAL PRIMARY KEY,
-                    user_email TEXT NOT NULL,
-                    make TEXT NOT NULL,
-                    model TEXT NOT NULL,
-                    min_price INTEGER,
-                    max_price INTEGER,
-                    min_year INTEGER,
-                    max_year INTEGER,
-                    max_km INTEGER,
-                    active BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_checked TIMESTAMP
-                )
-            ''')
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS alerts (
+                        id SERIAL PRIMARY KEY,
+                        user_email TEXT NOT NULL,
+                        make TEXT NOT NULL,
+                        model TEXT NOT NULL,
+                        min_price INTEGER,
+                        max_price INTEGER,
+                        min_year INTEGER,
+                        max_year INTEGER,
+                        max_km INTEGER,
+                        active BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_checked TIMESTAMP
+                    )
+                ''')
             
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS ads (
-                    id TEXT PRIMARY KEY,
-                    source TEXT,
-                    title TEXT,
-                    price INTEGER,
-                    currency TEXT DEFAULT 'EUR',
-                    link TEXT UNIQUE,
-                    image TEXT,
-                    make TEXT,
-                    model TEXT,
-                    year INTEGER,
-                    km INTEGER,
-                    fuel TEXT,
-                    transmission TEXT,
-                    body_type TEXT,
-                    city TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    active BOOLEAN DEFAULT TRUE
-                )
-            ''')
+                cursor.execute('''
+                    CREATE TABLE IF NOT EXISTS ads (
+                        id TEXT PRIMARY KEY,
+                        source TEXT,
+                        title TEXT,
+                        price INTEGER,
+                        currency TEXT DEFAULT 'EUR',
+                        link TEXT UNIQUE,
+                        image TEXT,
+                        make TEXT,
+                        model TEXT,
+                        year INTEGER,
+                        km INTEGER,
+                        fuel TEXT,
+                        transmission TEXT,
+                        body_type TEXT,
+                        city TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        active BOOLEAN DEFAULT TRUE
+                    )
+                ''')
             
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
-            cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)')
             
-            conn.commit()
-            conn.close()
+                conn.commit()
         except Exception as e:
             print(f"Eroare la crearea bazei de date (probabil nu e configurat DATABASE_URL): {e}")
 
     def delete_ad(self, ad_id: str):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('DELETE FROM ads WHERE id = %s', (ad_id,))
-        conn.commit()
-        conn.close()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM ads WHERE id = %s', (ad_id,))
+            conn.commit()
 
     def upsert_ad(self, ad_data: dict):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        import hashlib
-        link = ad_data.get('link', '')
-        if not ad_data.get('id'):
-            ad_id = hashlib.md5(link.encode()).hexdigest()
-        else:
-            ad_id = ad_data['id']
-        try:
-            price_val = int(ad_data.get('price', 0))
-        except:
-            price_val = 0
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            import hashlib
+            link = ad_data.get('link', '')
+            if not ad_data.get('id'):
+                ad_id = hashlib.md5(link.encode()).hexdigest()
+            else:
+                ad_id = ad_data['id']
+            try:
+                price_val = int(ad_data.get('price', 0))
+            except:
+                price_val = 0
 
-        cursor.execute('''
-            INSERT INTO ads (
-                id, source, title, price, link, image, make, model, year, km, 
-                fuel, transmission, body_type, city, last_seen, active, updated_at
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)
-            ON CONFLICT(link) DO UPDATE SET
-                price = EXCLUDED.price,
-                last_seen = CURRENT_TIMESTAMP,
-                active = TRUE,
-                updated_at = CURRENT_TIMESTAMP,
-                image = COALESCE(EXCLUDED.image, ads.image) 
-        ''', (
-            ad_id, 
-            ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
-            ad_data.get('title'), 
-            price_val, 
-            link, 
-            ad_data.get('image'), 
-            ad_data.get('make'), 
-            ad_data.get('model'), 
-            ad_data.get('year'), 
-            ad_data.get('km'), 
-            ad_data.get('fuel'), 
-            ad_data.get('transmission'), 
-            ad_data.get('body_type'), 
-            ad_data.get('city')
-        ))
-        conn.commit()
-        conn.close()
-        return ad_id
+            cursor.execute('''
+                INSERT INTO ads (
+                    id, source, title, price, link, image, make, model, year, km, 
+                    fuel, transmission, body_type, city, last_seen, active, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)
+                ON CONFLICT(link) DO UPDATE SET
+                    price = EXCLUDED.price,
+                    last_seen = CURRENT_TIMESTAMP,
+                    active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP,
+                    image = COALESCE(EXCLUDED.image, ads.image) 
+            ''', (
+                ad_id, 
+                ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
+                ad_data.get('title'), 
+                price_val, 
+                link, 
+                ad_data.get('image'), 
+                ad_data.get('make'), 
+                ad_data.get('model'), 
+                ad_data.get('year'), 
+                ad_data.get('km'), 
+                ad_data.get('fuel'), 
+                ad_data.get('transmission'), 
+                ad_data.get('body_type'), 
+                ad_data.get('city')
+            ))
+            conn.commit()
+            return ad_id
 
     def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, min_year=None, max_year=None, min_km=None, max_km=None, limit=100, sort_by='price', order='asc') -> List[Dict]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        query = 'SELECT * FROM ads WHERE active = TRUE'
-        params = []
-        if make:
-            query += ' AND make ILIKE %s'
-            params.append(f'%{make}%')
-        if model:
-            query += ' AND (model ILIKE %s OR title ILIKE %s)'
-            params.append(f'%{model}%')
-            params.append(f'%{model}%')
-        if min_price:
-            query += ' AND price >= %s'
-            params.append(min_price)
-        if max_price:
-            query += ' AND price <= %s'
-            params.append(max_price)
-        if min_year:
-            query += ' AND year >= %s'
-            params.append(min_year)
-        if max_year:
-            query += ' AND year <= %s'
-            params.append(max_year)
-        if max_km:
-            query += ' AND km <= %s'
-            params.append(max_km)
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = 'SELECT * FROM ads WHERE active = TRUE'
+            params = []
+            if make:
+                query += ' AND make ILIKE %s'
+                params.append(f'%{make}%')
+            if model:
+                query += ' AND (model ILIKE %s OR title ILIKE %s)'
+                params.append(f'%{model}%')
+                params.append(f'%{model}%')
+            if min_price:
+                query += ' AND price >= %s'
+                params.append(min_price)
+            if max_price:
+                query += ' AND price <= %s'
+                params.append(max_price)
+            if min_year:
+                query += ' AND year >= %s'
+                params.append(min_year)
+            if max_year:
+                query += ' AND year <= %s'
+                params.append(max_year)
+            if max_km:
+                query += ' AND km <= %s'
+                params.append(max_km)
         
-        query += ' ORDER BY created_at DESC LIMIT %s'
-        params.append(limit)
+            query += ' ORDER BY created_at DESC LIMIT %s'
+            params.append(limit)
         
-        cursor.execute(query, tuple(params))
-        rows = cursor.fetchall()
-        ads = []
-        for r in rows:
-            d = dict(r)
-            d['price'] = f"{d['price']} €"
-            ads.append(d)
-        conn.close()
-        return ads
+            cursor.execute(query, tuple(params))
+            rows = cursor.fetchall()
+            ads = []
+            for r in rows:
+                d = dict(r)
+                d['price'] = f"{d['price']} €"
+                ads.append(d)
+            return ads
 
     def deactivate_stale_ads(self, hours_threshold=24):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        # PostgreSQL syntax for interval
-        cursor.execute("UPDATE ads SET active = FALSE WHERE last_seen < NOW() - CAST(%s AS interval)", (f"{hours_threshold} hours",))
-        count = cursor.rowcount
-        conn.commit()
-        conn.close()
-        return count
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            # PostgreSQL syntax for interval
+            cursor.execute("UPDATE ads SET active = FALSE WHERE last_seen < NOW() - CAST(%s AS interval)", (f"{hours_threshold} hours",))
+            count = cursor.rowcount
+            conn.commit()
+            return count
 
     def get_cron_groups(self, limit=2):
         try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT make, model 
-                FROM alerts 
-                WHERE active = TRUE 
-                GROUP BY make, model 
-                ORDER BY MIN(COALESCE(last_checked, '2000-01-01')) ASC
-                LIMIT %s
-            ''', (limit,))
-            groups = cursor.fetchall()
-            cursor.close()
-            return [{'make': r[0], 'model': r[1]} for r in groups]
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT make, model 
+                    FROM alerts 
+                    WHERE active = TRUE 
+                    GROUP BY make, model 
+                    ORDER BY MIN(COALESCE(last_checked, '2000-01-01')) ASC
+                    LIMIT %s
+                ''', (limit,))
+                groups = cursor.fetchall()
+                cursor.close()
+                return [{'make': r[0], 'model': r[1]} for r in groups]
         except Exception as e:
-            print(f"Error getting cron groups: {e}")
-            return []
+                print(f"Error getting cron groups: {e}")
+                return []
 
     def get_alerts_for_group(self, make, model):
         try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT id, user_email, min_price, max_price, min_year, max_year, max_km 
-                FROM alerts 
-                WHERE active = TRUE AND make = %s AND model = %s
-            ''', (make, model))
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT id, user_email, min_price, max_price, min_year, max_year, max_km 
+                    FROM alerts 
+                    WHERE active = TRUE AND make = %s AND model = %s
+                ''', (make, model))
             
-            alerts = cursor.fetchall()
-            cursor.execute('''
-                UPDATE alerts SET last_checked = CURRENT_TIMESTAMP WHERE active = TRUE AND make = %s AND model = %s
-            ''', (make, model))
-            conn.commit()
-            cursor.close()
+                alerts = cursor.fetchall()
+                cursor.execute('''
+                    UPDATE alerts SET last_checked = CURRENT_TIMESTAMP WHERE active = TRUE AND make = %s AND model = %s
+                ''', (make, model))
+                conn.commit()
+                cursor.close()
             
-            return [{
-                'id': r[0], 'user_email': r[1], 'min_price': r[2], 'max_price': r[3],
-                'min_year': r[4], 'max_year': r[5], 'max_km': r[6]
-            } for r in alerts]
+                return [{
+                    'id': r[0], 'user_email': r[1], 'min_price': r[2], 'max_price': r[3],
+                    'min_year': r[4], 'max_year': r[5], 'max_km': r[6]
+                } for r in alerts]
         except Exception as e:
-            print(f"Error getting alerts for group: {e}")
-            return []
+                print(f"Error getting alerts for group: {e}")
+                return []
 
     def insert_cron_ads(self, ads):
         new_ads = []
         try:
-            conn = self.get_connection()
-            cursor = conn.cursor()
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
             
-            for ad in ads:
-                ad_id = ad.get('id')
-                if not ad_id:
-                    continue
+                for ad in ads:
+                    ad_id = ad.get('id')
+                    if not ad_id:
+                        continue
                 
-                cursor.execute('''
-                    INSERT INTO ads (id, source, title, price, currency, link, image, make, model, year, km, fuel, transmission, body_type, city)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO NOTHING
-                    RETURNING id
-                ''', (
-                    ad_id, ad.get('source'), ad.get('title'), ad.get('price'), ad.get('currency', 'EUR'), ad.get('link'),
-                    ad.get('image'), ad.get('make'), ad.get('model'), ad.get('year'), ad.get('km'),
-                    ad.get('fuel'), ad.get('transmission'), ad.get('body_type'), ad.get('city')
-                ))
+                    cursor.execute('''
+                        INSERT INTO ads (id, source, title, price, currency, link, image, make, model, year, km, fuel, transmission, body_type, city)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (id) DO NOTHING
+                        RETURNING id
+                    ''', (
+                        ad_id, ad.get('source'), ad.get('title'), ad.get('price'), ad.get('currency', 'EUR'), ad.get('link'),
+                        ad.get('image'), ad.get('make'), ad.get('model'), ad.get('year'), ad.get('km'),
+                        ad.get('fuel'), ad.get('transmission'), ad.get('body_type'), ad.get('city')
+                    ))
                 
-                if cursor.fetchone():
-                    new_ads.append(ad)
+                    if cursor.fetchone():
+                        new_ads.append(ad)
             
-            conn.commit()
-            cursor.close()
-            return new_ads
+                conn.commit()
+                cursor.close()
+                return new_ads
         except Exception as e:
-            print(f"Error inserting cron ads: {e}")
-            return []
+                print(f"Error inserting cron ads: {e}")
+                return []
 
     def add_car_model(self, make: str, model: str, min_year: int=None, max_year: int=None, generation: str=None, body_type: str=None, model_variants: List[str]=None, engine_types: List[str]=None):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        variants_json = json.dumps(model_variants) if model_variants else None
-        engines_json = json.dumps(engine_types) if engine_types else None
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            variants_json = json.dumps(model_variants) if model_variants else None
+            engines_json = json.dumps(engine_types) if engine_types else None
         
-        cursor.execute('''
-            INSERT INTO car_models 
-            (make, model, model_variants, min_year, max_year, generation, body_type, engine_types, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
-            ON CONFLICT (make, model) DO UPDATE SET
-                model_variants = EXCLUDED.model_variants,
-                min_year = EXCLUDED.min_year,
-                max_year = EXCLUDED.max_year,
-                generation = EXCLUDED.generation,
-                body_type = EXCLUDED.body_type,
-                engine_types = EXCLUDED.engine_types,
-                updated_at = CURRENT_TIMESTAMP
-        ''', (make.lower(), model.lower(), variants_json, min_year, max_year, generation, body_type, engines_json))
-        conn.commit()
-        conn.close()
+            cursor.execute('''
+                INSERT INTO car_models 
+                (make, model, model_variants, min_year, max_year, generation, body_type, engine_types, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (make, model) DO UPDATE SET
+                    model_variants = EXCLUDED.model_variants,
+                    min_year = EXCLUDED.min_year,
+                    max_year = EXCLUDED.max_year,
+                    generation = EXCLUDED.generation,
+                    body_type = EXCLUDED.body_type,
+                    engine_types = EXCLUDED.engine_types,
+                    updated_at = CURRENT_TIMESTAMP
+            ''', (make.lower(), model.lower(), variants_json, min_year, max_year, generation, body_type, engines_json))
+            conn.commit()
 
     def get_model_info(self, make: str, model: str) -> Optional[Dict]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT make, model, model_variants, min_year, max_year, generation, body_type, engine_types
-            FROM car_models 
-            WHERE make = %s AND model = %s
-        ''', (make.lower(), model.lower()))
-        result = cursor.fetchone()
-        conn.close()
-        if result:
-            return {'make': result['make'], 'model': result['model'], 'model_variants': json.loads(result['model_variants']) if result['model_variants'] else [], 'min_year': result['min_year'], 'max_year': result['max_year'], 'generation': result['generation'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}
-        return None
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT make, model, model_variants, min_year, max_year, generation, body_type, engine_types
+                FROM car_models 
+                WHERE make = %s AND model = %s
+            ''', (make.lower(), model.lower()))
+            result = cursor.fetchone()
+            if result:
+                return {'make': result['make'], 'model': result['model'], 'model_variants': json.loads(result['model_variants']) if result['model_variants'] else [], 'min_year': result['min_year'], 'max_year': result['max_year'], 'generation': result['generation'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}
+            return None
 
     def get_generations_for_model(self, make: str, model: str) -> List[Dict]:
         make_normalized = make.lower().strip()
@@ -369,18 +368,17 @@ class CarDatabaseOptimizer:
         generations = self._get_model_generations_from_db(make_normalized, model_normalized)
         if generations:
             return generations
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT generation, min_year, max_year, body_type, engine_types
-            FROM car_models 
-            WHERE make = %s AND model = %s
-        ''', (make_normalized, model_normalized))
-        result = cursor.fetchone()
-        conn.close()
-        if result and result['generation']:
-            return [{'generation': result['generation'], 'min_year': result['min_year'], 'max_year': result['max_year'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}]
-        return []
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT generation, min_year, max_year, body_type, engine_types
+                FROM car_models 
+                WHERE make = %s AND model = %s
+            ''', (make_normalized, model_normalized))
+            result = cursor.fetchone()
+            if result and result['generation']:
+                return [{'generation': result['generation'], 'min_year': result['min_year'], 'max_year': result['max_year'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}]
+            return []
 
     def _get_model_generations_from_db(self, make: str, model: str) -> List[Dict]:
         if make.lower() == 'bmw' and any((x in model.lower() for x in ['seria-3', 'seria3', '3', 'seria 3'])):
@@ -453,63 +451,60 @@ class CarDatabaseOptimizer:
         return model_lc
 
     def update_search_stats(self, make: str, model: str, avg_price: float=None, avg_year: float=None, avg_km: float=None):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT id, search_count FROM search_stats WHERE make = %s AND model = %s ORDER BY id DESC LIMIT 1', (make.lower(), model.lower()))
-        row = cursor.fetchone()
-        if row:
-            cursor.execute('''
-                UPDATE search_stats 
-                SET search_count = search_count + 1,
-                    last_searched = CURRENT_TIMESTAMP,
-                    avg_price = %s, avg_year = %s, avg_km = %s
-                WHERE id = %s
-            ''', (avg_price, avg_year, avg_km, row['id']))
-        else:
-            cursor.execute('''
-                INSERT INTO search_stats 
-                (make, model, search_count, last_searched, avg_price, avg_year, avg_km)
-                VALUES (%s, %s, 1, CURRENT_TIMESTAMP, %s, %s, %s)
-            ''', (make.lower(), model.lower(), avg_price, avg_year, avg_km))
-        conn.commit()
-        conn.close()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT id, search_count FROM search_stats WHERE make = %s AND model = %s ORDER BY id DESC LIMIT 1', (make.lower(), model.lower()))
+            row = cursor.fetchone()
+            if row:
+                cursor.execute('''
+                    UPDATE search_stats 
+                    SET search_count = search_count + 1,
+                        last_searched = CURRENT_TIMESTAMP,
+                        avg_price = %s, avg_year = %s, avg_km = %s
+                    WHERE id = %s
+                ''', (avg_price, avg_year, avg_km, row['id']))
+            else:
+                cursor.execute('''
+                    INSERT INTO search_stats 
+                    (make, model, search_count, last_searched, avg_price, avg_year, avg_km)
+                    VALUES (%s, %s, 1, CURRENT_TIMESTAMP, %s, %s, %s)
+                ''', (make.lower(), model.lower(), avg_price, avg_year, avg_km))
+            conn.commit()
 
     def get_popular_models(self, make: str=None, limit: int=10) -> List[Dict]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        if make:
-            cursor.execute('''
-                SELECT make, model, search_count, avg_price, avg_year, avg_km
-                FROM search_stats 
-                WHERE make = %s
-                ORDER BY search_count DESC, last_searched DESC
-                LIMIT %s
-            ''', (make.lower(), limit))
-        else:
-            cursor.execute('''
-                SELECT make, model, search_count, avg_price, avg_year, avg_km
-                FROM search_stats 
-                ORDER BY search_count DESC, last_searched DESC
-                LIMIT %s
-            ''', (limit,))
-        results = cursor.fetchall()
-        conn.close()
-        return [{'make': r['make'], 'model': r['model'], 'search_count': r['search_count'], 'avg_price': r['avg_price'], 'avg_year': r['avg_year'], 'avg_km': r['avg_km']} for r in results]
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            if make:
+                cursor.execute('''
+                    SELECT make, model, search_count, avg_price, avg_year, avg_km
+                    FROM search_stats 
+                    WHERE make = %s
+                    ORDER BY search_count DESC, last_searched DESC
+                    LIMIT %s
+                ''', (make.lower(), limit))
+            else:
+                cursor.execute('''
+                    SELECT make, model, search_count, avg_price, avg_year, avg_km
+                    FROM search_stats 
+                    ORDER BY search_count DESC, last_searched DESC
+                    LIMIT %s
+                ''', (limit,))
+            results = cursor.fetchall()
+            return [{'make': r['make'], 'model': r['model'], 'search_count': r['search_count'], 'avg_price': r['avg_price'], 'avg_year': r['avg_year'], 'avg_km': r['avg_km']} for r in results]
 
     def get_model_stats(self, make: str, model: str) -> Optional[Dict]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            SELECT make, model, search_count, avg_price, avg_year, avg_km, last_searched
-            FROM search_stats 
-            WHERE make = %s AND model = %s
-            ORDER BY id DESC LIMIT 1
-        ''', (make.lower(), model.lower()))
-        result = cursor.fetchone()
-        conn.close()
-        if result:
-            return dict(result)
-        return None
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT make, model, search_count, avg_price, avg_year, avg_km, last_searched
+                FROM search_stats 
+                WHERE make = %s AND model = %s
+                ORDER BY id DESC LIMIT 1
+            ''', (make.lower(), model.lower()))
+            result = cursor.fetchone()
+            if result:
+                return dict(result)
+            return None
 
     def populate_sample_data(self):
         sample_models = [('bmw', 'seria-3', 2012, 2024, 'F30/G20', 'sedan', ['320d', '330d', '320i', '330i'], ['diesel', 'petrol']), ('bmw', 'seria-5', 2010, 2024, 'F10/G30', 'sedan', ['520d', '530d', '520i', '530i'], ['diesel', 'petrol']), ('bmw', 'x3', 2010, 2024, 'F25/G01', 'suv', ['x3', 'xdrive30d', 'xdrive20d'], ['diesel', 'petrol']), ('bmw', 'x5', 2006, 2024, 'E70/F15/G05', 'suv', ['x5', 'xdrive30d', 'xdrive40d'], ['diesel', 'petrol']), ('audi', 'a4', 2008, 2024, 'B8/B9', 'sedan', ['a4', 'avant', 'allroad'], ['diesel', 'petrol']), ('audi', 'a6', 2011, 2024, 'C7/C8', 'sedan', ['a6', 'avant', 'allroad'], ['diesel', 'petrol']), ('audi', 'q5', 2008, 2024, '8R/FY', 'suv', ['q5', 'sq5'], ['diesel', 'petrol']), ('audi', 'q7', 2006, 2024, '4L/4M', 'suv', ['q7', 'sq7'], ['diesel', 'petrol']), ('mercedes', 'c', 2007, 2024, 'W204/W205', 'sedan', ['c220d', 'c250d', 'c200', 'c250'], ['diesel', 'petrol']), ('mercedes', 'e', 2009, 2024, 'W212/W213', 'sedan', ['e220d', 'e250d', 'e200', 'e250'], ['diesel', 'petrol']), ('mercedes', 'g', 2005, 2024, 'W463', 'suv', ['g350d', 'g500', 'g63'], ['diesel', 'petrol']), ('volkswagen', 'golf', 2008, 2024, 'Mk6/Mk7/Mk8', 'hatchback', ['golf', 'gti', 'gtd'], ['diesel', 'petrol']), ('volkswagen', 'passat', 2010, 2024, 'B7/B8', 'sedan', ['passat', 'passat-variant'], ['diesel', 'petrol']), ('volkswagen', 'tiguan', 2007, 2024, '5N/AD1', 'suv', ['tiguan', 'tiguan-allspace'], ['diesel', 'petrol']), ('skoda', 'octavia', 2013, 2024, 'Mk3/Mk4', 'sedan', ['octavia', 'octavia-combi'], ['diesel', 'petrol']), ('skoda', 'superb', 2008, 2024, '3T/3V', 'sedan', ['superb', 'superb-combi'], ['diesel', 'petrol']), ('skoda', 'kodiaq', 2017, 2024, 'NS', 'suv', ['kodiaq'], ['diesel', 'petrol'])]
@@ -525,91 +520,83 @@ class CarDatabaseOptimizer:
         return data
 
     def add_alert(self, user_email: str, make: str, model: str, min_price: int=None, max_price: int=None, min_year: int=None, max_year: int=None, max_km: int=None):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO alerts (user_email, make, model, min_price, max_price, min_year, max_year, max_km, active, last_checked)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
-            RETURNING id
-        ''', (user_email, make, model, min_price, max_price, min_year, max_year, max_km))
-        row = cursor.fetchone()
-        alert_id = row['id'] if row else None
-        conn.commit()
-        conn.close()
-        return {'id': alert_id, 'user_email': user_email, 'make': make, 'model': model, 'min_price': min_price, 'max_price': max_price, 'min_year': min_year, 'max_year': max_year, 'max_km': max_km, 'active': 1}
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO alerts (user_email, make, model, min_price, max_price, min_year, max_year, max_km, active, last_checked)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, TRUE, CURRENT_TIMESTAMP)
+                RETURNING id
+            ''', (user_email, make, model, min_price, max_price, min_year, max_year, max_km))
+            row = cursor.fetchone()
+            alert_id = row['id'] if row else None
+            conn.commit()
+            return {'id': alert_id, 'user_email': user_email, 'make': make, 'model': model, 'min_price': min_price, 'max_price': max_price, 'min_year': min_year, 'max_year': max_year, 'max_km': max_km, 'active': 1}
 
     def deactivate_alert(self, alert_id: int):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('UPDATE alerts SET active = FALSE WHERE id = %s', (alert_id,))
-        conn.commit()
-        conn.close()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('UPDATE alerts SET active = FALSE WHERE id = %s', (alert_id,))
+            conn.commit()
 
     def get_alerts(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM alerts')
-        rows = cursor.fetchall()
-        alerts = [dict(row) for row in rows]
-        conn.close()
-        return alerts
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM alerts')
+            rows = cursor.fetchall()
+            alerts = [dict(row) for row in rows]
+            return alerts
 
     def _hash_password(self, password: str) -> str:
         salt = bcrypt.gensalt()
         return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
     def register_user(self, email: str, password: str) -> dict:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            hashed = self._hash_password(password)
-            cursor.execute('INSERT INTO users (email, hashed_password) VALUES (%s, %s) RETURNING id', (email, hashed))
-            row = cursor.fetchone()
-            user_id = row['id']
-            conn.commit()
-            return {"success": True, "id": user_id, "email": email}
-        except psycopg2.IntegrityError:
-            conn.rollback() # necesar in Postgres
-            return {"success": False, "error": "Email already registered"}
-        finally:
-            conn.close()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                hashed = self._hash_password(password)
+                cursor.execute('INSERT INTO users (email, hashed_password) VALUES (%s, %s) RETURNING id', (email, hashed))
+                row = cursor.fetchone()
+                user_id = row['id']
+                conn.commit()
+                return {"success": True, "id": user_id, "email": email}
+            except psycopg2.IntegrityError:
+                conn.rollback() # necesar in Postgres
+                return {"success": False, "error": "Email already registered"}
 
     def verify_login(self, email: str, password: str) -> dict:
-        conn = self.get_connection()
-        cursor = conn.cursor()
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
         
-        cursor.execute('SELECT id, email, hashed_password FROM users WHERE email = %s', (email,))
-        user = cursor.fetchone()
-        conn.close()
+            cursor.execute('SELECT id, email, hashed_password FROM users WHERE email = %s', (email,))
+            user = cursor.fetchone()
         
-        if not user:
-            return {"success": False, "error": "User not found"}
+            if not user:
+                return {"success": False, "error": "User not found"}
             
-        try:
-            if bcrypt.checkpw(password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
-                return {"success": True, "id": user["id"], "email": user["email"]}
-            else:
-                return {"success": False, "error": "Incorrect password"}
-        except ValueError:
-            return {"success": False, "error": "Incorrect password or outdated security hash"}
+            try:
+                if bcrypt.checkpw(password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
+                    return {"success": True, "id": user["id"], "email": user["email"]}
+                else:
+                    return {"success": False, "error": "Incorrect password"}
+            except ValueError:
+                return {"success": False, "error": "Incorrect password or outdated security hash"}
 
     def get_all_brands(self) -> List[str]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT DISTINCT make FROM car_models ORDER BY make ASC')
-        rows = cursor.fetchall()
-        brands = [self.format_brand_name(row['make']) for row in rows if row['make']]
-        conn.close()
-        return sorted(list(set(brands)))
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT DISTINCT make FROM car_models ORDER BY make ASC')
+            rows = cursor.fetchall()
+            brands = [self.format_brand_name(row['make']) for row in rows if row['make']]
+            return sorted(list(set(brands)))
 
     def get_models(self, make: str) -> List[str]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute('SELECT DISTINCT model FROM car_models WHERE make = %s ORDER BY model ASC', (make.lower(),))
-        rows = cursor.fetchall()
-        models = [self.format_model_name(row['model']) for row in rows if row['model']]
-        conn.close()
-        return sorted(list(set(models)))
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT DISTINCT model FROM car_models WHERE make = %s ORDER BY model ASC', (make.lower(),))
+            rows = cursor.fetchall()
+            models = [self.format_model_name(row['model']) for row in rows if row['model']]
+            return sorted(list(set(models)))
         
 car_db_optimizer = CarDatabaseOptimizer()
 
