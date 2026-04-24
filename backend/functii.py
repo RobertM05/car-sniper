@@ -237,7 +237,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         searchable_tokens = title_tokens | link_tokens
         make_tokens = normalize_tokens(make or '')
         model_tokens = normalize_tokens(model or '')
-        model_matches = True
+        model_matches = model_tokens.issubset(searchable_tokens) if model_tokens else True
         bad_keywords = {'dezmembrari', 'dezmembrez', 'piese', 'piesa'}
         if any((bad in title_tokens or bad in link_tokens for bad in bad_keywords)):
             filter_stats['bad_keyword'] += 1
@@ -292,9 +292,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 continue
             if make_is_bmw and (not model_is_x) and model_norm:
                 import re as _re
-                m_num = _re.match('(\\d{3})', model_norm)
+                m_num = _re.search('(\\d{3})', model_norm)
                 model_num = m_num.group(1) if m_num else ''
-                m_series = _re.match('(\\d)', model_norm)
+                m_series = _re.search('(\\d)', model_norm)
                 series_digit = m_series.group(1) if m_series else ''
                 allowed = False
                 if model_num and (model_num in title_norm or model_num in link_norm or model_num + 'd' in title_norm):
@@ -302,6 +302,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 if series_digit:
                     series_tokens = [f'seria{series_digit}', f'serie{series_digit}', f'{series_digit}series', f'series{series_digit}']
                     if any((tok in title_norm or tok in link_norm for tok in series_tokens)):
+                        allowed = True
+                    import re as _re_allow
+                    if _re_allow.search(f"{series_digit}\\d{{2}}", title_norm):
                         allowed = True
                 if not allowed:
                     continue
@@ -312,7 +315,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 continue
             if make_is_audi and (not model_is_q) and model_norm:
                 import re as _re2
-                m2 = _re2.match('([a-z])(\\d)', model_norm)
+                m2 = _re2.search('([a-z])(\\d)', model_norm)
                 if m2:
                     series_token = f'{m2.group(1)}{m2.group(2)}'
                     if series_token.startswith('a'):
@@ -320,7 +323,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                             continue
             make_is_mercedes = make_norm in ('mercedes', 'mercedesbenz', 'mercedesbenz')
             import re as _re3
-            mer_class_match = _re3.match('([a-z])', model_norm or '')
+            mer_class_match = _re3.search('([a-z])', model_norm or '')
             requested_class = mer_class_match.group(1) if mer_class_match else ''
             is_g_requested = requested_class == 'g'
             contains_g_suv = any((tok in title_norm or tok in link_norm for tok in ['gla', 'glb', 'glc', 'gle', 'gls', 'g55', 'g63', 'g500', 'g350'])) if title_norm or link_norm else False
@@ -329,7 +332,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             if make_is_mercedes and requested_class in ('c', 'e', 's'):
                 class_tokens = [f'clasa{requested_class}', f'{requested_class}class']
                 if not any((tok in title_norm or tok in link_norm for tok in class_tokens)):
-                    continue
+                    import re as _re_allow
+                    if not _re_allow.search(f"{requested_class}\\d{{2,3}}", title_norm):
+                        continue
             loose_filtered.append(car)
     filter_stats['passed'] = len(strict_filtered) + len(loose_filtered)
     print(f'Filter Stats: {filter_stats}')

@@ -78,6 +78,8 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                             link_href = 'https://www.olx.ro' + link_href
                         if link_href in seen_links:
                             continue
+                        if 'reason=extended_search_no_results' in link_href:
+                            continue
                         seen_links.add(link_href)
                         is_autovit = 'autovit.ro' in link_href
                         car_year = None

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 import threading, time
 from pydantic import BaseModel
@@ -102,12 +102,11 @@ class ContactRequest(BaseModel):
 
 @app.post('/api/contact')
 @limiter.limit("3/minute")
-def api_submit_contact(request: Request, req: ContactRequest):
-    threading.Thread(
-        target=send_contact_email,
-        args=(req.name, req.phone, req.company_email, req.company_name, req.has_website, req.website_ip),
-        daemon=True
-    ).start()
+def api_submit_contact(request: Request, req: ContactRequest, background_tasks: BackgroundTasks):
+    background_tasks.add_task(
+        send_contact_email,
+        req.name, req.phone, req.company_email, req.company_name, req.has_website, req.website_ip
+    )
     
     return {'status': 'success'}
 
@@ -157,16 +156,15 @@ def api_auth_login(request: Request, req: AuthRequest):
 
 @app.post('/api/alert')
 @limiter.limit("5/minute")
-def api_create_alert(request: Request, req: AlertRequest, user_email: str = Depends(verify_token)):
+def api_create_alert(request: Request, req: AlertRequest, background_tasks: BackgroundTasks, user_email: str = Depends(verify_token)):
     # Overwrite the request email with the verified token email
     verified_email = user_email
     alert = add_alert(verified_email, req.make, req.model, req.min_price, req.max_price, req.min_year, req.max_year, req.max_km)
     
-    threading.Thread(
-        target=send_alert_email,
-        args=(req.user_email, req.make, req.model, req.max_price),
-        daemon=True
-    ).start()
+    background_tasks.add_task(
+        send_alert_email,
+        req.user_email, req.make, req.model, req.max_price
+    )
     
     return {'alert': alert}
 
