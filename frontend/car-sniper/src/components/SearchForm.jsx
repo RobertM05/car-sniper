@@ -161,7 +161,7 @@ const SearchForm = ({
             onClick={onAlertClick}
             disabled={!formData.make || !formData.model}
             className="submit-btn"
-            style={{ background: 'transparent', border: '1px solid var(--border-shell)', color: 'var(--text-secondary)' }}
+            style={{ background: 'transparent', border: '1px solid var(--border-shell)', color: 'var(--text-secondary)', paddingRight: '1.5rem' }}
           >
             {t('search', 'setAlert')}
           </button>
