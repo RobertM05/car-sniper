@@ -345,71 +345,77 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     print(f'📋 strict_filtered: {len(strict_filtered)}, loose_filtered: {len(loose_filtered)}')
     final_results = strict_filtered if strict_filtered else loose_filtered if model else []
     print(f'📋 final_results before repair: {len(final_results)}')
-    ads_to_repair = []
     import aiohttp
     from bs4 import BeautifulSoup
     import json as _json_live
+    import random as _rand_enrich
 
-    async def repair_ad(ad):
+    _enrich_sem = asyncio.Semaphore(5)
+
+    async def repair_ad(ad, session):
         is_missing_image = not ad.get('image') or 'no_thumbnail' in str(ad.get('image'))
-        is_missing_image = not ad.get('image') or 'no_thumbnail' in str(ad.get('image'))
-        if is_missing_image:
+        if not is_missing_image:
+            return ad
+        async with _enrich_sem:
+            await asyncio.sleep(_rand_enrich.uniform(0.1, 0.5))
             try:
-                async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as sess:
-                    async with sess.get(ad.get('link'), timeout=5) as r:
-                        if r.status == 404 or len(str(r.url)) < 30:
-                            return None
-                        if r.status == 200:
-                            html = await r.text()
-                            soup = BeautifulSoup(html, 'html.parser')
-                            nd = soup.find('script', {'id': '__NEXT_DATA__'})
-                            current_price = int(ad.get('price', 0))
-                            if nd and nd.string:
-                                d = _json_live.loads(nd.string)
-                                pp = d.get('props', {}).get('pageProps', {})
-                                adv = pp.get('advert') or pp.get('data', {}).get('advert')
-                                if adv:
-                                    p = adv.get('price', {}).get('value')
-                                    if p:
-                                        new_p = int(p)
-                                        if new_p > current_price:
-                                            ad['price'] = new_p
-                            if is_missing_image:
-                                og = soup.find('meta', attrs={'property': 'og:image'})
-                                if og and og.get('content'):
-                                    ad['image'] = og.get('content')
-                                if not ad.get('image'):
-                                    scripts = soup.find_all('script', type='application/ld+json')
-                                    for s in scripts:
-                                        try:
-                                            data = _json_live.loads(s.string)
-                                            if isinstance(data, dict) and 'image' in data:
-                                                imgs = data['image']
-                                                if isinstance(imgs, list) and imgs:
-                                                    ad['image'] = imgs[0]
-                                                elif isinstance(imgs, str):
-                                                    ad['image'] = imgs
-                                                break
-                                        except:
-                                            pass
-                                if not ad.get('image'):
-                                    selectors = ['img.css-1bmvjcs', 'div.swiper-zoom-container img', 'div.css-1bnh990 img', 'img.photo-handler', '.image-gallery-slide img']
-                                    for sel in selectors:
-                                        gal = soup.select_one(sel)
-                                        if gal:
-                                            src = gal.get('src') or gal.get('data-src')
-                                            if src:
-                                                ad['image'] = src
-                                                break
+                async with session.get(ad.get('link'), timeout=5) as r:
+                    if r.status == 404 or len(str(r.url)) < 30:
+                        return None
+                    if r.status == 200:
+                        html = await r.text()
+                        soup = BeautifulSoup(html, 'html.parser')
+                        nd = soup.find('script', {'id': '__NEXT_DATA__'})
+                        current_price = int(ad.get('price', 0))
+                        if nd and nd.string:
+                            d = _json_live.loads(nd.string)
+                            pp = d.get('props', {}).get('pageProps', {})
+                            adv = pp.get('advert') or pp.get('data', {}).get('advert')
+                            if adv:
+                                p = adv.get('price', {}).get('value')
+                                if p:
+                                    new_p = int(p)
+                                    if new_p > current_price:
+                                        ad['price'] = new_p
+                        if is_missing_image:
+                            og = soup.find('meta', attrs={'property': 'og:image'})
+                            if og and og.get('content'):
+                                ad['image'] = og.get('content')
+                            if not ad.get('image'):
+                                scripts = soup.find_all('script', type='application/ld+json')
+                                for s in scripts:
+                                    try:
+                                        data = _json_live.loads(s.string)
+                                        if isinstance(data, dict) and 'image' in data:
+                                            imgs = data['image']
+                                            if isinstance(imgs, list) and imgs:
+                                                ad['image'] = imgs[0]
+                                            elif isinstance(imgs, str):
+                                                ad['image'] = imgs
+                                            break
+                                    except:
+                                        pass
+                            if not ad.get('image'):
+                                selectors = ['img.css-1bmvjcs', 'div.swiper-zoom-container img', 'div.css-1bnh990 img', 'img.photo-handler', '.image-gallery-slide img']
+                                for sel in selectors:
+                                    gal = soup.select_one(sel)
+                                    if gal:
+                                        src = gal.get('src') or gal.get('data-src')
+                                        if src:
+                                            ad['image'] = src
+                                            break
             except:
                 pass
         return ad
-    repair_tasks = []
-    for ad in final_results:
-        repair_tasks.append(repair_ad(ad))
-    if repair_tasks:
-        repaired_results = await asyncio.gather(*repair_tasks)
-        final_results = [r for r in repaired_results if r]
+
+    if final_results:
+        async with aiohttp.ClientSession(
+            connector=aiohttp.TCPConnector(ssl=False, limit=10),
+            headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'}
+        ) as _shared_session:
+            repair_tasks = [repair_ad(ad, _shared_session) for ad in final_results]
+            repaired_results = await asyncio.gather(*repair_tasks)
+            final_results = [r for r in repaired_results if r]
     unique_map = {}
     unique_list = []
     import re as _re_dedup
