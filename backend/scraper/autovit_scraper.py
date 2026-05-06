@@ -12,12 +12,15 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
     seen_links_total: set[str] = set()
     scrape_stats = {'dupes': 0, 'invalid': 0}
 
-    async def _fetch_next_data_details(url: str) -> tuple[str | None, str | None]:
+    _enrich_sem = asyncio.Semaphore(5)
+
+    async def _fetch_next_data_details(url: str, enrich_session) -> tuple[str | None, str | None]:
         ua = random.choice(USER_AGENTS)
         headers_det = {'User-Agent': ua, 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Referer': 'https://www.autovit.ro/'}
-        try:
-            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as sess:
-                async with sess.get(url, headers=headers_det, timeout=8) as r:
+        async with _enrich_sem:
+            await asyncio.sleep(random.uniform(0.1, 0.5))
+            try:
+                async with enrich_session.get(url, headers=headers_det, timeout=8) as r:
                     if r.status != 200:
                         return (None, None)
                     text = await r.text()
@@ -54,11 +57,11 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         if og and og.get('content'):
                             image = og.get('content')
                     return (price, image)
-        except:
-            pass
-        return (None, None)
+            except:
+                pass
+            return (None, None)
 
-    async def fetch_page(page_num: int):
+    async def fetch_page(page_num: int, enrich_session=None):
         try:
             params = {'page': str(page_num)}
             if sort_order == 'price_asc':
@@ -199,7 +202,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         needs_enrichment = p_num < 15000 or not image_url
                         if needs_enrichment:
                             try:
-                                (new_p, new_img) = await _fetch_next_data_details(lnk)
+                                (new_p, new_img) = await _fetch_next_data_details(lnk, enrich_session)
                                 if new_p:
                                     try:
                                         new_p_val = int(float(str(new_p).replace('€', '')))
@@ -248,10 +251,11 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
     current_p = page
     empty_pages = 0
     failed_pages = []
+    _shared_enrich = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False, limit=10))
     while len(results) < limit:
         if current_p > max_pages:
             break
-        ads = await fetch_page(current_p)
+        ads = await fetch_page(current_p, _shared_enrich)
         if ads is None:
             failed_pages.append(current_p)
             current_p += 1
@@ -274,7 +278,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                 except:
                     pass
                 if p_n < 15000 or not ad['image']:
-                    enrich_tasks.append(_fetch_next_data_details(ad['link']))
+                    enrich_tasks.append(_fetch_next_data_details(ad['link'], _shared_enrich))
                 else:
                     results.append(ad)
         if enrich_tasks:
@@ -294,11 +298,12 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
             if len(results) >= limit:
                 break
             await asyncio.sleep(random.uniform(2.0, 4.0))
-            ads = await fetch_page(p_idx)
+            ads = await fetch_page(p_idx, _shared_enrich)
             if ads:
                 for ad in ads:
                     if ad['link'] not in seen_links_total:
                         seen_links_total.add(ad['link'])
                         results.append(ad)
+    await _shared_enrich.close()
     print(f"Autovit Stats: Found {len(results)} | Skipped {scrape_stats['dupes']} Duplicates | Skipped {scrape_stats['invalid']} Invalid (Price=0)")
     return results[:limit]
