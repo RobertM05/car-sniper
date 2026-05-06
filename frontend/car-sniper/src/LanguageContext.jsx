@@ -60,6 +60,8 @@ const translations = {
         stats: {
             title: 'Analiză Piață',
             avgPrice: 'Preț Mediu',
+            avgYear: 'An Mediu',
+            avgKm: 'Km Mediu',
             minPrice: 'Preț Minim',
             maxPrice: 'Preț Maxim',
             basedOn: 'bazat pe {count} anunțuri',
@@ -129,6 +131,8 @@ const translations = {
         stats: {
             title: 'Market Analysis',
             avgPrice: 'Avg Price',
+            avgYear: 'Avg Year',
+            avgKm: 'Avg Km',
             minPrice: 'Min Price',
             maxPrice: 'Max Price',
             basedOn: 'based on {count} listings',
