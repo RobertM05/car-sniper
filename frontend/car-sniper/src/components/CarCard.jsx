@@ -20,6 +20,16 @@ const CarCard = ({ car }) => {
     const isOlx = (car.link || car.url || "").includes('olx');
     const siteName = car.subsource || car.source || (isOlx ? 'OLX' : 'Autovit');
     const badgeClass = isOlx ? 'badge-olx' : 'badge-autovit';
+    
+    // Deal Score Logic
+    let dealClass = "";
+    let dealTextKey = "";
+    if (car.deal_score != null) {
+        if (car.deal_score >= 80) { dealClass = "deal-excellent"; dealTextKey = "excellent"; }
+        else if (car.deal_score >= 60) { dealClass = "deal-good"; dealTextKey = "good"; }
+        else if (car.deal_score >= 40) { dealClass = "deal-fair"; dealTextKey = "fair"; }
+        else { dealClass = "deal-overpriced"; dealTextKey = "overpriced"; }
+    }
 
     return (
         <div className="car-card-shell group">
@@ -27,6 +37,13 @@ const CarCard = ({ car }) => {
                 <div className={`site-badge ${badgeClass}`}>
                     {siteName}
                 </div>
+                
+                {car.deal_score != null && (
+                    <div className={`deal-badge ${dealClass}`}>
+                        <div className="deal-score">{car.deal_score}</div>
+                        <div className="deal-label">{t('deal', dealTextKey)}</div>
+                    </div>
+                )}
 
                 <div className="car-image-container">
                     <img

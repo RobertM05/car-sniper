@@ -40,7 +40,7 @@ const SearchForm = ({
       <form onSubmit={handleSubmit} className="search-form-grid">
 
         {/* Top Row: 4 Columns */}
-        <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
+        <div className="search-fields-row">
           <div className="form-group">
             <label>{t('search', 'make')}</label>
             <select
@@ -100,7 +100,7 @@ const SearchForm = ({
 
         {/* Advanced Row: 4 Columns */}
         {showAdvanced && (
-          <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', borderTop: '1px solid var(--border-shell)', paddingTop: '1.5rem', marginTop: '0.5rem' }}>
+          <div className="search-fields-row search-fields-advanced">
             <div className="form-group">
               <label>{t('search', 'minYear')}</label>
               <input
@@ -155,7 +155,7 @@ const SearchForm = ({
         )}
 
         {/* Action Buttons Centered Below */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1.5rem', width: '100%', paddingTop: '1.5rem' }}>
+        <div className="search-actions-row">
           <button
             type="button"
             onClick={onAlertClick}

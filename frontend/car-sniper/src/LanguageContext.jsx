@@ -49,6 +49,12 @@ const translations = {
             priceOnRequest: 'Preț la cerere',
             viewAd: 'Vezi Anunț',
         },
+        deal: {
+            excellent: 'Excelent',
+            good: 'Bun',
+            fair: 'Corect',
+            overpriced: 'Scump',
+        },
         alert: {
             title: 'Setează Alertă de Preț',
             desc: 'Vei primi un email când apar mașini noi sub prețul selectat.',
@@ -119,6 +125,12 @@ const translations = {
             noTitle: 'Untitled Ad',
             priceOnRequest: 'Price on request',
             viewAd: 'View Ad',
+        },
+        deal: {
+            excellent: 'Excellent',
+            good: 'Good',
+            fair: 'Fair',
+            overpriced: 'Overpriced',
         },
         alert: {
             title: 'Set Price Alert',

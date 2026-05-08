@@ -57,6 +57,64 @@ def decode_vin(request: Request, vin: str):
 
 import asyncio
 
+def calculate_deal_scores(results: list, stats: dict) -> list:
+    """Calculate a 0-100 deal score for each result based on peer averages (same year +/- 2)."""
+    global_avg_price = stats.get('avg_price')
+    global_avg_year = stats.get('avg_year')
+    global_avg_km = stats.get('avg_km')
+    
+    valid_cars = []
+    for car in results:
+        try:
+            p = int(str(car.get('price', 0)).replace(' ', '').replace('€', '') or 0)
+            y_str = ''.join(filter(str.isdigit, str(car.get('year', 0))))
+            y = int(y_str) if y_str else 0
+            k_str = ''.join(filter(str.isdigit, str(car.get('km', 0))))
+            k = int(k_str) if k_str else 0
+            if p > 0 and y > 1900:
+                valid_cars.append({'price': p, 'year': y, 'km': k, 'ref': car})
+        except:
+            pass
+
+    for data in valid_cars:
+        car = data['ref']
+        car_price = data['price']
+        car_year = data['year']
+        car_km = data['km']
+        
+        # Find peers (same year +/- 2 years) to compare apples to apples
+        peers = [p for p in valid_cars if abs(p['year'] - car_year) <= 2]
+        
+        if len(peers) >= 3:
+            peer_avg_price = sum(p['price'] for p in peers) / len(peers)
+            peer_avg_km = sum(p['km'] for p in peers) / len(peers)
+        else:
+            # Fallback to global stats if car is close to global average year (within 3 years)
+            if global_avg_year and global_avg_price and abs(car_year - global_avg_year) <= 3:
+                peer_avg_price = global_avg_price
+                peer_avg_km = global_avg_km
+            else:
+                car['deal_score'] = None
+                continue
+                
+        if not peer_avg_price or peer_avg_price <= 0:
+            car['deal_score'] = None
+            continue
+            
+        # Price: positive = cheaper than average (good)
+        price_factor = (peer_avg_price - car_price) / peer_avg_price
+        
+        # Km: positive = fewer km than average (good)
+        km_factor = (peer_avg_km - car_km) / max(peer_avg_km, 1) if peer_avg_km else 0
+        
+        # Weighted score: 80% price, 20% km (age is controlled for via peers!)
+        raw_score = 50 + price_factor * 100 + km_factor * 20
+        deal_score = max(0, min(100, int(round(raw_score))))
+        
+        car['deal_score'] = deal_score
+        
+    return results
+
 @app.get('/api/search')
 @limiter.limit("30/minute")
 async def api_search(request: Request, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
@@ -77,6 +135,14 @@ async def api_search(request: Request, make: str, model: str, max_price: int, si
             pass
     except:
         pass
+    
+    # Calculate deal scores if we have stats for this make/model
+    if make and model:
+        s_model = model.lower().replace(' ', '-')
+        stats = car_db_optimizer.get_model_stats(make, s_model)
+        if stats:
+            results = calculate_deal_scores(results, stats)
+    
     return {'results': results}
 
 class AlertRequest(BaseModel):
