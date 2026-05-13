@@ -61,8 +61,8 @@ async def scrape_and_classify(make, possible_models):
             model="", # MAGIC! Nu cerem un model specific, vrem TOATE mașinile acestei mărci!
             max_price=999999,
             site='both',
-            limit=5000, # Fără limită reală. Aducem mii de anunțuri pe fiecare marcă!
-            max_pages=60, # OLX/Autovit de obicei taie accesul la paginile foarte vechi, dar încercăm până la pagina 60
+            limit=10000, # Maximizat complet pentru Autovit și OLX
+            max_pages=300, # Autovit are maxim 500 pagini, setăm la 300 ca să înghițim absolut toate BMW-urile și VW-urile (care sunt cele mai multe)
             sort='newest'
         )
         
