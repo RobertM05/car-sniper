@@ -117,24 +117,28 @@ def calculate_deal_scores(results: list, stats: dict) -> list:
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-async def api_search(request: Request, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
-    calculated_pages = limit // 30 + 2
-    if max_pages < calculated_pages:
-        max_pages = min(calculated_pages, 20)
-    print(f'API CALL: make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}, site={site}')
-    results = await search_cars(make=make, model=model, sort=sort, min_price=min_price, max_price=max_price, min_year=min_year, max_year=max_year, max_km=max_km, min_cc=min_cc, min_hp=min_hp, limit=limit, max_pages=max_pages, site=site)
-    reverse = True if 'desc' in sort else False
-    key = 'price'
-    if 'year' in sort:
-        key = 'year'
-    elif 'km' in sort:
-        key = 'km'
-    try:
-        results.sort(key=lambda x: int(str(x.get(key, 0)).replace(' ', '').replace('€', '') or 0), reverse=reverse)
-        if 'asc' in sort and (not reverse):
-            pass
-    except:
-        pass
+def api_search(request: Request, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+    print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}')
+    
+    parts = sort.split('_')
+    sort_by = parts[0] if len(parts) > 0 else 'price'
+    order = parts[1] if len(parts) > 1 else 'asc'
+    
+    # Normalizăm modelul (ex: "Seria 3" devine "seria-3")
+    norm_model = car_db_optimizer.normalize_model_name(make, model)
+    
+    results = car_db_optimizer.search_ads_db(
+        make=make,
+        model=norm_model,
+        min_price=min_price,
+        max_price=max_price,
+        min_year=min_year,
+        max_year=max_year,
+        max_km=max_km,
+        limit=limit,
+        sort_by=sort_by,
+        order=order
+    )
     
     # Calculate deal scores if we have stats for this make/model
     if make and model:

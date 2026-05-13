@@ -147,6 +147,8 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                     break
                 current_page += 1
             except Exception as e:
+                import traceback
                 print(f'Error scraping OLX page {current_page}: {e}')
+                print(traceback.format_exc())
                 break
     return ads

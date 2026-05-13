@@ -1,0 +1,39 @@
+name: Car Sniper Global Crawler
+
+on:
+  schedule:
+    # Rulează la fiecare 4 ore (minutul 0, orele 0,4,8,12,16,20)
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Permite rularea manuală din interfața GitHub
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip' # Accelerează instalările viitoare
+        
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r backend/requirements.txt
+        
+    - name: Install Playwright Browsers (for Autovit)
+      run: |
+        python -m playwright install chromium
+        
+    - name: Run Global Crawler
+      env:
+        # Preluăm parola bazei de date din GitHub Secrets
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        # Setăm această variabilă ca scriptul să știe să nu facă "while True"
+        GITHUB_ACTIONS: true
+      run: |
+        python start_crawler.py

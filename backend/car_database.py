@@ -231,7 +231,11 @@ class CarDatabaseOptimizer:
                 query += ' AND km <= %s'
                 params.append(max_km)
         
-            query += ' ORDER BY created_at DESC LIMIT %s'
+            valid_sort_columns = {'price': 'price', 'year': 'year', 'km': 'km', 'created_at': 'created_at'}
+            sort_column = valid_sort_columns.get(sort_by, 'created_at')
+            sort_order = 'ASC' if order.lower() == 'asc' else 'DESC'
+            
+            query += f' ORDER BY {sort_column} {sort_order} LIMIT %s'
             params.append(limit)
         
             cursor.execute(query, tuple(params))
