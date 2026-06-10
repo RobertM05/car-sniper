@@ -149,6 +149,72 @@ def api_search(request: Request, make: str, model: str, max_price: int, site: st
     
     return {'results': results}
 
+@app.get('/api/deals/top')
+@limiter.limit("10/minute")
+def get_top_deals(request: Request):
+    """
+    Fetch up to 5 active car deals added/updated within the last 48 hours,
+    sorted by their calculated Deal Score (highest first).
+    """
+    try:
+        # 1. Fetch active ads updated within the last 48 hours
+        recent_ads = car_db_optimizer.get_recent_active_ads(hours_threshold=48)
+        if not recent_ads:
+            return {'results': []}
+
+        # 2. Group candidate ads by (make, model) to perform peer scoring
+        grouped_candidates = {}
+        for ad in recent_ads:
+            make = ad.get('make')
+            model = ad.get('model')
+            if not make or not model:
+                continue
+            key = (make.lower().strip(), model.lower().strip())
+            grouped_candidates.setdefault(key, []).append(ad)
+
+        # 3. For each group, calculate deal scores based on their peers
+        for (make_lower, model_lower), candidates in grouped_candidates.items():
+            # Get all active ads for this make/model to act as peers
+            peer_pool = car_db_optimizer.get_active_ads_for_make_model(candidates[0]['make'], candidates[0]['model'])
+            if not peer_pool:
+                continue
+            
+            # Fetch model stats
+            s_model = model_lower.replace(' ', '-')
+            stats = car_db_optimizer.get_model_stats(candidates[0]['make'], s_model) or {}
+            
+            # Calculate deal scores for all ads in the peer pool (in-place modification)
+            scored_pool = calculate_deal_scores(peer_pool, stats)
+            
+            # Create a lookup map for the calculated deal scores
+            scores_map = {ad['id']: ad.get('deal_score') for ad in scored_pool if 'id' in ad}
+            
+            # Assign the scores back to the candidate ads
+            for ad in candidates:
+                ad['deal_score'] = scores_map.get(ad['id'])
+
+        # 4. Filter out ads without a valid deal score
+        valid_deals = [ad for ad in recent_ads if ad.get('deal_score') is not None]
+
+        # 5. Sort by deal score descending (highest first)
+        valid_deals.sort(key=lambda x: x['deal_score'], reverse=True)
+
+        # 6. Take top 5 and format their price with " €" to match other endpoints
+        top_deals = valid_deals[:5]
+        for ad in top_deals:
+            price_val = ad.get('price')
+            if price_val is not None:
+                if isinstance(price_val, str):
+                    if '€' not in price_val:
+                        ad['price'] = f"{price_val} €"
+                else:
+                    ad['price'] = f"{price_val} €"
+
+        return {'results': top_deals}
+    except Exception as e:
+        logging.error(f"Error fetching top deals: {e}")
+        return {'results': [], 'error': str(e)}
+
 class AlertRequest(BaseModel):
     user_email: str
     make: str

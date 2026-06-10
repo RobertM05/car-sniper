@@ -779,3 +779,80 @@ html, body {
     padding: 0.65rem 0.75rem;
   }
 }
+
+/* === DEAL OF THE DAY SECTION (Double-Bezel Glassmorphism) === */
+.deals-section-shell {
+  background: var(--bg-shell);
+  border: 1px solid var(--border-shell);
+  padding: 0.5rem;
+  border-radius: 2rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--shadow-ambient);
+  margin-top: 4rem;
+  margin-bottom: 2rem;
+  opacity: 0;
+  animation: fadeUp 1s var(--spring-easing) 0.5s forwards;
+}
+
+.deals-section-core {
+  background: var(--bg-core);
+  border-radius: calc(2rem - 0.5rem);
+  padding: 2.5rem 2rem;
+  box-shadow: var(--shadow-inset-top);
+  border: 1px solid var(--border-core);
+}
+
+.deals-section-header {
+  margin-bottom: 2rem;
+}
+
+.deals-section-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.6) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.03em;
+}
+
+.deals-section-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  font-weight: 400;
+}
+
+.deals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Tablet & Mobile Media Query Adjustments */
+@media (max-width: 768px) {
+  .deals-section-shell {
+    border-radius: 1rem;
+    padding: 0.25rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .deals-section-core {
+    padding: 1.5rem 1rem;
+    border-radius: calc(1rem - 0.25rem);
+  }
+  
+  .deals-section-title {
+    font-size: 1.4rem;
+  }
+  
+  .deals-section-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .deals-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}

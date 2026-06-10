@@ -76,6 +76,11 @@ const translations = {
             prev: 'Anterior',
             next: 'Următor',
         },
+        dealOfTheDay: {
+            title: 'Ofertele Zilei',
+            subtitle: 'Cele mai bune raporturi calitate-preț din ultimele 48 de ore',
+            loading: 'Se încarcă cele mai bune oferte...',
+        },
         footer: '© {year} CarSniper. Toate drepturile rezervate.',
     },
     en: {
@@ -152,6 +157,11 @@ const translations = {
         pagination: {
             prev: 'Previous',
             next: 'Next',
+        },
+        dealOfTheDay: {
+            title: 'Deals of the Day',
+            subtitle: 'The best value-for-money listings from the last 48 hours',
+            loading: 'Loading top deals...',
         },
         footer: '© {year} CarSniper. All rights reserved.',
     }

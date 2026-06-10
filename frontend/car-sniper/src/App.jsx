@@ -7,6 +7,7 @@ import AuthModal from "./components/AuthModal";
 import PriceStats from "./components/PriceStats";
 import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
+import DealOfTheDay from "./components/DealOfTheDay";
 import emptyStateImg from "./assets/empty-state.png";
 import { useLanguage } from "./LanguageContext";
 import "./App.css";
@@ -315,6 +316,10 @@ const App = () => {
           onClose={() => setIsAuthOpen(false)}
           onLoginSuccess={(email, token) => setCurrentUser(email)}
         />
+
+        {!loading && !error && results.length === 0 && !formData.make && (
+          <DealOfTheDay />
+        )}
 
         {error && <div className="error-message">{error}</div>}
 

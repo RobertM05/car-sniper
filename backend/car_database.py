@@ -247,6 +247,33 @@ class CarDatabaseOptimizer:
                 ads.append(d)
             return ads
 
+    def get_recent_active_ads(self, hours_threshold: int = 48) -> List[Dict]:
+        """Fetch all active ads updated/added within the last hours_threshold hours."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = '''
+                SELECT * FROM ads 
+                WHERE active = TRUE 
+                  AND updated_at >= NOW() - CAST(%s AS interval)
+            '''
+            cursor.execute(query, (f"{hours_threshold} hours",))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+
+    def get_active_ads_for_make_model(self, make: str, model: str) -> List[Dict]:
+        """Fetch all active ads for a specific make and model to act as a peer comparison group."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            query = '''
+                SELECT * FROM ads 
+                WHERE active = TRUE 
+                  AND make = %s 
+                  AND model = %s
+            '''
+            cursor.execute(query, (make, model))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+
     def deactivate_stale_ads(self, hours_threshold=24):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -354,6 +381,9 @@ class CarDatabaseOptimizer:
             conn.commit()
 
     def get_model_info(self, make: str, model: str) -> Optional[Dict]:
+        if not make or not model:
+            return None
+            
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute('''
