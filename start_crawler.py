@@ -56,13 +56,16 @@ async def scrape_and_classify(make, possible_models):
     print(f"[{time.strftime('%X')}] Căutare Generală pentru Marca: {make.upper()}...")
     try:
         # Caută cele mai recente oferte PENTRU TOATĂ MARCA (model="")
+        # Dacă rulăm o sincronizare "adâncă" (deep sync), luăm 300 de pagini, altfel doar 15 (pentru GitHub Actions)
+        is_deep_sync = os.environ.get("DEEP_SYNC") == "true"
+        
         results = await search_cars(
             make=make,
             model="", # MAGIC! Nu cerem un model specific, vrem TOATE mașinile acestei mărci!
             max_price=999999,
             site='both',
-            limit=10000, # Maximizat complet pentru Autovit și OLX
-            max_pages=300, # Autovit are maxim 500 pagini, setăm la 300 ca să înghițim absolut toate BMW-urile și VW-urile (care sunt cele mai multe)
+            limit=10000 if is_deep_sync else 500,
+            max_pages=300 if is_deep_sync else 15,
             sort='newest'
         )
         
