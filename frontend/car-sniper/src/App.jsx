@@ -13,6 +13,7 @@ import DealOfTheDay from "./components/DealOfTheDay";
 import LegalPage from "./components/LegalPage";
 import emptyStateImg from "./assets/empty-state.png";
 import { useLanguage } from "./LanguageContext";
+import { initGA, logPageView, logEvent } from "./utils/analytics";
 import "./App.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
@@ -108,6 +109,14 @@ const AppContent = () => {
   }, [formData.make]);
 
   useEffect(() => {
+    initGA();
+  }, []);
+
+  useEffect(() => {
+    logPageView(location.pathname + location.search);
+  }, [location]);
+
+  useEffect(() => {
     if (urlMake && urlModel) {
       const make = decodeURIComponent(urlMake);
       const model = decodeURIComponent(urlModel);
@@ -152,6 +161,8 @@ const AppContent = () => {
 
       const data = await res.json();
       setResults(Array.isArray(data.results) ? data.results : []);
+
+      logEvent("Search", "Performed Search", `${searchData.make || 'Any'} ${searchData.model || ''}`, Array.isArray(data.results) ? data.results.length : 0);
 
       if (searchData.make && searchData.model) {
         try {
@@ -241,6 +252,7 @@ const AppContent = () => {
 
       if (!response.ok) throw new Error("Nu s-a putut salva alerta.");
 
+      logEvent("Alert", "Created Price Alert", `${formData.make || 'Any'} ${formData.model || ''} - Max: ${formData.maxPrice}`);
       alert("Alertă salvată cu succes! Vei primi notificări pe email.");
     } catch (err) {
       console.error(err);
