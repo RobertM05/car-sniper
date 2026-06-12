@@ -498,3 +498,23 @@ async def api_cron_run(request: Request, authorization: str = Header(None)):
     except Exception as e:
         print(f"Cron execution failed: {e}")
         return {"error": str(e)}
+
+from fastapi import Response
+
+@app.get("/sitemap.xml")
+def get_sitemap():
+    models = car_db_optimizer.get_popular_models(limit=5000)
+    
+    xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml_content += '  <url><loc>https://car-sniper.com/</loc></url>\n'
+    
+    for m in models:
+        make = m.get('make', '').lower().replace(' ', '-')
+        model = m.get('model', '').lower().replace(' ', '-')
+        if make and model:
+            xml_content += f'  <url><loc>https://car-sniper.com/masini/{make}/{model}</loc></url>\n'
+        
+    xml_content += '</urlset>'
+    
+    return Response(content=xml_content, media_type="application/xml")

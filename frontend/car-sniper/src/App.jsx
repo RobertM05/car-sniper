@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import SearchForm from "./components/SearchForm";
 import ResultsList from "./components/ResultsList";
 import AlertModal from "./components/AlertModal";
@@ -14,8 +16,11 @@ import "./App.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
 
-const App = () => {
+const AppContent = () => {
   const { t, lang, setLang } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { make: urlMake, model: urlModel } = useParams();
 
   const [formData, setFormData] = useState({
     make: "",
@@ -96,33 +101,45 @@ const App = () => {
   useEffect(() => {
     if (formData.make) {
       fetchModels(formData.make);
-      setFormData(prev => ({ ...prev, model: "" }));
     } else {
       setModels([]);
     }
   }, [formData.make]);
 
+  useEffect(() => {
+    if (urlMake && urlModel) {
+      const make = decodeURIComponent(urlMake);
+      const model = decodeURIComponent(urlModel);
+      
+      setFormData(prev => ({ ...prev, make, model }));
+      fetchModels(make);
+      handleSearch(null, { ...formData, make, model });
+    }
+  }, [urlMake, urlModel]);
 
-  const handleSearch = async (e) => {
+
+  const handleSearch = async (e, overrideData = null) => {
     if (e && e.preventDefault) e.preventDefault();
     setError("");
     setLoading(true);
     setResults([]);
     setCurrentPage(1);
 
+    const searchData = overrideData || formData;
+
     try {
       const params = new URLSearchParams();
 
-      if (formData.make) params.append("make", formData.make);
-      if (formData.model) params.append("model", formData.model);
-      if (formData.minPrice) params.append("min_price", formData.minPrice);
-      if (formData.maxPrice) params.append("max_price", formData.maxPrice);
-      if (formData.minYear) params.append("min_year", formData.minYear);
-      if (formData.maxYear) params.append("max_year", formData.maxYear);
-      if (formData.maxKm) params.append("max_km", formData.maxKm);
-      params.append("site", formData.site);
-      params.append("limit", formData.limit);
-      params.append("max_pages", formData.maxPages);
+      if (searchData.make) params.append("make", searchData.make);
+      if (searchData.model) params.append("model", searchData.model);
+      if (searchData.minPrice) params.append("min_price", searchData.minPrice);
+      if (searchData.maxPrice) params.append("max_price", searchData.maxPrice);
+      if (searchData.minYear) params.append("min_year", searchData.minYear);
+      if (searchData.maxYear) params.append("max_year", searchData.maxYear);
+      if (searchData.maxKm) params.append("max_km", searchData.maxKm);
+      params.append("site", searchData.site);
+      params.append("limit", searchData.limit);
+      params.append("max_pages", searchData.maxPages);
 
       const url = `${API_BASE_URL}/api/search?${params.toString()}`;
 
@@ -135,9 +152,9 @@ const App = () => {
       const data = await res.json();
       setResults(Array.isArray(data.results) ? data.results : []);
 
-      if (formData.make && formData.model) {
+      if (searchData.make && searchData.model) {
         try {
-          const statsRes = await fetch(`${API_BASE_URL}/api/stats/${formData.make}/${formData.model}`);
+          const statsRes = await fetch(`${API_BASE_URL}/api/stats/${searchData.make}/${searchData.model}`);
           if (statsRes.ok) {
             const statsData = await statsRes.json();
             if (!statsData.error) {
@@ -158,6 +175,24 @@ const App = () => {
       setError(err.message || t('search', 'searching'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (formData.make && formData.model) {
+      const targetUrl = `/masini/${encodeURIComponent(formData.make)}/${encodeURIComponent(formData.model)}`;
+      if (location.pathname === targetUrl) {
+        handleSearch();
+      } else {
+        navigate(targetUrl);
+      }
+    } else {
+      if (location.pathname !== "/") {
+        navigate("/");
+      } else {
+        handleSearch();
+      }
     }
   };
 
@@ -250,6 +285,18 @@ const App = () => {
 
   return (
     <div>
+      {urlMake && urlModel && (
+        <Helmet>
+          <title>{`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | CarSniper`}</title>
+          <meta name="description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare. Prețuri excelente și mașini verificate.`} />
+        </Helmet>
+      )}
+      {!urlMake && !urlModel && (
+        <Helmet>
+          <title>CarSniper - Găsește mașina dorită</title>
+          <meta name="description" content="Caută și găsește cele mai bune mașini second hand și noi." />
+        </Helmet>
+      )}
       <nav className="top-nav">
         <div className="nav-brand">
           <span>C</span> CARSNIPER
@@ -294,7 +341,7 @@ const App = () => {
           models={models}
           loadingBrands={loadingBrands}
           loadingModels={loadingModels}
-          onSubmit={handleSearch}
+          onSubmit={handleSearchSubmit}
           loading={loading}
           onAlertClick={() => setIsAlertOpen(true)}
         />
@@ -381,6 +428,15 @@ const App = () => {
         </footer>
       </div>
     </div>
+  );
+};
+
+const App = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<AppContent />} />
+      <Route path="/masini/:make/:model" element={<AppContent />} />
+    </Routes>
   );
 };
 
