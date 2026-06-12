@@ -70,6 +70,7 @@ async def scrape_and_classify(make, possible_models):
         )
         
         saved_count = 0
+        valid_cars = []
         for car in results:
             try:
                 car['make'] = make
@@ -114,10 +115,16 @@ async def scrape_and_classify(make, possible_models):
                     car['price'] = int(price_raw) if price_raw else 0
                 
                 if car['model']: # Salvăm doar dacă am putut detecta modelul
-                    car_db_optimizer.upsert_ad(car)
-                    saved_count += 1
+                    valid_cars.append(car)
+            except Exception as e:
+                print(f" Eroare parsare masina {car.get('link')[:30]}: {e}")
+                
+        if valid_cars:
+            try:
+                car_db_optimizer.upsert_ads(valid_cars)
+                saved_count = len(valid_cars)
             except Exception as db_err:
-                print(f" Eroare DB pt masina {car.get('link')[:30]}: {db_err}")
+                print(f" Eroare DB batch upsert: {db_err}")
                 
         print(f"[{time.strftime('%X')}] Succes! Am clasificat și actualizat {saved_count} mașini noi din cele {len(results)} găsite pentru {make.upper()}.")
     except Exception as e:

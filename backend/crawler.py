@@ -13,6 +13,7 @@ async def crawl_target(target):
     try:
         results = await search_cars(make=make, model=model, max_price=10000000, site='both', limit=1000, max_pages=20)
         count = 0
+        valid_db_ads = []
         for ad in results:
             try:
                 price_val = 0
@@ -65,10 +66,17 @@ async def crawl_target(target):
                     except Exception as e:
                         logging.warning(f'     Repair failed: {e}')
                 db_ad = {'source': ad.get('subsource') or ad.get('source', 'Unknown'), 'make': make, 'model': model, 'title': ad.get('title'), 'link': ad.get('link'), 'image': ad.get('image'), 'price': price_val, 'year': ad.get('year'), 'km': ad.get('km'), 'id': ad.get('id')}
-                car_db_optimizer.upsert_ad(db_ad)
-                count += 1
+                valid_db_ads.append(db_ad)
             except Exception as e:
-                logging.warning(f'Failed to upsert ad: {e}')
+                logging.warning(f'Failed to process ad: {e}')
+                
+        if valid_db_ads:
+            try:
+                car_db_optimizer.upsert_ads(valid_db_ads)
+                count = len(valid_db_ads)
+            except Exception as e:
+                logging.warning(f'Failed to batch upsert ads: {e}')
+
         logging.info(f'Finished {make} {model}: Saved {count} ads.')
     except Exception as e:
         logging.error(f'Error crawling {make} {model}: {e}')

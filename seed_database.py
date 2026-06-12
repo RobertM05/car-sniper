@@ -69,6 +69,7 @@ async def scrape_by_year(make, possible_models, min_year, max_year):
         )
         
         saved_count = 0
+        valid_cars = []
         for car in results:
             try:
                 car['make'] = make
@@ -102,10 +103,16 @@ async def scrape_by_year(make, possible_models, min_year, max_year):
                     car['price'] = int(price_raw) if price_raw else 0
                 
                 if car['model']:
-                    car_db_optimizer.upsert_ad(car)
-                    saved_count += 1
+                    valid_cars.append(car)
             except Exception as db_err:
                 pass
+                
+        if valid_cars:
+            try:
+                car_db_optimizer.upsert_ads(valid_cars)
+                saved_count = len(valid_cars)
+            except Exception as e:
+                print(f"Eroare batch insert: {e}")
                 
         print(f"[{time.strftime('%X')}] Succes! Am salvat {saved_count} mașini {make.upper()} ({min_year}-{max_year}).")
     except Exception as e:

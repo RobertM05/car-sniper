@@ -203,6 +203,64 @@ class CarDatabaseOptimizer:
             conn.commit()
             return ad_id
 
+    def upsert_ads(self, ads_data: List[Dict]):
+        if not ads_data:
+            return []
+            
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            import hashlib
+            from psycopg2.extras import execute_values
+            
+            insert_query = '''
+                INSERT INTO ads (
+                    id, source, title, price, link, image, make, model, year, km, 
+                    fuel, transmission, body_type, city, last_seen, active, updated_at
+                ) VALUES %s
+                ON CONFLICT(link) DO UPDATE SET
+                    price = EXCLUDED.price,
+                    last_seen = CURRENT_TIMESTAMP,
+                    active = TRUE,
+                    updated_at = CURRENT_TIMESTAMP,
+                    image = COALESCE(EXCLUDED.image, ads.image) 
+            '''
+            
+            values = []
+            ad_ids = []
+            
+            for ad_data in ads_data:
+                link = ad_data.get('link', '')
+                if not ad_data.get('id'):
+                    ad_id = hashlib.md5(link.encode()).hexdigest()
+                else:
+                    ad_id = ad_data['id']
+                try:
+                    price_val = int(ad_data.get('price', 0))
+                except:
+                    price_val = 0
+
+                values.append((
+                    ad_id, 
+                    ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
+                    ad_data.get('title'), 
+                    price_val, 
+                    link, 
+                    ad_data.get('image'), 
+                    ad_data.get('make'), 
+                    ad_data.get('model'), 
+                    ad_data.get('year'), 
+                    ad_data.get('km'), 
+                    ad_data.get('fuel'), 
+                    ad_data.get('transmission'), 
+                    ad_data.get('body_type'), 
+                    ad_data.get('city')
+                ))
+                ad_ids.append(ad_id)
+                
+            execute_values(cursor, insert_query, values)
+            conn.commit()
+            return ad_ids
+
     def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, min_year=None, max_year=None, min_km=None, max_km=None, limit=100, sort_by='price', order='asc') -> List[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
