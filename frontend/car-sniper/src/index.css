@@ -106,3 +106,19 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+.login-btn {
+  background: var(--card-bg);
+  border: 1px solid var(--border-shell);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.login-btn:hover {
+  background: var(--border-shell);
+  color: var(--text-primary);
+}
