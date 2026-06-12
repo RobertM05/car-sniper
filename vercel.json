@@ -18,6 +18,10 @@
             "src": "/api/(.*)",
             "dest": "/backend/main.py"
         },
+        {
+            "src": "/(assets/.*|.*\\.(ico|png|jpg|jpeg|svg|css|js|json|woff|woff2|ttf|eot))$",
+            "dest": "/frontend/car-sniper/$1"
+        },
         { "handle": "filesystem" },
         {
             "src": "/(.*)",
