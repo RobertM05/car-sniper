@@ -34,6 +34,29 @@
   --shadow-inset-top: inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
+[data-theme='light'] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  
+  --bg-shell: rgba(0, 0, 0, 0.04);
+  --bg-core: rgba(255, 255, 255, 0.9);
+  
+  --text-primary: #0f172a;
+  --text-secondary: rgba(15, 23, 42, 0.65);
+  --text-muted: rgba(15, 23, 42, 0.45);
+  
+  --accent-color: #0f172a;
+  --accent-glow: rgba(0, 0, 0, 0.05);
+  --primary-color: #0284c7; 
+  
+  --border-shell: rgba(0, 0, 0, 0.1);
+  --border-core: rgba(0, 0, 0, 0.05);
+  --border-highlight: rgba(0, 0, 0, 0.15);
+  
+  --shadow-ambient: 0 20px 40px -10px rgba(0, 0, 0, 0.1);
+  --shadow-inset-top: inset 0 1px 1px rgba(255, 255, 255, 1);
+}
+
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;

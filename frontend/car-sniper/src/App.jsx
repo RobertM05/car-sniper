@@ -15,6 +15,7 @@ import PartnerDashboard from "./components/PartnerDashboard";
 import emptyStateImg from "./assets/empty-state.png";
 import { useLanguage } from "./LanguageContext";
 import { initGA, logPageView, logEvent } from "./utils/analytics";
+import { Sun, Moon } from "lucide-react";
 import "./App.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
@@ -56,7 +57,20 @@ const AppContent = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
   const [sortBy, setSortBy] = useState("price-asc");
+  const [theme, setTheme] = useState('dark');
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
 
   const fetchBrands = async () => {
     setLoadingBrands(true);
@@ -334,6 +348,10 @@ const AppContent = () => {
             <span style={{ color: 'var(--text-secondary)' }}>|</span>
             <button onClick={() => setLang('en')} style={{ background: 'none', border: 'none', color: lang === 'en' ? 'var(--primary-color)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: lang === 'en' ? 'bold' : 'normal' }}>EN</button>
           </div>
+
+          <button onClick={toggleTheme} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '1rem' }} aria-label="Toggle Theme">
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
         </div>
       </nav>
 
