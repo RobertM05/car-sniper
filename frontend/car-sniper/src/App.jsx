@@ -107,12 +107,12 @@ const AppContent = () => {
 
 
   useEffect(() => {
-    fetchBrands();
-    const storedToken = localStorage.getItem('jwt_token');
     const storedEmail = localStorage.getItem('user_email');
-    if (storedToken && storedEmail) {
-      setCurrentUser(storedEmail);
+    const storedRole = localStorage.getItem('user_role');
+    if (storedEmail) {
+      setCurrentUser({ email: storedEmail, role: storedRole || 'user' });
     }
+    fetchBrands();
   }, []);
 
   useEffect(() => {
@@ -260,6 +260,7 @@ const AppContent = () => {
       if (response.status === 401) {
           localStorage.removeItem('jwt_token');
           localStorage.removeItem('user_email');
+          localStorage.removeItem('user_role');
           setCurrentUser(null);
           setIsAuthOpen(true);
           throw new Error("Sesiunea a expirat. Te rugăm să te conectezi din nou.");
@@ -275,10 +276,10 @@ const AppContent = () => {
     }
   };
 
-  const handleLogout = (e) => {
-    e.preventDefault();
+  const handleLogout = () => {
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('user_email');
+    localStorage.removeItem('user_role');
     setCurrentUser(null);
   };
 
@@ -331,16 +332,20 @@ const AppContent = () => {
         </div>
         <div className="nav-links">
           <a href="#">{t('nav', 'browse')}</a>
-          <a href="/partner-dashboard" style={{ color: 'var(--primary-color)' }}>Dashboard</a>
           <a href="#" className="partner-link" onClick={(e) => { e.preventDefault(); setIsContactOpen(true); }}>{t('nav', 'partner')}</a>
 
           {currentUser ? (
-            <div className="user-menu" style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-              <span style={{ color: 'var(--primary-color)', fontSize: '13px' }}>{currentUser}</span>
-              <a href="#" onClick={handleLogout} style={{ color: '#ef4444' }}>Ieșire</a>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              {(currentUser.role === 'admin' || currentUser.role === 'dealer') && (
+                <a href="/partner-dashboard" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>Dashboard</a>
+              )}
+              <span style={{ color: 'var(--text-secondary)' }}>Salut, {currentUser.email}</span>
+              <button onClick={handleLogout} style={{ background: 'none', border: '1px solid var(--border-shell)', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
+                Logout
+              </button>
             </div>
           ) : (
-            <a href="#" onClick={(e) => { e.preventDefault(); setIsAuthOpen(true); }}>{t('nav', 'account')}</a>
+            <button onClick={() => setIsAuthOpen(true)} className="login-btn">Contul meu</button>
           )}
 
           <div className="lang-selector" style={{ display: 'flex', gap: '8px', marginLeft: '1rem', alignItems: 'center' }}>
@@ -390,10 +395,10 @@ const AppContent = () => {
           onClose={() => setIsContactOpen(false)}
         />
 
-        <AuthModal
-          isOpen={isAuthOpen}
-          onClose={() => setIsAuthOpen(false)}
-          onLoginSuccess={(email, token) => setCurrentUser(email)}
+        <AuthModal 
+          isOpen={isAuthOpen} 
+          onClose={() => setIsAuthOpen(false)} 
+          onLoginSuccess={(email, token, role) => setCurrentUser({ email, role })}
         />
 
         {!loading && !error && results.length === 0 && !formData.make && (
