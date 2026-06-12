@@ -10,6 +10,7 @@ import PriceStats from "./components/PriceStats";
 import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
 import DealOfTheDay from "./components/DealOfTheDay";
+import LegalPage from "./components/LegalPage";
 import emptyStateImg from "./assets/empty-state.png";
 import { useLanguage } from "./LanguageContext";
 import "./App.css";
@@ -424,6 +425,10 @@ const AppContent = () => {
         </div>
 
         <footer style={{ textAlign: 'center', marginTop: '4rem', color: 'var(--text-secondary)', padding: '2rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '1rem' }}>
+             <a href="/termeni" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{t('legal', 'termsTitle')}</a>
+             <a href="/confidentialitate" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{t('legal', 'privacyTitle')}</a>
+          </div>
           <p>{t('footer', null, { year: new Date().getFullYear() })}</p>
         </footer>
       </div>
@@ -436,6 +441,8 @@ const App = () => {
     <Routes>
       <Route path="/" element={<AppContent />} />
       <Route path="/masini/:make/:model" element={<AppContent />} />
+      <Route path="/termeni" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="terms" /></div>} />
+      <Route path="/confidentialitate" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="privacy" /></div>} />
     </Routes>
   );
 };
