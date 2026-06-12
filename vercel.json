@@ -18,9 +18,10 @@
             "src": "/api/(.*)",
             "dest": "/backend/main.py"
         },
+        { "handle": "filesystem" },
         {
             "src": "/(.*)",
-            "dest": "/frontend/car-sniper/$1"
+            "dest": "/frontend/car-sniper/index.html"
         }
     ]
 }
