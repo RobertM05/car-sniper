@@ -11,6 +11,7 @@ import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
 import DealOfTheDay from "./components/DealOfTheDay";
 import LegalPage from "./components/LegalPage";
+import PartnerDashboard from "./components/PartnerDashboard";
 import emptyStateImg from "./assets/empty-state.png";
 import { useLanguage } from "./LanguageContext";
 import { initGA, logPageView, logEvent } from "./utils/analytics";
@@ -316,7 +317,7 @@ const AppContent = () => {
         </div>
         <div className="nav-links">
           <a href="#">{t('nav', 'browse')}</a>
-          <a href="#">{t('nav', 'partnerNetwork')}</a>
+          <a href="/partner-dashboard" style={{ color: 'var(--primary-color)' }}>Dashboard</a>
           <a href="#" className="partner-link" onClick={(e) => { e.preventDefault(); setIsContactOpen(true); }}>{t('nav', 'partner')}</a>
 
           {currentUser ? (
@@ -455,6 +456,7 @@ const App = () => {
       <Route path="/masini/:make/:model" element={<AppContent />} />
       <Route path="/termeni" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="terms" /></div>} />
       <Route path="/confidentialitate" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="privacy" /></div>} />
+      <Route path="/partner-dashboard" element={<PartnerDashboard />} />
     </Routes>
   );
 };
