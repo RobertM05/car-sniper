@@ -27,22 +27,29 @@ def infer_car_details(title: str, make: str = "") -> tuple:
     hybrid_keywords = ['hybrid', 'phev', 'hibrid', 'e-hybrid']
     electric_keywords = ['electric', 'e-tron', 'eq', 'ev', 'tesla']
 
-    if any(k in title_lower for k in hybrid_keywords):
+    # Helper to check whole words
+    def has_keyword(keywords, text):
+        # We replace some common separators to spaces for easier boundary checking,
+        # but regex \b is usually sufficient. We'll use a dynamic regex.
+        pattern = r'\b(?:' + '|'.join(map(re.escape, keywords)) + r')\b'
+        return bool(re.search(pattern, text))
+
+    if has_keyword(hybrid_keywords, title_lower):
         fuel = 'Hybrid'
-    elif any(k in title_lower for k in electric_keywords):
+    elif has_keyword(electric_keywords, title_lower):
         fuel = 'Electric'
-    elif any(k in title_lower for k in diesel_keywords) or (make.lower() == 'bmw' and ('d ' in title_lower.replace('xdrive', '') or title_lower.endswith('d'))):
+    elif has_keyword(diesel_keywords, title_lower) or (make.lower() == 'bmw' and bool(re.search(r'\bd\b', title_lower.replace('xdrive', '')))):
         fuel = 'Diesel'
-    elif any(k in title_lower for k in petrol_keywords) or (make.lower() == 'bmw' and ('i ' in title_lower.replace('xdrive', '') or title_lower.endswith('i'))):
+    elif has_keyword(petrol_keywords, title_lower) or (make.lower() == 'bmw' and bool(re.search(r'\bi\b', title_lower.replace('xdrive', '')))):
         fuel = 'Petrol'
         
     # 2. Infer Transmission
     auto_keywords = ['dsg', 'steptronic', 's tronic', 's-tronic', 'automat', 'automatic', 'xdrive', '4matic', 'quattro', 'edc', '7g-tronic', '9g-tronic', 'tiptronic', 'pdk', 'cutie automata']
     manual_keywords = ['manual', 'cutie manuala']
     
-    if any(k in title_lower for k in auto_keywords):
+    if has_keyword(auto_keywords, title_lower):
         transmission = 'Automatic'
-    elif any(k in title_lower for k in manual_keywords):
+    elif has_keyword(manual_keywords, title_lower):
         transmission = 'Manual'
         
     return fuel, transmission
