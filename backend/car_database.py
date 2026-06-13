@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
 import json
 from typing import Dict, List, Optional, Tuple
@@ -16,16 +17,29 @@ class CarDatabaseOptimizer:
         else:
             self.db_path = db_path
             
+        try:
+            self.connection_pool = pool.ThreadedConnectionPool(1, 20, self.db_path, cursor_factory=RealDictCursor)
+        except Exception as e:
+            print(f"Error creating connection pool: {e}")
+            self.connection_pool = None
+            
         self.init_database()
 
     @contextmanager
     def get_connection(self):
         # Using RealDictCursor allows us to fetch rows as dictionaries, similar to sqlite3.Row
-        conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
-        try:
-            yield conn
-        finally:
-            conn.close()
+        if self.connection_pool:
+            conn = self.connection_pool.getconn()
+            try:
+                yield conn
+            finally:
+                self.connection_pool.putconn(conn)
+        else:
+            conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
+            try:
+                yield conn
+            finally:
+                conn.close()
 
     def format_brand_name(self, brand: str) -> str:
         brand = brand.lower().strip()
