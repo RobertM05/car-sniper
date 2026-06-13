@@ -258,7 +258,7 @@ class CarDatabaseOptimizer:
                 ))
                 ad_ids.append(ad_id)
                 
-            execute_values(cursor, insert_query, values)
+            execute_values(cursor, insert_query, values, template="(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)")
             conn.commit()
             return ad_ids
 
