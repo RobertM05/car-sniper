@@ -161,6 +161,10 @@ def api_search(request: Request, background_tasks: BackgroundTasks, make: str, m
     
     return {'results': results}
 
+import time
+_TOP_DEALS_CACHE = {"timestamp": 0, "deals": []}
+_TOP_DEALS_CACHE_TTL = 3600  # Cache for 1 hour (3600 seconds)
+
 @app.get('/api/deals/top')
 @limiter.limit("10/minute")
 def get_top_deals(request: Request):
@@ -169,6 +173,13 @@ def get_top_deals(request: Request):
     sorted by their calculated Deal Score (highest first).
     """
     try:
+        global _TOP_DEALS_CACHE
+        current_time = time.time()
+        
+        # Return cached deals if still valid
+        if current_time - _TOP_DEALS_CACHE["timestamp"] < _TOP_DEALS_CACHE_TTL and _TOP_DEALS_CACHE["deals"]:
+            return {'results': _TOP_DEALS_CACHE["deals"]}
+
         # 1. Fetch active ads updated within the last 48 hours
         recent_ads = car_db_optimizer.get_recent_active_ads(hours_threshold=48)
         if not recent_ads:
@@ -226,9 +237,20 @@ def get_top_deals(request: Request):
                 else:
                     ad['price'] = f"{price_val} €"
 
+        # Update the cache with the new top deals
+        _TOP_DEALS_CACHE["timestamp"] = current_time
+        _TOP_DEALS_CACHE["deals"] = top_deals
+        
         return {'results': top_deals}
     except Exception as e:
+        import traceback
         logging.error(f"Error fetching top deals: {e}")
+        logging.error(traceback.format_exc())
+        
+        # If error occurs, try returning stale cache as fallback
+        if _TOP_DEALS_CACHE["deals"]:
+            return {'results': _TOP_DEALS_CACHE["deals"]}
+            
         return {'results': [], 'error': str(e)}
 
 class AlertRequest(BaseModel):
