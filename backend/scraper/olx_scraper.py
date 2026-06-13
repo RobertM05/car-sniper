@@ -12,12 +12,19 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
     async with aiohttp.ClientSession(headers={'User-Agent': 'Mozilla/5.0'}, connector=aiohttp.TCPConnector(ssl=False)) as session:
         while len(ads) < limit and current_page <= max_pages:
             path = 'autoturisme'
-            if make:
+            if make and model_slug:
                 make_slug = make.lower().replace(' ', '-')
-                path = f'{path}/{make_slug}'
-                if model_slug:
-                    path = f'{path}/{model_slug}'
-            url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/'
+                path = f'{path}/{make_slug}/{model_slug}'
+                url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/'
+            elif query:
+                url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/q-{query.lower().replace(" ", "-")}/'
+            else:
+                if make:
+                    make_slug = make.lower().replace(' ', '-')
+                    path = f'{path}/{make_slug}'
+                    url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/'
+                else:
+                    url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/'
             params = {'page': str(current_page), 'currency': 'EUR', 'search[photos]': '1'}
             if sort_order == 'price_asc':
                 params['search[order]'] = 'filter_float_price:asc'

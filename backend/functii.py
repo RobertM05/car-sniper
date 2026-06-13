@@ -130,6 +130,8 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         if make_lc == 'audi':
             m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
             if m:
+                if m.group(1) == 'a' and m.group(2) == '5':
+                    return None
                 return f'{m.group(1)}{m.group(2)}'
         if make_lc in ['volkswagen', 'vw']:
             return None

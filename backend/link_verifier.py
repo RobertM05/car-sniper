@@ -13,6 +13,9 @@ async def check_single_link(session, ad):
             if response.status == 404:
                 return ad, False
                 
+            if response.status in [403, 429]:
+                return ad, True
+                
             # If the URL redirects significantly (e.g. back to the homepage or search page)
             # Autovit redirects sold cars to similar cars or homepage.
             # OLX usually keeps the URL but changes content, but sometimes redirects.
@@ -20,7 +23,7 @@ async def check_single_link(session, ad):
             original_url = ad.get('link')
             
             # Very basic redirect check
-            if len(final_url) < 35 or "autovit.ro" in original_url and "autovit.ro/anunt/" not in final_url:
+            if len(final_url) < 35 or ("autovit.ro" in original_url and "autovit.ro/anunt/" not in final_url):
                 return ad, False
                 
             # For OLX, if it redirects to the homepage
