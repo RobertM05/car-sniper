@@ -163,6 +163,9 @@ class CarDatabaseOptimizer:
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)')
+                
+                # Setup column for Price Drop Tracking
+                cursor.execute('ALTER TABLE ads ADD COLUMN IF NOT EXISTS original_price INTEGER')
             
                 conn.commit()
         except Exception as e:
@@ -237,11 +240,12 @@ class CarDatabaseOptimizer:
             
             insert_query = '''
                 INSERT INTO ads (
-                    id, source, title, price, link, image, make, model, year, km, 
+                    id, source, title, price, original_price, link, image, make, model, year, km, 
                     fuel, transmission, body_type, city, last_seen, active, updated_at
                 ) VALUES %s
                 ON CONFLICT(link) DO UPDATE SET
                     price = EXCLUDED.price,
+                    original_price = COALESCE(ads.original_price, EXCLUDED.price),
                     last_seen = CURRENT_TIMESTAMP,
                     active = TRUE,
                     updated_at = CURRENT_TIMESTAMP,
@@ -275,6 +279,7 @@ class CarDatabaseOptimizer:
                     ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
                     ad_data.get('title'), 
                     price_val, 
+                    price_val,
                     link, 
                     ad_data.get('image'), 
                     ad_data.get('make'), 
@@ -288,7 +293,7 @@ class CarDatabaseOptimizer:
                 ))
                 ad_ids.append(ad_id)
                 
-            execute_values(cursor, insert_query, values, template="(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)")
+            execute_values(cursor, insert_query, values, template="(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)")
             conn.commit()
             return ad_ids
 

@@ -7,6 +7,11 @@ const CarCard = ({ car, index = 0 }) => {
 
     let displayPrice = "";
     const rawPrice = parseInt(String(car.price).replace(/\D/g, '')) || 0;
+    const rawOriginalPrice = parseInt(String(car.original_price).replace(/\D/g, '')) || rawPrice;
+
+    const priceDrop = (rawOriginalPrice > rawPrice && rawPrice > 0) 
+        ? Math.round(((rawOriginalPrice - rawPrice) / rawOriginalPrice) * 100) 
+        : 0;
 
     if (rawPrice === 0) {
         displayPrice = t('card', 'priceOnRequest');
@@ -74,6 +79,11 @@ const CarCard = ({ car, index = 0 }) => {
                 )}
 
                 <div className="car-image-container">
+                    {priceDrop > 0 && (
+                        <div className="price-drop-badge">
+                            ↓ {priceDrop}% REDUCERE
+                        </div>
+                    )}
                     <img
                         src={car.image || "https://placehold.co/600x400/1e293b/cbd5e1?text=Fără+Poză"}
                         alt={car.title}
