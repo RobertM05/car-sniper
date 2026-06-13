@@ -462,6 +462,13 @@ class CarDatabaseOptimizer:
             return None
 
     def get_generations_for_model(self, make: str, model: str) -> List[Dict]:
+        if not hasattr(self, '_gens_cache'):
+            self._gens_cache = {}
+            
+        cache_key = f"{make}_{model}"
+        if cache_key in self._gens_cache:
+            return self._gens_cache[cache_key]
+            
         make_normalized = make.lower().strip()
         model_normalized = model.lower().strip()
         generations = self._get_model_generations_from_db(make_normalized, model_normalized)
@@ -476,7 +483,10 @@ class CarDatabaseOptimizer:
             ''', (make_normalized, model_normalized))
             result = cursor.fetchone()
             if result and result['generation']:
-                return [{'generation': result['generation'], 'min_year': result['min_year'], 'max_year': result['max_year'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}]
+                res = [{'generation': result['generation'], 'min_year': result['min_year'], 'max_year': result['max_year'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}]
+                self._gens_cache[cache_key] = res
+                return res
+            self._gens_cache[cache_key] = []
             return []
 
     def _get_model_generations_from_db(self, make: str, model: str) -> List[Dict]:
