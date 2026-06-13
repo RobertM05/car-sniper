@@ -413,7 +413,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 import datetime
 
-JWT_SECRET = os.environ.get("JWT_SECRET", "super-secret-fallback-token-sniper-2026")
+JWT_SECRET = os.environ.get("JWT_SECRET")
+if not JWT_SECRET:
+    print("WARNING: JWT_SECRET environment variable is missing! Falling back to generated token for safety, but login will not persist across restarts.")
+    JWT_SECRET = "temp-secret-" + str(datetime.datetime.now().timestamp())
 JWT_ALGORITHM = "HS256"
 security = HTTPBearer()
 
@@ -598,7 +601,9 @@ def get_model_stats(request: Request, make: str, model: str):
 from fastapi import Header
 from mailer import send_new_cars_email
 
-CRON_SECRET_KEY = os.environ.get("CRON_SECRET", "super-secret-cron-key-2026")
+CRON_SECRET_KEY = os.environ.get("CRON_SECRET")
+if not CRON_SECRET_KEY:
+    print("WARNING: CRON_SECRET environment variable is missing! Cron jobs will fail until this is set.")
 
 @app.get('/api/cron/run')
 @limiter.limit("10/minute")
@@ -607,7 +612,7 @@ async def api_cron_run(request: Request, authorization: str = Header(None)):
     Endpoint triggered periodically (e.g. via cron-job.org or Vercel Cron) 
     to dispatch alerts. Protected by CRON_SECRET.
     """
-    if not authorization or authorization.replace("Bearer ", "") != CRON_SECRET_KEY:
+    if not CRON_SECRET_KEY or not authorization or authorization.replace("Bearer ", "") != CRON_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized Cron Trigger")
         
     try:
