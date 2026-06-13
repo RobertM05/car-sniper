@@ -37,13 +37,13 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
             if (data.token) {
                 localStorage.setItem('jwt_token', data.token);
                 localStorage.setItem('user_email', data.email);
-                const role = data.email === 'robert.musoiu05@gmail.com' ? 'admin' : (data.role || 'user');
+                const role = data.role || 'user';
                 localStorage.setItem('user_role', role);
             }
 
             setStatus('Succes!');
             setTimeout(() => {
-                const role = data.email === 'robert.musoiu05@gmail.com' ? 'admin' : (data.role || 'user');
+                const role = data.role || 'user';
                 onLoginSuccess(data.email, data.token, role);
                 onClose();
                 setStatus('');
