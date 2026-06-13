@@ -14,6 +14,39 @@ load_dotenv(dotenv_path=env_path)
 _SEARCH_CACHE = {}
 _CACHE_TTL = 600
 
+def infer_car_details(title: str, make: str = "") -> tuple:
+    """Infers fuel and transmission based on the car title."""
+    title_lower = (title or "").lower()
+    
+    fuel = None
+    transmission = None
+    
+    # 1. Infer Fuel
+    petrol_keywords = ['tsi', 'tfsi', 'fsi', 'vti', 't-gdi', 'tce', 'ecoboost', 'vtec', 'i-vtec', 'benzina', 'petrol']
+    diesel_keywords = ['tdi', 'cdi', 'dci', 'crdi', 'cr-di', 'jtd', 'hdi', 'mjet', 'multijet', 'diesel', 'motorina']
+    hybrid_keywords = ['hybrid', 'phev', 'hibrid', 'e-hybrid']
+    electric_keywords = ['electric', 'e-tron', 'eq', 'ev', 'tesla']
+
+    if any(k in title_lower for k in hybrid_keywords):
+        fuel = 'Hybrid'
+    elif any(k in title_lower for k in electric_keywords):
+        fuel = 'Electric'
+    elif any(k in title_lower for k in diesel_keywords) or (make.lower() == 'bmw' and ('d ' in title_lower.replace('xdrive', '') or title_lower.endswith('d'))):
+        fuel = 'Diesel'
+    elif any(k in title_lower for k in petrol_keywords) or (make.lower() == 'bmw' and ('i ' in title_lower.replace('xdrive', '') or title_lower.endswith('i'))):
+        fuel = 'Petrol'
+        
+    # 2. Infer Transmission
+    auto_keywords = ['dsg', 'steptronic', 's tronic', 's-tronic', 'automat', 'automatic', 'xdrive', '4matic', 'quattro', 'edc', '7g-tronic', '9g-tronic', 'tiptronic', 'pdk', 'cutie automata']
+    manual_keywords = ['manual', 'cutie manuala']
+    
+    if any(k in title_lower for k in auto_keywords):
+        transmission = 'Automatic'
+    elif any(k in title_lower for k in manual_keywords):
+        transmission = 'Manual'
+        
+    return fuel, transmission
+
 def ttl_cache(func):
 
     @functools.wraps(func)

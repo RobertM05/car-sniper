@@ -162,6 +162,8 @@ const AppContent = () => {
       if (searchData.minYear) params.append("min_year", searchData.minYear);
       if (searchData.maxYear) params.append("max_year", searchData.maxYear);
       if (searchData.maxKm) params.append("max_km", searchData.maxKm);
+      if (searchData.fuel) params.append("fuel", searchData.fuel);
+      if (searchData.transmission) params.append("transmission", searchData.transmission);
       params.append("site", searchData.site);
       params.append("limit", searchData.limit);
       params.append("max_pages", searchData.maxPages);

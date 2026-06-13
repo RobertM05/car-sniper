@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from functii import search_cars
+from functii import search_cars, infer_car_details
 from car_database import car_db_optimizer
 import random
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -65,7 +65,16 @@ async def crawl_target(target):
                                                 ad['image'] = gal.get('src')
                     except Exception as e:
                         logging.warning(f'     Repair failed: {e}')
-                db_ad = {'source': ad.get('subsource') or ad.get('source', 'Unknown'), 'make': make, 'model': model, 'title': ad.get('title'), 'link': ad.get('link'), 'image': ad.get('image'), 'price': price_val, 'year': ad.get('year'), 'km': ad.get('km'), 'id': ad.get('id')}
+                fuel = ad.get('fuel')
+                transmission = ad.get('transmission')
+                
+                # Infer missing data
+                if not fuel or not transmission:
+                    inf_fuel, inf_trans = infer_car_details(ad.get('title'), make)
+                    if not fuel: fuel = inf_fuel
+                    if not transmission: transmission = inf_trans
+                    
+                db_ad = {'source': ad.get('subsource') or ad.get('source', 'Unknown'), 'make': make, 'model': model, 'title': ad.get('title'), 'link': ad.get('link'), 'image': ad.get('image'), 'price': price_val, 'year': ad.get('year'), 'km': ad.get('km'), 'id': ad.get('id'), 'fuel': fuel, 'transmission': transmission}
                 valid_db_ads.append(db_ad)
             except Exception as e:
                 logging.warning(f'Failed to process ad: {e}')

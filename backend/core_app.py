@@ -112,13 +112,16 @@ def calculate_deal_scores(results: list, stats: dict) -> list:
         deal_score = max(0, min(100, int(round(raw_score))))
         
         car['deal_score'] = deal_score
+        car['peer_avg_price'] = int(round(peer_avg_price))
+        car['peer_avg_km'] = int(round(peer_avg_km))
+        car['price_diff'] = int(round(peer_avg_price - car_price))
         
     return results
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
-    print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}')
+def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+    print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}, fuel={fuel}, transmission={transmission}')
     
     parts = sort.split('_')
     sort_by = parts[0] if len(parts) > 0 else 'price'
@@ -135,6 +138,8 @@ def api_search(request: Request, background_tasks: BackgroundTasks, make: str, m
         min_year=min_year,
         max_year=max_year,
         max_km=max_km,
+        fuel=fuel,
+        transmission=transmission,
         limit=limit,
         sort_by=sort_by,
         order=order

@@ -70,6 +70,7 @@ class CarDatabaseOptimizer:
                         id SERIAL PRIMARY KEY,
                         email TEXT UNIQUE NOT NULL,
                         hashed_password TEXT NOT NULL,
+                        role TEXT DEFAULT 'user',
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                     )
                 ''')
@@ -261,7 +262,7 @@ class CarDatabaseOptimizer:
             conn.commit()
             return ad_ids
 
-    def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, min_year=None, max_year=None, min_km=None, max_km=None, limit=100, sort_by='price', order='asc') -> List[Dict]:
+    def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, min_year=None, max_year=None, min_km=None, max_km=None, fuel=None, transmission=None, limit=100, sort_by='price', order='asc') -> List[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             query = 'SELECT * FROM ads WHERE active = TRUE'
@@ -288,6 +289,12 @@ class CarDatabaseOptimizer:
             if max_km:
                 query += ' AND km <= %s'
                 params.append(max_km)
+            if fuel:
+                query += ' AND fuel ILIKE %s'
+                params.append(fuel)
+            if transmission:
+                query += ' AND transmission ILIKE %s'
+                params.append(transmission)
         
             valid_sort_columns = {'price': 'price', 'year': 'year', 'km': 'km', 'created_at': 'created_at'}
             sort_column = valid_sort_columns.get(sort_by, 'created_at')
@@ -660,7 +667,7 @@ class CarDatabaseOptimizer:
         with self.get_connection() as conn:
             cursor = conn.cursor()
         
-            cursor.execute('SELECT id, email, hashed_password FROM users WHERE email = %s', (email,))
+            cursor.execute('SELECT id, email, hashed_password, role FROM users WHERE email = %s', (email,))
             user = cursor.fetchone()
         
             if not user:
@@ -668,7 +675,7 @@ class CarDatabaseOptimizer:
             
             try:
                 if bcrypt.checkpw(password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
-                    return {"success": True, "id": user["id"], "email": user["email"]}
+                    return {"success": True, "id": user["id"], "email": user["email"], "role": user.get("role", "user")}
                 else:
                     return {"success": False, "error": "Incorrect password"}
             except ValueError:

@@ -138,6 +138,26 @@ const SearchForm = ({
             </div>
 
             <div className="form-group">
+              <label>Combustibil</label>
+              <select name="fuel" value={formData.fuel || ""} onChange={handleChange} className="form-control">
+                <option value="">Oricare</option>
+                <option value="Petrol">Benzină</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Hybrid">Hibrid</option>
+                <option value="Electric">Electric</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Cutie de viteze</label>
+              <select name="transmission" value={formData.transmission || ""} onChange={handleChange} className="form-control">
+                <option value="">Oricare</option>
+                <option value="Automatic">Automată</option>
+                <option value="Manual">Manuală</option>
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>{t('search', 'limit')}</label>
               <select
                 name="limit"
