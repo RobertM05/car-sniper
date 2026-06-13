@@ -117,7 +117,7 @@ def calculate_deal_scores(results: list, stats: dict) -> list:
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-def api_search(request: Request, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
     print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}')
     
     parts = sort.split('_')
@@ -146,6 +146,13 @@ def api_search(request: Request, make: str, model: str, max_price: int, site: st
         stats = car_db_optimizer.get_model_stats(make, s_model)
         if stats:
             results = calculate_deal_scores(results, stats)
+            
+    # Run the background verifier to clean up any dead links asynchronously
+    if results:
+        from link_verifier import verify_ads_liveness
+        # asyncio.run is not ideal inside FastAPI background_tasks directly if the function is async,
+        # but BackgroundTasks in FastAPI natively supports async functions.
+        background_tasks.add_task(verify_ads_liveness, results)
     
     return {'results': results}
 
@@ -577,6 +584,23 @@ async def api_cron_run(request: Request, authorization: str = Header(None)):
         return {"status": "success", "groups_checked": len(groups), "emails_dispatched": dispatched_count}
     except Exception as e:
         print(f"Cron execution failed: {e}")
+        return {"error": str(e)}
+
+@app.get('/api/cron/cleanup')
+@limiter.limit("10/minute")
+async def api_cron_cleanup(request: Request, authorization: str = Header(None)):
+    """
+    Cron job to scan and delete old inactive ads.
+    """
+    if not authorization or authorization.replace("Bearer ", "") != CRON_SECRET_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized Cron Trigger")
+        
+    try:
+        from link_verifier import cron_cleanup_ads
+        dead_count = await cron_cleanup_ads(limit=100)
+        return {"status": "success", "dead_ads_deleted": dead_count}
+    except Exception as e:
+        print(f"Cron cleanup failed: {e}")
         return {"error": str(e)}
 
 from fastapi import Response
