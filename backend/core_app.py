@@ -162,9 +162,13 @@ def get_top_deals(request: Request):
         if not recent_ads:
             return {'results': []}
 
-        # 2. Group candidate ads by (make, model) to perform peer scoring
+        # 2. Randomly select up to 50 recent ads to evaluate (prevents hundreds of DB queries)
+        import random
+        random.shuffle(recent_ads)
+        candidates_to_evaluate = recent_ads[:50]
+
         grouped_candidates = {}
-        for ad in recent_ads:
+        for ad in candidates_to_evaluate:
             make = ad.get('make')
             model = ad.get('model')
             if not make or not model:
