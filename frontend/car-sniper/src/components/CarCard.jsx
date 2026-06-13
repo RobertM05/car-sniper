@@ -45,12 +45,12 @@ const CarCard = ({ car }) => {
                         
                         {/* Tooltip Explanation */}
                         {car.peer_avg_price > 0 && (
-                            <div className="absolute opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-300 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-[var(--bg-core)] border border-[var(--border-shell)] rounded-xl shadow-2xl z-50 text-left pointer-events-none">
-                                <div className="text-[10px] uppercase tracking-wider text-[var(--primary-color)] font-bold mb-1">
+                            <div className="deal-tooltip">
+                                <div className="deal-tooltip-title">
                                     AI Deal Analysis
                                 </div>
-                                <p className="text-xs text-[var(--text-secondary)] m-0 leading-relaxed">
-                                    This car is <strong className={car.price_diff > 0 ? "text-green-400" : "text-red-400"}>
+                                <p className="deal-tooltip-text">
+                                    This car is <strong style={{ color: car.price_diff > 0 ? '#4ade80' : '#f87171' }}>
                                         €{Math.abs(car.price_diff).toLocaleString()} {car.price_diff > 0 ? "cheaper" : "more expensive"}
                                     </strong> than the market average of €{car.peer_avg_price.toLocaleString()} for similar models.
                                 </p>
