@@ -377,8 +377,8 @@ html, body {
   height: 3.5rem;
   border-radius: 50%;
   z-index: 2;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -399,19 +399,19 @@ html, body {
 }
 
 .deal-excellent {
-  background: rgba(34, 197, 94, 0.85); /* Green */
+  background: rgba(34, 197, 94, 0.75); /* Green */
 }
 
 .deal-good {
-  background: rgba(59, 130, 246, 0.85); /* Blue */
+  background: rgba(59, 130, 246, 0.75); /* Blue */
 }
 
 .deal-fair {
-  background: rgba(234, 179, 8, 0.85); /* Yellow */
+  background: rgba(234, 179, 8, 0.75); /* Yellow */
 }
 
 .deal-overpriced {
-  background: rgba(239, 68, 68, 0.85); /* Red */
+  background: rgba(239, 68, 68, 0.75); /* Red */
 }
 
 .deal-tooltip {
@@ -434,7 +434,8 @@ html, body {
   transition: all 0.3s ease;
 }
 
-.deal-badge:hover .deal-tooltip {
+.deal-badge:hover .deal-tooltip,
+.deal-badge.is-open .deal-tooltip {
   opacity: 1;
   visibility: visible;
 }
@@ -770,8 +771,8 @@ html, body {
   }
 
   .page-btn {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
     font-size: 0.85rem;
   }
 

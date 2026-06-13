@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
 
-const CarCard = ({ car }) => {
+const CarCard = ({ car, index = 0 }) => {
     const { t } = useLanguage();
+    const [tooltipOpen, setTooltipOpen] = useState(false);
 
     let displayPrice = "";
     const rawPrice = parseInt(String(car.price).replace(/\D/g, '')) || 0;
@@ -32,14 +33,27 @@ const CarCard = ({ car }) => {
     }
 
     return (
-        <div className="car-card-shell group">
+        <div 
+            className="car-card-shell group"
+            style={{ 
+                animation: 'fadeUp 0.6s ease forwards', 
+                opacity: 0,
+                animationDelay: `${index * 0.05}s` 
+            }}
+        >
             <div className="car-card-core">
                 <div className={`site-badge ${badgeClass}`}>
                     {siteName}
                 </div>
                 
                 {car.deal_score != null && (
-                    <div className={`deal-badge ${dealClass} group/tooltip relative`}>
+                    <div 
+                        className={`deal-badge ${dealClass} group/tooltip relative ${tooltipOpen ? 'is-open' : ''}`}
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setTooltipOpen(!tooltipOpen);
+                        }}
+                    >
                         <div className="deal-score">{car.deal_score}</div>
                         <div className="deal-label">{t('deal', dealTextKey)}</div>
                         

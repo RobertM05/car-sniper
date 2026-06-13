@@ -13,7 +13,7 @@ const ResultsList = ({ results }) => {
     return (
         <div className="results-grid">
             {results.map((car, idx) => (
-                <CarCard key={`${car.id}-${idx}`} car={car} />
+                <CarCard key={`${car.id}-${idx}`} car={car} index={idx} />
             ))}
         </div>
     );
