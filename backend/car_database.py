@@ -486,11 +486,32 @@ class CarDatabaseOptimizer:
             return [{'generation': 'E60', 'min_year': 2003, 'max_year': 2010, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'F10', 'min_year': 2010, 'max_year': 2017, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'G30', 'min_year': 2017, 'max_year': 2024, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
         elif make.lower() == 'audi' and model.lower() in ['a4', 'a-4']:
             return [{'generation': 'B7', 'min_year': 2004, 'max_year': 2008, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'B8', 'min_year': 2008, 'max_year': 2016, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'B9', 'min_year': 2016, 'max_year': 2024, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
+        elif make.lower() == 'audi' and model.lower() in ['a6', 'a-6']:
+            return [{'generation': 'C6', 'min_year': 2004, 'max_year': 2011, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'C7', 'min_year': 2011, 'max_year': 2018, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'C8', 'min_year': 2018, 'max_year': 2024, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
+        elif make.lower() == 'audi' and model.lower() in ['a3', 'a-3']:
+            return [{'generation': '8P', 'min_year': 2003, 'max_year': 2012, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol']}, {'generation': '8V', 'min_year': 2012, 'max_year': 2020, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol']}, {'generation': '8Y', 'min_year': 2020, 'max_year': 2024, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
         elif make.lower() in ['mercedes', 'mercedes-benz'] and any((x in model.lower() for x in ['c', 'c-class', 'cclass', 'c class'])):
             return [{'generation': 'W204', 'min_year': 2007, 'max_year': 2014, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'W205', 'min_year': 2014, 'max_year': 2021, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'W206', 'min_year': 2021, 'max_year': 2024, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
+        elif make.lower() in ['mercedes', 'mercedes-benz'] and any((x in model.lower() for x in ['e', 'e-class', 'eclass', 'e class'])):
+            return [{'generation': 'W211', 'min_year': 2002, 'max_year': 2009, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'W212', 'min_year': 2009, 'max_year': 2016, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'W213', 'min_year': 2016, 'max_year': 2024, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
         elif make.lower() == 'volkswagen' and model.lower() in ['golf', 'golf-7', 'golf-8']:
             return [{'generation': 'Mk5', 'min_year': 2003, 'max_year': 2008, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol']}, {'generation': 'Mk6', 'min_year': 2008, 'max_year': 2012, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol']}, {'generation': 'Mk7', 'min_year': 2012, 'max_year': 2019, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol']}, {'generation': 'Mk8', 'min_year': 2019, 'max_year': 2024, 'body_type': 'hatchback', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
+        elif make.lower() == 'volkswagen' and model.lower() in ['passat', 'passat-cc']:
+            return [{'generation': 'B6', 'min_year': 2005, 'max_year': 2010, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'B7', 'min_year': 2010, 'max_year': 2014, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'B8', 'min_year': 2014, 'max_year': 2023, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
+        elif make.lower() == 'skoda' and model.lower() in ['octavia']:
+            return [{'generation': 'Mk2', 'min_year': 2004, 'max_year': 2013, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'Mk3', 'min_year': 2013, 'max_year': 2020, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol']}, {'generation': 'Mk4', 'min_year': 2020, 'max_year': 2024, 'body_type': 'sedan', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
+        elif make.lower() == 'bmw' and any((x in model.lower() for x in ['x5', 'x-5'])):
+            return [{'generation': 'E70', 'min_year': 2006, 'max_year': 2013, 'body_type': 'suv', 'engine_types': ['diesel', 'petrol']}, {'generation': 'F15', 'min_year': 2013, 'max_year': 2018, 'body_type': 'suv', 'engine_types': ['diesel', 'petrol', 'hybrid']}, {'generation': 'G05', 'min_year': 2018, 'max_year': 2024, 'body_type': 'suv', 'engine_types': ['diesel', 'petrol', 'hybrid']}]
         return []
+
+    def get_generation_for_year(self, make: str, model: str, year: int) -> str:
+        generations = self.get_generations_for_model(make, model)
+        if not generations:
+            return None
+        for gen in generations:
+            if gen['min_year'] <= year <= gen['max_year']:
+                return gen['generation']
+        return None
 
     def get_year_range_for_generation(self, make: str, model: str, generation: str) -> Tuple[int, int]:
         hardcoded_gens = {'W203': (2000, 2007), 'W204': (2007, 2015), 'W205': (2014, 2021), 'W206': (2021, 2025), 'W211': (2002, 2009), 'W212': (2009, 2016), 'W213': (2016, 2024), 'W221': (2005, 2013), 'W222': (2013, 2021), 'E46': (1998, 2006), 'E90': (2005, 2012), 'F30': (2012, 2019), 'G20': (2019, 2025), 'E60': (2003, 2010), 'F10': (2010, 2017), 'G30': (2017, 2024), 'B7': (2004, 2009), 'B8': (2008, 2016), 'B9': (2015, 2025), 'C6': (2004, 2011), 'C7': (2011, 2018), 'C8': (2018, 2025), 'MK5': (2003, 2009), 'MK6': (2008, 2013), 'MK7': (2012, 2020), 'MK8': (2019, 2025)}
