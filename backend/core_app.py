@@ -57,24 +57,29 @@ def decode_vin(request: Request, vin: str):
 
 import asyncio
 
-def calculate_deal_scores(results: list, stats: dict) -> list:
+def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) -> list:
     """Calculate a 0-100 deal score for each result based on peer averages (same year +/- 2)."""
     global_avg_price = stats.get('avg_price')
     global_avg_year = stats.get('avg_year')
     global_avg_km = stats.get('avg_km')
     
-    valid_cars = []
-    for car in results:
-        try:
-            p = int(str(car.get('price', 0)).replace(' ', '').replace('€', '') or 0)
-            y_str = ''.join(filter(str.isdigit, str(car.get('year', 0))))
-            y = int(y_str) if y_str else 0
-            k_str = ''.join(filter(str.isdigit, str(car.get('km', 0))))
-            k = int(k_str) if k_str else 0
-            if p > 0 and y > 1900:
-                valid_cars.append({'price': p, 'year': y, 'km': k, 'ref': car})
-        except:
-            pass
+    def parse_cars(car_list):
+        parsed = []
+        for car in car_list:
+            try:
+                p = int(str(car.get('price', 0)).replace(' ', '').replace('€', '') or 0)
+                y_str = ''.join(filter(str.isdigit, str(car.get('year', 0))))
+                y = int(y_str) if y_str else 0
+                k_str = ''.join(filter(str.isdigit, str(car.get('km', 0))))
+                k = int(k_str) if k_str else 0
+                if p > 0 and y > 1900:
+                    parsed.append({'price': p, 'year': y, 'km': k, 'ref': car})
+            except:
+                pass
+        return parsed
+
+    valid_cars = parse_cars(results)
+    valid_peers = parse_cars(peer_pool) if peer_pool else valid_cars
 
     for data in valid_cars:
         car = data['ref']
@@ -87,11 +92,11 @@ def calculate_deal_scores(results: list, stats: dict) -> list:
         # Otherwise, fall back to comparing with cars +/- 2 years old.
         if car_gen:
             peers = [
-                p for p in valid_cars 
+                p for p in valid_peers 
                 if car_db_optimizer.get_generation_for_year(p['ref'].get('make', ''), p['ref'].get('model', ''), p['year']) == car_gen
             ]
         else:
-            peers = [p for p in valid_cars if abs(p['year'] - car_year) <= 2]
+            peers = [p for p in valid_peers if abs(p['year'] - car_year) <= 2]
         
         if len(peers) >= 3:
             peer_avg_price = sum(p['price'] for p in peers) / len(peers)
@@ -158,7 +163,8 @@ def api_search(request: Request, background_tasks: BackgroundTasks, make: str, m
         s_model = model.lower().replace(' ', '-')
         stats = car_db_optimizer.get_model_stats(make, s_model)
         if stats:
-            results = calculate_deal_scores(results, stats)
+            peer_pool = car_db_optimizer.get_active_ads_for_make_model(make, norm_model)
+            results = calculate_deal_scores(results, stats, peer_pool=peer_pool)
             
     # Run the background verifier to clean up any dead links asynchronously
     if results:
