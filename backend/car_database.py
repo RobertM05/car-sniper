@@ -248,29 +248,29 @@ class CarDatabaseOptimizer:
                 except:
                     price_val = 0
 
-                    km_val = ad_data.get('km')
-                    if km_val:
-                        km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
-                    
-                    year_val = ad_data.get('year')
-                    if year_val:
-                        year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
+                km_val = ad_data.get('km')
+                if km_val:
+                    km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
+                
+                year_val = ad_data.get('year')
+                if year_val:
+                    year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
 
-                    values.append((
-                        ad_id, 
-                        ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
-                        ad_data.get('title'), 
-                        price_val, 
-                        link, 
-                        ad_data.get('image'), 
-                        ad_data.get('make'), 
-                        ad_data.get('model'), 
-                        year_val, 
-                        km_val, 
-                        ad_data.get('fuel'), 
-                        ad_data.get('transmission'), 
-                        ad_data.get('body_type'), 
-                        ad_data.get('city')
+                values.append((
+                    ad_id, 
+                    ad_data.get('subsource') or ad_data.get('source', 'Unknown'), 
+                    ad_data.get('title'), 
+                    price_val, 
+                    link, 
+                    ad_data.get('image'), 
+                    ad_data.get('make'), 
+                    ad_data.get('model'), 
+                    year_val, 
+                    km_val, 
+                    ad_data.get('fuel'), 
+                    ad_data.get('transmission'), 
+                    ad_data.get('body_type'), 
+                    ad_data.get('city')
                 ))
                 ad_ids.append(ad_id)
                 
