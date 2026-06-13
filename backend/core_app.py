@@ -133,7 +133,7 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+async def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
     print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}, fuel={fuel}, transmission={transmission}')
     
     parts = sort.split('_')
@@ -157,6 +157,41 @@ def api_search(request: Request, background_tasks: BackgroundTasks, make: str, m
         sort_by=sort_by,
         order=order
     )
+    
+    if not results:
+        # DB has no active results, let's scrape on the fly
+        from functii import search_cars
+        live_max = max_price if max_price and max_price < 99999 else 999999
+        live_results = await search_cars(
+            make=make,
+            model=model,
+            site=site,
+            min_price=min_price,
+            max_price=live_max,
+            min_km=None,
+            max_km=max_km,
+            min_year=min_year,
+            max_year=max_year,
+            limit=50,
+            max_pages=2
+        )
+        if live_results:
+            car_db_optimizer.upsert_ads(live_results)
+            # Re-query DB so results are correctly formatted and sorted
+            results = car_db_optimizer.search_ads_db(
+                make=make,
+                model=norm_model,
+                min_price=min_price,
+                max_price=max_price,
+                min_year=min_year,
+                max_year=max_year,
+                max_km=max_km,
+                fuel=fuel,
+                transmission=transmission,
+                limit=limit,
+                sort_by=sort_by,
+                order=order
+            )
     
     # Calculate deal scores if we have stats for this make/model
     if make and model:
