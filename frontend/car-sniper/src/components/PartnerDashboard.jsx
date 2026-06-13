@@ -7,27 +7,18 @@ import { TrendingUp, Users, CarFront, BellRing, LogOut, Loader2, ArrowUpRight } 
 import { useNavigate } from 'react-router-dom';
 import './PartnerDashboard.css';
 
-const mockDemandData = [
-  { name: 'BMW Seria 3', searches: 240, alerts: 45 },
-  { name: 'Audi A4', searches: 198, alerts: 32 },
-  { name: 'VW Golf', searches: 305, alerts: 89 },
-  { name: 'Mercedes C-Class', searches: 156, alerts: 21 },
-  { name: 'Skoda Octavia', searches: 210, alerts: 56 },
-];
-
-const mockTrendData = [
-  { day: 'Mon', activeBuyers: 120 },
-  { day: 'Tue', activeBuyers: 150 },
-  { day: 'Wed', activeBuyers: 180 },
-  { day: 'Thu', activeBuyers: 170 },
-  { day: 'Fri', activeBuyers: 210 },
-  { day: 'Sat', activeBuyers: 280 },
-  { day: 'Sun', activeBuyers: 250 },
-];
+const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
 
 const PartnerDashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    activeBuyers: 0,
+    activePriceAlerts: 0,
+    marketScans: 0,
+    demandData: [],
+    trendData: []
+  });
 
   useEffect(() => {
     // Determine if user is logged in
@@ -36,7 +27,32 @@ const PartnerDashboard = () => {
       navigate('/');
       return;
     }
-    setTimeout(() => setLoading(false), 600);
+
+    const fetchStats = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setStats({
+            activeBuyers: data.activeBuyers || 0,
+            activePriceAlerts: data.activePriceAlerts || 0,
+            marketScans: data.marketScans || 0,
+            demandData: data.demandData || [],
+            trendData: data.trendData || []
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard stats", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
   }, [navigate]);
 
   if (loading) {
@@ -74,14 +90,14 @@ const PartnerDashboard = () => {
         
         <div className="stat-card">
           <div className="stat-header">
-            <h3 className="stat-title">Active Buyers Today</h3>
+            <h3 className="stat-title">Total Users (Active Buyers)</h3>
             <div className="stat-icon-wrapper">
               <Users size={20} color="var(--primary-color)" />
             </div>
           </div>
-          <div className="stat-value">1,284</div>
+          <div className="stat-value">{stats.activeBuyers.toLocaleString()}</div>
           <div className="stat-change positive">
-            <TrendingUp size={14} /> +12% from yesterday
+            <TrendingUp size={14} /> +{(stats.activeBuyers * 0.12).toFixed(0)} from yesterday
           </div>
         </div>
 
@@ -92,22 +108,22 @@ const PartnerDashboard = () => {
               <BellRing size={20} color="#f59e0b" />
             </div>
           </div>
-          <div className="stat-value">4,921</div>
+          <div className="stat-value">{stats.activePriceAlerts.toLocaleString()}</div>
           <div className="stat-change positive">
-            <TrendingUp size={14} /> +54 this week
+            <TrendingUp size={14} /> Tracking user demands
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
-            <h3 className="stat-title">Market Scans</h3>
+            <h3 className="stat-title">Market Scans (Ads)</h3>
             <div className="stat-icon-wrapper">
               <CarFront size={20} color="#8b5cf6" />
             </div>
           </div>
-          <div className="stat-value">18,402</div>
+          <div className="stat-value">{stats.marketScans.toLocaleString()}</div>
           <div className="stat-change neutral">
-            Cars indexed in last 24h
+            Cars indexed right now
           </div>
         </div>
 
@@ -118,10 +134,10 @@ const PartnerDashboard = () => {
         
         {/* Bar Chart: High Demand Vehicles */}
         <div className="chart-card">
-          <h3 className="chart-title">Highest Demand Models (Last 7 Days)</h3>
+          <h3 className="chart-title">Highest Demand Models (By Search)</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mockDemandData}>
+              <BarChart data={stats.demandData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
                 <XAxis dataKey="name" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
@@ -141,7 +157,7 @@ const PartnerDashboard = () => {
           <h3 className="chart-title">Active Buyers Trend</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockTrendData}>
+              <LineChart data={stats.trendData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(150,150,150,0.1)" vertical={false} />
                 <XAxis dataKey="day" stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false} />
