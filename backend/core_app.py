@@ -59,9 +59,9 @@ import asyncio
 
 def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) -> list:
     """Calculate a 0-100 deal score for each result based on peer averages (same year +/- 2)."""
-    global_avg_price = stats.get('avg_price')
-    global_avg_year = stats.get('avg_year')
-    global_avg_km = stats.get('avg_km')
+    global_avg_price = stats.get('avg_price') if stats else None
+    global_avg_year = stats.get('avg_year') if stats else None
+    global_avg_km = stats.get('avg_km') if stats else None
     
     def parse_cars(car_list):
         parsed = []
@@ -162,9 +162,8 @@ def api_search(request: Request, background_tasks: BackgroundTasks, make: str, m
     if make and model:
         s_model = model.lower().replace(' ', '-')
         stats = car_db_optimizer.get_model_stats(make, s_model)
-        if stats:
-            peer_pool = car_db_optimizer.get_active_ads_for_make_model(make, norm_model)
-            results = calculate_deal_scores(results, stats, peer_pool=peer_pool)
+        peer_pool = car_db_optimizer.get_active_ads_for_make_model(make, norm_model)
+        results = calculate_deal_scores(results, stats, peer_pool=peer_pool)
             
     # Run the background verifier to clean up any dead links asynchronously
     if results:
