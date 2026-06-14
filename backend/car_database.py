@@ -310,9 +310,16 @@ class CarDatabaseOptimizer:
                 query += ' AND make ILIKE %s'
                 params.append(f'%{make}%')
             if model:
-                query += ' AND (model ILIKE %s OR title ILIKE %s)'
-                params.append(f'%{model}%')
-                params.append(f'%{model}%')
+                if len(model) <= 2:
+                    # Folosim regex cu limite (^, space, dash) pentru modele scurte gen 'e', 'c', 'a4', 'x5' ca sa evitam match in cuvinte gen "GLE"
+                    query += r' AND (model ~* %s OR title ~* %s)'
+                    pattern = rf'(^|\s|-){model}(\s|$|-)'
+                    params.append(pattern)
+                    params.append(pattern)
+                else:
+                    query += ' AND (model ILIKE %s OR title ILIKE %s)'
+                    params.append(f'%{model}%')
+                    params.append(f'%{model}%')
             if min_price:
                 query += ' AND price >= %s'
                 params.append(min_price)
