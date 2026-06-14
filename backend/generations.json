@@ -1,0 +1,2440 @@
+{
+    "Volkswagen": {
+        "golf": [
+            {
+                "code": "Golf IV",
+                "start_year": 1997,
+                "end_year": 2003,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf V",
+                "start_year": 2003,
+                "end_year": 2008,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf VI",
+                "start_year": 2008,
+                "end_year": 2012,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf VII",
+                "start_year": 2012,
+                "end_year": 2019,
+                "facelift_year": 2017
+            },
+            {
+                "code": "Golf VIII",
+                "start_year": 2019,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "passat": [
+            {
+                "code": "B5",
+                "start_year": 1996,
+                "end_year": 2005,
+                "facelift_year": 2001
+            },
+            {
+                "code": "B6",
+                "start_year": 2005,
+                "end_year": 2010,
+                "facelift_year": null
+            },
+            {
+                "code": "B7",
+                "start_year": 2010,
+                "end_year": 2014,
+                "facelift_year": null
+            },
+            {
+                "code": "B8",
+                "start_year": 2014,
+                "end_year": 2023,
+                "facelift_year": 2019
+            },
+            {
+                "code": "B9",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "arteon": [
+            {
+                "code": "Mk1",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "polo": [
+            {
+                "code": "Mk4 (9N)",
+                "start_year": 2001,
+                "end_year": 2009,
+                "facelift_year": 2005
+            },
+            {
+                "code": "Mk5 (6R/6C)",
+                "start_year": 2009,
+                "end_year": 2017,
+                "facelift_year": 2014
+            },
+            {
+                "code": "Mk6 (AW/BZ)",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ],
+        "tiguan": [
+            {
+                "code": "Mk1 (5N)",
+                "start_year": 2007,
+                "end_year": 2016,
+                "facelift_year": 2011
+            },
+            {
+                "code": "Mk2 (AD/BW)",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "touareg": [
+            {
+                "code": "Mk1 (7L)",
+                "start_year": 2002,
+                "end_year": 2010,
+                "facelift_year": 2006
+            },
+            {
+                "code": "Mk2 (7P)",
+                "start_year": 2010,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "Mk3 (CR)",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "t-roc": [
+            {
+                "code": "A11/AC7",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2022
+            }
+        ],
+        "golf gti": [
+            {
+                "code": "Golf IV",
+                "start_year": 1997,
+                "end_year": 2003,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf V",
+                "start_year": 2003,
+                "end_year": 2008,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf VI",
+                "start_year": 2008,
+                "end_year": 2012,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf VII",
+                "start_year": 2012,
+                "end_year": 2019,
+                "facelift_year": 2017
+            },
+            {
+                "code": "Golf VIII",
+                "start_year": 2019,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "golf r": [
+            {
+                "code": "Golf IV",
+                "start_year": 1997,
+                "end_year": 2003,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf V",
+                "start_year": 2003,
+                "end_year": 2008,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf VI",
+                "start_year": 2008,
+                "end_year": 2012,
+                "facelift_year": null
+            },
+            {
+                "code": "Golf VII",
+                "start_year": 2012,
+                "end_year": 2019,
+                "facelift_year": 2017
+            },
+            {
+                "code": "Golf VIII",
+                "start_year": 2019,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "passat cc": [
+            {
+                "code": "B5",
+                "start_year": 1996,
+                "end_year": 2005,
+                "facelift_year": 2001
+            },
+            {
+                "code": "B6",
+                "start_year": 2005,
+                "end_year": 2010,
+                "facelift_year": null
+            },
+            {
+                "code": "B7",
+                "start_year": 2010,
+                "end_year": 2014,
+                "facelift_year": null
+            },
+            {
+                "code": "B8",
+                "start_year": 2014,
+                "end_year": 2023,
+                "facelift_year": 2019
+            },
+            {
+                "code": "B9",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "tiguan r": [
+            {
+                "code": "Mk1 (5N)",
+                "start_year": 2007,
+                "end_year": 2016,
+                "facelift_year": 2011
+            },
+            {
+                "code": "Mk2 (AD/BW)",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ]
+    },
+    "BMW": {
+        "seria 1": [
+            {
+                "code": "E81/E82/E87/E88",
+                "start_year": 2004,
+                "end_year": 2013,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F20/F21",
+                "start_year": 2011,
+                "end_year": 2019,
+                "facelift_year": 2015
+            },
+            {
+                "code": "F40",
+                "start_year": 2019,
+                "end_year": 2024,
+                "facelift_year": null
+            }
+        ],
+        "seria 2": [
+            {
+                "code": "F22/F23",
+                "start_year": 2014,
+                "end_year": 2021,
+                "facelift_year": 2017
+            },
+            {
+                "code": "G42",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "seria 3": [
+            {
+                "code": "E46",
+                "start_year": 1998,
+                "end_year": 2006,
+                "facelift_year": 2001
+            },
+            {
+                "code": "E90/E91/E92/E93",
+                "start_year": 2005,
+                "end_year": 2013,
+                "facelift_year": 2008
+            },
+            {
+                "code": "F30/F31/F34",
+                "start_year": 2011,
+                "end_year": 2019,
+                "facelift_year": 2015
+            },
+            {
+                "code": "G20/G21",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2022
+            }
+        ],
+        "seria 4": [
+            {
+                "code": "F32/F33/F36",
+                "start_year": 2013,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "G22/G23/G26",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "seria 5": [
+            {
+                "code": "E39",
+                "start_year": 1995,
+                "end_year": 2004,
+                "facelift_year": 2000
+            },
+            {
+                "code": "E60/E61",
+                "start_year": 2003,
+                "end_year": 2010,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F10/F11",
+                "start_year": 2010,
+                "end_year": 2017,
+                "facelift_year": 2013
+            },
+            {
+                "code": "G30/G31",
+                "start_year": 2017,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "G60",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "seria 6": [
+            {
+                "code": "E63/E64",
+                "start_year": 2003,
+                "end_year": 2010,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F12/F13/F06",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "G32",
+                "start_year": 2017,
+                "end_year": 2023,
+                "facelift_year": 2020
+            }
+        ],
+        "seria 7": [
+            {
+                "code": "E65/E66",
+                "start_year": 2001,
+                "end_year": 2008,
+                "facelift_year": 2005
+            },
+            {
+                "code": "F01/F02",
+                "start_year": 2008,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "G11/G12",
+                "start_year": 2015,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "G70",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "x1": [
+            {
+                "code": "E84",
+                "start_year": 2009,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "F48",
+                "start_year": 2015,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "U11",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "x3": [
+            {
+                "code": "E83",
+                "start_year": 2003,
+                "end_year": 2010,
+                "facelift_year": 2006
+            },
+            {
+                "code": "F25",
+                "start_year": 2010,
+                "end_year": 2017,
+                "facelift_year": 2014
+            },
+            {
+                "code": "G01",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2021
+            }
+        ],
+        "x4": [
+            {
+                "code": "F26",
+                "start_year": 2014,
+                "end_year": 2018,
+                "facelift_year": null
+            },
+            {
+                "code": "G02",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ],
+        "x5": [
+            {
+                "code": "E53",
+                "start_year": 1999,
+                "end_year": 2006,
+                "facelift_year": 2003
+            },
+            {
+                "code": "E70",
+                "start_year": 2006,
+                "end_year": 2013,
+                "facelift_year": 2010
+            },
+            {
+                "code": "F15",
+                "start_year": 2013,
+                "end_year": 2018,
+                "facelift_year": null
+            },
+            {
+                "code": "G05",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "x6": [
+            {
+                "code": "E71",
+                "start_year": 2008,
+                "end_year": 2014,
+                "facelift_year": 2012
+            },
+            {
+                "code": "F16",
+                "start_year": 2014,
+                "end_year": 2019,
+                "facelift_year": null
+            },
+            {
+                "code": "G06",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "m135i": [
+            {
+                "code": "E81/E82/E87/E88",
+                "start_year": 2004,
+                "end_year": 2013,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F20/F21",
+                "start_year": 2011,
+                "end_year": 2019,
+                "facelift_year": 2015
+            },
+            {
+                "code": "F40",
+                "start_year": 2019,
+                "end_year": 2024,
+                "facelift_year": null
+            }
+        ],
+        "m140i": [
+            {
+                "code": "E81/E82/E87/E88",
+                "start_year": 2004,
+                "end_year": 2013,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F20/F21",
+                "start_year": 2011,
+                "end_year": 2019,
+                "facelift_year": 2015
+            },
+            {
+                "code": "F40",
+                "start_year": 2019,
+                "end_year": 2024,
+                "facelift_year": null
+            }
+        ],
+        "m2": [
+            {
+                "code": "F22/F23",
+                "start_year": 2014,
+                "end_year": 2021,
+                "facelift_year": 2017
+            },
+            {
+                "code": "G42",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "m3": [
+            {
+                "code": "E46",
+                "start_year": 1998,
+                "end_year": 2006,
+                "facelift_year": 2001
+            },
+            {
+                "code": "E90/E91/E92/E93",
+                "start_year": 2005,
+                "end_year": 2013,
+                "facelift_year": 2008
+            },
+            {
+                "code": "F30/F31/F34",
+                "start_year": 2011,
+                "end_year": 2019,
+                "facelift_year": 2015
+            },
+            {
+                "code": "G20/G21",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2022
+            }
+        ],
+        "m4": [
+            {
+                "code": "F32/F33/F36",
+                "start_year": 2013,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "G22/G23/G26",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "m5": [
+            {
+                "code": "E39",
+                "start_year": 1995,
+                "end_year": 2004,
+                "facelift_year": 2000
+            },
+            {
+                "code": "E60/E61",
+                "start_year": 2003,
+                "end_year": 2010,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F10/F11",
+                "start_year": 2010,
+                "end_year": 2017,
+                "facelift_year": 2013
+            },
+            {
+                "code": "G30/G31",
+                "start_year": 2017,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "G60",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "m6": [
+            {
+                "code": "E63/E64",
+                "start_year": 2003,
+                "end_year": 2010,
+                "facelift_year": 2007
+            },
+            {
+                "code": "F12/F13/F06",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "G32",
+                "start_year": 2017,
+                "end_year": 2023,
+                "facelift_year": 2020
+            }
+        ],
+        "m760li": [
+            {
+                "code": "E65/E66",
+                "start_year": 2001,
+                "end_year": 2008,
+                "facelift_year": 2005
+            },
+            {
+                "code": "F01/F02",
+                "start_year": 2008,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "G11/G12",
+                "start_year": 2015,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "G70",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "x3 m": [
+            {
+                "code": "E83",
+                "start_year": 2003,
+                "end_year": 2010,
+                "facelift_year": 2006
+            },
+            {
+                "code": "F25",
+                "start_year": 2010,
+                "end_year": 2017,
+                "facelift_year": 2014
+            },
+            {
+                "code": "G01",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2021
+            }
+        ],
+        "x4 m": [
+            {
+                "code": "F26",
+                "start_year": 2014,
+                "end_year": 2018,
+                "facelift_year": null
+            },
+            {
+                "code": "G02",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ],
+        "x5 m": [
+            {
+                "code": "E53",
+                "start_year": 1999,
+                "end_year": 2006,
+                "facelift_year": 2003
+            },
+            {
+                "code": "E70",
+                "start_year": 2006,
+                "end_year": 2013,
+                "facelift_year": 2010
+            },
+            {
+                "code": "F15",
+                "start_year": 2013,
+                "end_year": 2018,
+                "facelift_year": null
+            },
+            {
+                "code": "G05",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "x6 m": [
+            {
+                "code": "E71",
+                "start_year": 2008,
+                "end_year": 2014,
+                "facelift_year": 2012
+            },
+            {
+                "code": "F16",
+                "start_year": 2014,
+                "end_year": 2019,
+                "facelift_year": null
+            },
+            {
+                "code": "G06",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ]
+    },
+    "Audi": {
+        "a1": [
+            {
+                "code": "8X",
+                "start_year": 2010,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "GB",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "a3": [
+            {
+                "code": "8P",
+                "start_year": 2003,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "8V",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2016
+            },
+            {
+                "code": "8Y",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "a4": [
+            {
+                "code": "B6",
+                "start_year": 2000,
+                "end_year": 2006,
+                "facelift_year": null
+            },
+            {
+                "code": "B7",
+                "start_year": 2004,
+                "end_year": 2008,
+                "facelift_year": null
+            },
+            {
+                "code": "B8",
+                "start_year": 2007,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "B9",
+                "start_year": 2015,
+                "end_year": 2024,
+                "facelift_year": 2019
+            }
+        ],
+        "a5": [
+            {
+                "code": "B8",
+                "start_year": 2007,
+                "end_year": 2016,
+                "facelift_year": 2011
+            },
+            {
+                "code": "B9",
+                "start_year": 2016,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "a6": [
+            {
+                "code": "C6",
+                "start_year": 2004,
+                "end_year": 2011,
+                "facelift_year": 2008
+            },
+            {
+                "code": "C7",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "C8",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2023
+            }
+        ],
+        "a7": [
+            {
+                "code": "4G",
+                "start_year": 2010,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "4K",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "q3": [
+            {
+                "code": "8U",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "F3",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "q5": [
+            {
+                "code": "8R",
+                "start_year": 2008,
+                "end_year": 2017,
+                "facelift_year": 2012
+            },
+            {
+                "code": "FY",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "q7": [
+            {
+                "code": "4L",
+                "start_year": 2005,
+                "end_year": 2015,
+                "facelift_year": 2009
+            },
+            {
+                "code": "4M",
+                "start_year": 2015,
+                "end_year": 2025,
+                "facelift_year": 2020
+            }
+        ],
+        "q8": [
+            {
+                "code": "4M8",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "s1": [
+            {
+                "code": "8X",
+                "start_year": 2010,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "GB",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "s3": [
+            {
+                "code": "8P",
+                "start_year": 2003,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "8V",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2016
+            },
+            {
+                "code": "8Y",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "rs3": [
+            {
+                "code": "8P",
+                "start_year": 2003,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "8V",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2016
+            },
+            {
+                "code": "8Y",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "s4": [
+            {
+                "code": "B6",
+                "start_year": 2000,
+                "end_year": 2006,
+                "facelift_year": null
+            },
+            {
+                "code": "B7",
+                "start_year": 2004,
+                "end_year": 2008,
+                "facelift_year": null
+            },
+            {
+                "code": "B8",
+                "start_year": 2007,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "B9",
+                "start_year": 2015,
+                "end_year": 2024,
+                "facelift_year": 2019
+            }
+        ],
+        "rs4": [
+            {
+                "code": "B6",
+                "start_year": 2000,
+                "end_year": 2006,
+                "facelift_year": null
+            },
+            {
+                "code": "B7",
+                "start_year": 2004,
+                "end_year": 2008,
+                "facelift_year": null
+            },
+            {
+                "code": "B8",
+                "start_year": 2007,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "B9",
+                "start_year": 2015,
+                "end_year": 2024,
+                "facelift_year": 2019
+            }
+        ],
+        "s5": [
+            {
+                "code": "B8",
+                "start_year": 2007,
+                "end_year": 2016,
+                "facelift_year": 2011
+            },
+            {
+                "code": "B9",
+                "start_year": 2016,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "rs5": [
+            {
+                "code": "B8",
+                "start_year": 2007,
+                "end_year": 2016,
+                "facelift_year": 2011
+            },
+            {
+                "code": "B9",
+                "start_year": 2016,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "s6": [
+            {
+                "code": "C6",
+                "start_year": 2004,
+                "end_year": 2011,
+                "facelift_year": 2008
+            },
+            {
+                "code": "C7",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "C8",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2023
+            }
+        ],
+        "rs6": [
+            {
+                "code": "C6",
+                "start_year": 2004,
+                "end_year": 2011,
+                "facelift_year": 2008
+            },
+            {
+                "code": "C7",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "C8",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2023
+            }
+        ],
+        "s7": [
+            {
+                "code": "4G",
+                "start_year": 2010,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "4K",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "rs7": [
+            {
+                "code": "4G",
+                "start_year": 2010,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "4K",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "rsq3": [
+            {
+                "code": "8U",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "F3",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": null
+            }
+        ],
+        "sq5": [
+            {
+                "code": "8R",
+                "start_year": 2008,
+                "end_year": 2017,
+                "facelift_year": 2012
+            },
+            {
+                "code": "FY",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "sq7": [
+            {
+                "code": "4L",
+                "start_year": 2005,
+                "end_year": 2015,
+                "facelift_year": 2009
+            },
+            {
+                "code": "4M",
+                "start_year": 2015,
+                "end_year": 2025,
+                "facelift_year": 2020
+            }
+        ],
+        "sq8": [
+            {
+                "code": "4M8",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "rsq8": [
+            {
+                "code": "4M8",
+                "start_year": 2018,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ]
+    },
+    "Mercedes-Benz": {
+        "a-class": [
+            {
+                "code": "W169",
+                "start_year": 2004,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "W176",
+                "start_year": 2012,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "W177",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2022
+            }
+        ],
+        "c-class": [
+            {
+                "code": "W203",
+                "start_year": 2000,
+                "end_year": 2007,
+                "facelift_year": 2004
+            },
+            {
+                "code": "W204",
+                "start_year": 2007,
+                "end_year": 2014,
+                "facelift_year": 2011
+            },
+            {
+                "code": "W205",
+                "start_year": 2014,
+                "end_year": 2021,
+                "facelift_year": 2018
+            },
+            {
+                "code": "W206",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "e-class": [
+            {
+                "code": "W211",
+                "start_year": 2002,
+                "end_year": 2009,
+                "facelift_year": 2006
+            },
+            {
+                "code": "W212",
+                "start_year": 2009,
+                "end_year": 2016,
+                "facelift_year": 2013
+            },
+            {
+                "code": "W213",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "W214",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "s-class": [
+            {
+                "code": "W221",
+                "start_year": 2005,
+                "end_year": 2013,
+                "facelift_year": 2009
+            },
+            {
+                "code": "W222",
+                "start_year": 2013,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "W223",
+                "start_year": 2020,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "glc": [
+            {
+                "code": "X253",
+                "start_year": 2015,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "X254",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "gle": [
+            {
+                "code": "W166",
+                "start_year": 2015,
+                "end_year": 2019,
+                "facelift_year": null
+            },
+            {
+                "code": "V167",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "gla": [
+            {
+                "code": "X156",
+                "start_year": 2013,
+                "end_year": 2019,
+                "facelift_year": 2017
+            },
+            {
+                "code": "H247",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "a45 amg": [
+            {
+                "code": "W169",
+                "start_year": 2004,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "W176",
+                "start_year": 2012,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "W177",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2022
+            }
+        ],
+        "a35 amg": [
+            {
+                "code": "W169",
+                "start_year": 2004,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "W176",
+                "start_year": 2012,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "W177",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2022
+            }
+        ],
+        "c63 amg": [
+            {
+                "code": "W203",
+                "start_year": 2000,
+                "end_year": 2007,
+                "facelift_year": 2004
+            },
+            {
+                "code": "W204",
+                "start_year": 2007,
+                "end_year": 2014,
+                "facelift_year": 2011
+            },
+            {
+                "code": "W205",
+                "start_year": 2014,
+                "end_year": 2021,
+                "facelift_year": 2018
+            },
+            {
+                "code": "W206",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "c43 amg": [
+            {
+                "code": "W203",
+                "start_year": 2000,
+                "end_year": 2007,
+                "facelift_year": 2004
+            },
+            {
+                "code": "W204",
+                "start_year": 2007,
+                "end_year": 2014,
+                "facelift_year": 2011
+            },
+            {
+                "code": "W205",
+                "start_year": 2014,
+                "end_year": 2021,
+                "facelift_year": 2018
+            },
+            {
+                "code": "W206",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "e63 amg": [
+            {
+                "code": "W211",
+                "start_year": 2002,
+                "end_year": 2009,
+                "facelift_year": 2006
+            },
+            {
+                "code": "W212",
+                "start_year": 2009,
+                "end_year": 2016,
+                "facelift_year": 2013
+            },
+            {
+                "code": "W213",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "W214",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "e53 amg": [
+            {
+                "code": "W211",
+                "start_year": 2002,
+                "end_year": 2009,
+                "facelift_year": 2006
+            },
+            {
+                "code": "W212",
+                "start_year": 2009,
+                "end_year": 2016,
+                "facelift_year": 2013
+            },
+            {
+                "code": "W213",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "W214",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "e43 amg": [
+            {
+                "code": "W211",
+                "start_year": 2002,
+                "end_year": 2009,
+                "facelift_year": 2006
+            },
+            {
+                "code": "W212",
+                "start_year": 2009,
+                "end_year": 2016,
+                "facelift_year": 2013
+            },
+            {
+                "code": "W213",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "W214",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "s63 amg": [
+            {
+                "code": "W221",
+                "start_year": 2005,
+                "end_year": 2013,
+                "facelift_year": 2009
+            },
+            {
+                "code": "W222",
+                "start_year": 2013,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "W223",
+                "start_year": 2020,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "s65 amg": [
+            {
+                "code": "W221",
+                "start_year": 2005,
+                "end_year": 2013,
+                "facelift_year": 2009
+            },
+            {
+                "code": "W222",
+                "start_year": 2013,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "W223",
+                "start_year": 2020,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "glc 63 amg": [
+            {
+                "code": "X253",
+                "start_year": 2015,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "X254",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "glc 43 amg": [
+            {
+                "code": "X253",
+                "start_year": 2015,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "X254",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "gle 63 amg": [
+            {
+                "code": "W166",
+                "start_year": 2015,
+                "end_year": 2019,
+                "facelift_year": null
+            },
+            {
+                "code": "V167",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "gle 53 amg": [
+            {
+                "code": "W166",
+                "start_year": 2015,
+                "end_year": 2019,
+                "facelift_year": null
+            },
+            {
+                "code": "V167",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ]
+    },
+    "Skoda": {
+        "octavia": [
+            {
+                "code": "Mk2 (1Z)",
+                "start_year": 2004,
+                "end_year": 2013,
+                "facelift_year": 2009
+            },
+            {
+                "code": "Mk3 (5E)",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "Mk4 (NX)",
+                "start_year": 2019,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "superb": [
+            {
+                "code": "Mk2 (3T)",
+                "start_year": 2008,
+                "end_year": 2015,
+                "facelift_year": 2013
+            },
+            {
+                "code": "Mk3 (3V)",
+                "start_year": 2015,
+                "end_year": 2023,
+                "facelift_year": 2019
+            },
+            {
+                "code": "Mk4",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "fabia": [
+            {
+                "code": "Mk2 (5J)",
+                "start_year": 2007,
+                "end_year": 2014,
+                "facelift_year": 2010
+            },
+            {
+                "code": "Mk3 (NJ)",
+                "start_year": 2014,
+                "end_year": 2021,
+                "facelift_year": 2018
+            },
+            {
+                "code": "Mk4 (PJ)",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "kodiaq": [
+            {
+                "code": "Mk1 (NS7)",
+                "start_year": 2016,
+                "end_year": 2024,
+                "facelift_year": 2021
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2024,
+                "end_year": 2031,
+                "facelift_year": null
+            }
+        ],
+        "karoq": [
+            {
+                "code": "NU7",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ]
+    },
+    "Dacia": {
+        "logan": [
+            {
+                "code": "Mk1",
+                "start_year": 2004,
+                "end_year": 2012,
+                "facelift_year": 2008
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2016
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2020,
+                "end_year": 2028,
+                "facelift_year": 2022
+            }
+        ],
+        "duster": [
+            {
+                "code": "Mk1",
+                "start_year": 2010,
+                "end_year": 2017,
+                "facelift_year": 2013
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2021
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2024,
+                "end_year": 2031,
+                "facelift_year": null
+            }
+        ],
+        "sandero": [
+            {
+                "code": "Mk1",
+                "start_year": 2007,
+                "end_year": 2012,
+                "facelift_year": null
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2016
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2020,
+                "end_year": 2028,
+                "facelift_year": 2022
+            }
+        ]
+    },
+    "Renault": {
+        "clio": [
+            {
+                "code": "Clio III",
+                "start_year": 2005,
+                "end_year": 2012,
+                "facelift_year": 2009
+            },
+            {
+                "code": "Clio IV",
+                "start_year": 2012,
+                "end_year": 2019,
+                "facelift_year": 2016
+            },
+            {
+                "code": "Clio V",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "megane": [
+            {
+                "code": "Megane II",
+                "start_year": 2002,
+                "end_year": 2008,
+                "facelift_year": 2006
+            },
+            {
+                "code": "Megane III",
+                "start_year": 2008,
+                "end_year": 2016,
+                "facelift_year": 2012
+            },
+            {
+                "code": "Megane IV",
+                "start_year": 2016,
+                "end_year": 2022,
+                "facelift_year": 2020
+            }
+        ],
+        "captur": [
+            {
+                "code": "Captur I",
+                "start_year": 2013,
+                "end_year": 2019,
+                "facelift_year": 2017
+            },
+            {
+                "code": "Captur II",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2024
+            }
+        ]
+    },
+    "Ford": {
+        "focus": [
+            {
+                "code": "Mk2",
+                "start_year": 2004,
+                "end_year": 2011,
+                "facelift_year": 2008
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2014
+            },
+            {
+                "code": "Mk4",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2022
+            }
+        ],
+        "mondeo": [
+            {
+                "code": "Mk4",
+                "start_year": 2007,
+                "end_year": 2014,
+                "facelift_year": 2010
+            },
+            {
+                "code": "Mk5",
+                "start_year": 2014,
+                "end_year": 2022,
+                "facelift_year": 2019
+            }
+        ],
+        "kuga": [
+            {
+                "code": "Mk1",
+                "start_year": 2008,
+                "end_year": 2012,
+                "facelift_year": null
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2012,
+                "end_year": 2019,
+                "facelift_year": 2016
+            },
+            {
+                "code": "Mk3",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2024
+            }
+        ]
+    },
+    "Opel": {
+        "astra": [
+            {
+                "code": "Astra H",
+                "start_year": 2004,
+                "end_year": 2014,
+                "facelift_year": 2007
+            },
+            {
+                "code": "Astra J",
+                "start_year": 2009,
+                "end_year": 2015,
+                "facelift_year": 2012
+            },
+            {
+                "code": "Astra K",
+                "start_year": 2015,
+                "end_year": 2021,
+                "facelift_year": 2019
+            },
+            {
+                "code": "Astra L",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "corsa": [
+            {
+                "code": "Corsa D",
+                "start_year": 2006,
+                "end_year": 2014,
+                "facelift_year": 2010
+            },
+            {
+                "code": "Corsa E",
+                "start_year": 2014,
+                "end_year": 2019,
+                "facelift_year": null
+            },
+            {
+                "code": "Corsa F",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "insignia": [
+            {
+                "code": "Insignia A",
+                "start_year": 2008,
+                "end_year": 2017,
+                "facelift_year": 2013
+            },
+            {
+                "code": "Insignia B",
+                "start_year": 2017,
+                "end_year": 2022,
+                "facelift_year": 2020
+            }
+        ]
+    },
+    "Toyota": {
+        "corolla": [
+            {
+                "code": "E150",
+                "start_year": 2006,
+                "end_year": 2013,
+                "facelift_year": 2010
+            },
+            {
+                "code": "E170",
+                "start_year": 2013,
+                "end_year": 2018,
+                "facelift_year": 2016
+            },
+            {
+                "code": "E210",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2022
+            }
+        ],
+        "rav4": [
+            {
+                "code": "XA30",
+                "start_year": 2005,
+                "end_year": 2012,
+                "facelift_year": 2009
+            },
+            {
+                "code": "XA40",
+                "start_year": 2012,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "XA50",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ],
+        "yaris": [
+            {
+                "code": "XP90",
+                "start_year": 2005,
+                "end_year": 2011,
+                "facelift_year": 2009
+            },
+            {
+                "code": "XP130",
+                "start_year": 2011,
+                "end_year": 2020,
+                "facelift_year": 2014
+            },
+            {
+                "code": "XP210",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ]
+    },
+    "Peugeot": {
+        "208": [
+            {
+                "code": "A9",
+                "start_year": 2012,
+                "end_year": 2019,
+                "facelift_year": 2015
+            },
+            {
+                "code": "P21",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "308": [
+            {
+                "code": "T7",
+                "start_year": 2007,
+                "end_year": 2013,
+                "facelift_year": 2011
+            },
+            {
+                "code": "T9",
+                "start_year": 2013,
+                "end_year": 2021,
+                "facelift_year": 2017
+            },
+            {
+                "code": "P5",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "3008": [
+            {
+                "code": "T84",
+                "start_year": 2008,
+                "end_year": 2016,
+                "facelift_year": 2013
+            },
+            {
+                "code": "P84",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "P64",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ]
+    },
+    "Hyundai": {
+        "i20": [
+            {
+                "code": "PB",
+                "start_year": 2008,
+                "end_year": 2014,
+                "facelift_year": 2012
+            },
+            {
+                "code": "GB",
+                "start_year": 2014,
+                "end_year": 2020,
+                "facelift_year": 2018
+            },
+            {
+                "code": "BC3",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2023
+            }
+        ],
+        "i30": [
+            {
+                "code": "FD",
+                "start_year": 2007,
+                "end_year": 2012,
+                "facelift_year": 2010
+            },
+            {
+                "code": "GD",
+                "start_year": 2011,
+                "end_year": 2017,
+                "facelift_year": 2015
+            },
+            {
+                "code": "PD",
+                "start_year": 2017,
+                "end_year": 2024,
+                "facelift_year": 2020
+            }
+        ],
+        "tucson": [
+            {
+                "code": "LM",
+                "start_year": 2009,
+                "end_year": 2015,
+                "facelift_year": 2013
+            },
+            {
+                "code": "TL",
+                "start_year": 2015,
+                "end_year": 2020,
+                "facelift_year": 2018
+            },
+            {
+                "code": "NX4",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ]
+    },
+    "Kia": {
+        "ceed": [
+            {
+                "code": "ED",
+                "start_year": 2006,
+                "end_year": 2012,
+                "facelift_year": 2009
+            },
+            {
+                "code": "JD",
+                "start_year": 2012,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "CD",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ],
+        "sportage": [
+            {
+                "code": "SL",
+                "start_year": 2010,
+                "end_year": 2015,
+                "facelift_year": 2014
+            },
+            {
+                "code": "QL",
+                "start_year": 2015,
+                "end_year": 2021,
+                "facelift_year": 2018
+            },
+            {
+                "code": "NQ5",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ]
+    },
+    "Nissan": {
+        "qashqai": [
+            {
+                "code": "J10",
+                "start_year": 2006,
+                "end_year": 2013,
+                "facelift_year": 2010
+            },
+            {
+                "code": "J11",
+                "start_year": 2013,
+                "end_year": 2021,
+                "facelift_year": 2017
+            },
+            {
+                "code": "J12",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": 2024
+            }
+        ],
+        "x-trail": [
+            {
+                "code": "T31",
+                "start_year": 2007,
+                "end_year": 2013,
+                "facelift_year": 2010
+            },
+            {
+                "code": "T32",
+                "start_year": 2013,
+                "end_year": 2021,
+                "facelift_year": 2017
+            },
+            {
+                "code": "T33",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ]
+    },
+    "Seat": {
+        "leon": [
+            {
+                "code": "Mk2 (1P)",
+                "start_year": 2005,
+                "end_year": 2012,
+                "facelift_year": 2009
+            },
+            {
+                "code": "Mk3 (5F)",
+                "start_year": 2012,
+                "end_year": 2020,
+                "facelift_year": 2017
+            },
+            {
+                "code": "Mk4 (KL)",
+                "start_year": 2020,
+                "end_year": 2027,
+                "facelift_year": 2024
+            }
+        ],
+        "ibiza": [
+            {
+                "code": "Mk3 (6L)",
+                "start_year": 2002,
+                "end_year": 2008,
+                "facelift_year": 2006
+            },
+            {
+                "code": "Mk4 (6J)",
+                "start_year": 2008,
+                "end_year": 2017,
+                "facelift_year": 2012
+            },
+            {
+                "code": "Mk5 (6F)",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ]
+    },
+    "Volvo": {
+        "xc60": [
+            {
+                "code": "Mk1",
+                "start_year": 2008,
+                "end_year": 2017,
+                "facelift_year": 2013
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ],
+        "xc90": [
+            {
+                "code": "Mk1",
+                "start_year": 2002,
+                "end_year": 2014,
+                "facelift_year": 2007
+            },
+            {
+                "code": "Mk2",
+                "start_year": 2014,
+                "end_year": 2025,
+                "facelift_year": 2019
+            }
+        ]
+    },
+    "Mazda": {
+        "mazda3": [
+            {
+                "code": "BL",
+                "start_year": 2008,
+                "end_year": 2013,
+                "facelift_year": 2011
+            },
+            {
+                "code": "BM/BN",
+                "start_year": 2013,
+                "end_year": 2018,
+                "facelift_year": 2016
+            },
+            {
+                "code": "BP",
+                "start_year": 2019,
+                "end_year": 2026,
+                "facelift_year": 2023
+            }
+        ],
+        "cx-5": [
+            {
+                "code": "KE",
+                "start_year": 2012,
+                "end_year": 2017,
+                "facelift_year": 2015
+            },
+            {
+                "code": "KF",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2021
+            }
+        ]
+    },
+    "Honda": {
+        "civic": [
+            {
+                "code": "Mk8",
+                "start_year": 2005,
+                "end_year": 2011,
+                "facelift_year": 2009
+            },
+            {
+                "code": "Mk9",
+                "start_year": 2011,
+                "end_year": 2016,
+                "facelift_year": 2014
+            },
+            {
+                "code": "Mk10",
+                "start_year": 2016,
+                "end_year": 2021,
+                "facelift_year": 2019
+            },
+            {
+                "code": "Mk11",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "cr-v": [
+            {
+                "code": "Mk3",
+                "start_year": 2006,
+                "end_year": 2011,
+                "facelift_year": 2009
+            },
+            {
+                "code": "Mk4",
+                "start_year": 2011,
+                "end_year": 2016,
+                "facelift_year": 2014
+            },
+            {
+                "code": "Mk5",
+                "start_year": 2016,
+                "end_year": 2022,
+                "facelift_year": 2019
+            },
+            {
+                "code": "Mk6",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ]
+    },
+    "Porsche": {
+        "cayenne": [
+            {
+                "code": "9PA",
+                "start_year": 2002,
+                "end_year": 2010,
+                "facelift_year": 2007
+            },
+            {
+                "code": "92A",
+                "start_year": 2010,
+                "end_year": 2017,
+                "facelift_year": 2014
+            },
+            {
+                "code": "9Y0",
+                "start_year": 2017,
+                "end_year": 2025,
+                "facelift_year": 2023
+            }
+        ],
+        "panamera": [
+            {
+                "code": "970",
+                "start_year": 2009,
+                "end_year": 2016,
+                "facelift_year": 2013
+            },
+            {
+                "code": "971",
+                "start_year": 2016,
+                "end_year": 2023,
+                "facelift_year": 2020
+            },
+            {
+                "code": "972",
+                "start_year": 2023,
+                "end_year": 2030,
+                "facelift_year": null
+            }
+        ],
+        "macan": [
+            {
+                "code": "95B",
+                "start_year": 2014,
+                "end_year": 2024,
+                "facelift_year": 2019
+            }
+        ]
+    },
+    "Land Rover": {
+        "range rover": [
+            {
+                "code": "L322",
+                "start_year": 2001,
+                "end_year": 2012,
+                "facelift_year": 2009
+            },
+            {
+                "code": "L405",
+                "start_year": 2012,
+                "end_year": 2021,
+                "facelift_year": 2017
+            },
+            {
+                "code": "L460",
+                "start_year": 2021,
+                "end_year": 2028,
+                "facelift_year": null
+            }
+        ],
+        "range rover sport": [
+            {
+                "code": "L320",
+                "start_year": 2005,
+                "end_year": 2013,
+                "facelift_year": 2009
+            },
+            {
+                "code": "L494",
+                "start_year": 2013,
+                "end_year": 2022,
+                "facelift_year": 2017
+            },
+            {
+                "code": "L461",
+                "start_year": 2022,
+                "end_year": 2029,
+                "facelift_year": null
+            }
+        ],
+        "range rover evoque": [
+            {
+                "code": "L538",
+                "start_year": 2011,
+                "end_year": 2018,
+                "facelift_year": 2015
+            },
+            {
+                "code": "L551",
+                "start_year": 2018,
+                "end_year": 2025,
+                "facelift_year": 2023
+            }
+        ]
+    }
+}

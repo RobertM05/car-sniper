@@ -49,7 +49,7 @@ const DealOfTheDay = () => {
                         </p>
                     </div>
                     <div className="deals-grid">
-                        {[...Array(5)].map((_, i) => (
+                        {[...Array(8)].map((_, i) => (
                             <SkeletonCard key={i} />
                         ))}
                     </div>
@@ -74,7 +74,7 @@ const DealOfTheDay = () => {
                     </p>
                 </div>
                 <div className="deals-grid">
-                    {deals.slice(0, 5).map((car, idx) => (
+                    {deals.slice(0, 8).map((car, idx) => (
                         <CarCard key={`deal-${car.id || idx}`} car={car} />
                     ))}
                 </div>

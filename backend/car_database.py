@@ -187,17 +187,19 @@ class CarDatabaseOptimizer:
             else:
                 ad_id = ad_data['id']
             try:
-                price_val = int(ad_data.get('price', 0))
+                p_str = str(ad_data.get('price', '0'))
+                p_digits = ''.join(filter(str.isdigit, p_str))
+                price_val = int(p_digits) if p_digits else 0
             except:
                 price_val = 0
 
-                km_val = ad_data.get('km')
-                if km_val:
-                    km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
-                
-                year_val = ad_data.get('year')
-                if year_val:
-                    year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
+            km_val = ad_data.get('km')
+            if km_val:
+                km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
+            
+            year_val = ad_data.get('year')
+            if year_val:
+                year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
                 
                 cursor.execute('''
                 INSERT INTO ads (
@@ -262,7 +264,9 @@ class CarDatabaseOptimizer:
                 else:
                     ad_id = ad_data['id']
                 try:
-                    price_val = int(ad_data.get('price', 0))
+                    p_str = str(ad_data.get('price', '0'))
+                    p_digits = ''.join(filter(str.isdigit, p_str))
+                    price_val = int(p_digits) if p_digits else 0
                 except:
                     price_val = 0
 
@@ -499,30 +503,68 @@ class CarDatabaseOptimizer:
     def get_generations_for_model(self, make: str, model: str) -> List[Dict]:
         if not hasattr(self, '_gens_cache'):
             self._gens_cache = {}
-            
+            # Load generations.json if it exists
+            gen_path = os.path.join(os.path.dirname(__file__), 'generations.json')
+            self._json_gens = {}
+            if os.path.exists(gen_path):
+                try:
+                    with open(gen_path, 'r', encoding='utf-8') as f:
+                        self._json_gens = json.load(f)
+                except Exception as e:
+                    logging.error(f"Error loading generations.json: {e}")
+
         cache_key = f"{make}_{model}"
         if cache_key in self._gens_cache:
             return self._gens_cache[cache_key]
-            
+
         make_normalized = make.lower().strip()
         model_normalized = model.lower().strip()
+
+        # Custom normalization for performance models to map to base models
+        if make_normalized in ['mercedes', 'mercedes-benz', 'mercedes benz']:
+            make_normalized = 'mercedes-benz'
+            if 'amg' in model_normalized or re.match(r'^[a-z]{1,2}\s?\d{2}', model_normalized):
+                # E.g. C 63 AMG -> c-class
+                if 'c' in model_normalized: model_normalized = 'c-class'
+                elif 'e' in model_normalized: model_normalized = 'e-class'
+                elif 's' in model_normalized and 'g' not in model_normalized: model_normalized = 's-class'
+                elif 'g' in model_normalized and 'l' not in model_normalized: model_normalized = 'g-class'
+        elif make_normalized == 'audi':
+            if model_normalized.startswith('rs'):
+                model_normalized = re.sub(r'^rs', 'a', model_normalized)
+            elif model_normalized.startswith('s') and not model_normalized.startswith('sq'):
+                model_normalized = re.sub(r'^s', 'a', model_normalized)
+            elif model_normalized.startswith('sq'):
+                model_normalized = re.sub(r'^sq', 'q', model_normalized)
+        elif make_normalized == 'bmw':
+            if model_normalized.startswith('m') and len(model_normalized) <= 2:
+                model_normalized = model_normalized.replace('m', 'seria ')
+
+        # Find in JSON first
+        for json_make, models in self._json_gens.items():
+            if json_make.lower() == make_normalized or json_make.lower().replace('-', '') == make_normalized.replace('-', ''):
+                for json_model, gens in models.items():
+                    if json_model.lower() == model_normalized or json_model.lower().replace('-', '') == model_normalized.replace('-', ''):
+                        # Convert JSON format to expected format
+                        formatted_gens = []
+                        for g in gens:
+                            formatted_gens.append({
+                                'generation': g['code'],
+                                'min_year': g['start_year'],
+                                'max_year': g['end_year'],
+                                'facelift_year': g.get('facelift_year')
+                            })
+                        self._gens_cache[cache_key] = formatted_gens
+                        return formatted_gens
+
+        # Fallback to hardcoded logic if not in JSON
         generations = self._get_model_generations_from_db(make_normalized, model_normalized)
         if generations:
+            self._gens_cache[cache_key] = generations
             return generations
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT generation, min_year, max_year, body_type, engine_types
-                FROM car_models 
-                WHERE make = %s AND model = %s
-            ''', (make_normalized, model_normalized))
-            result = cursor.fetchone()
-            if result and result['generation']:
-                res = [{'generation': result['generation'], 'min_year': result['min_year'], 'max_year': result['max_year'], 'body_type': result['body_type'], 'engine_types': json.loads(result['engine_types']) if result['engine_types'] else []}]
-                self._gens_cache[cache_key] = res
-                return res
-            self._gens_cache[cache_key] = []
-            return []
+
+        self._gens_cache[cache_key] = []
+        return []
 
     def _get_model_generations_from_db(self, make: str, model: str) -> List[Dict]:
         if make.lower() == 'bmw' and any((x in model.lower() for x in ['seria-3', 'seria3', '3', 'seria 3'])):
@@ -609,11 +651,12 @@ class CarDatabaseOptimizer:
                 series = m.group(1)
                 number = m.group(2)
                 return f'{series}{number}'
-        elif make_lc in ['mercedes', 'mercedesbenz']:
-            m = re.match('^([a-z])', model_lc)
-            if m:
-                return m.group(1)
-        return model_lc
+        elif make_lc in ['mercedes', 'mercedesbenz', 'mercedes-benz']:
+            if 'clasa' in model_lc or 'class' in model_lc:
+                m = re.search(r'\b([a-z])\b', model_lc.replace('clasa', '').replace('class', ''))
+                if m:
+                    return m.group(1)
+            return model_lc
 
     def update_search_stats(self, make: str, model: str, avg_price: float=None, avg_year: float=None, avg_km: float=None):
         with self.get_connection() as conn:

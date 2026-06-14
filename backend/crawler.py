@@ -1,17 +1,19 @@
 import asyncio
 import logging
+import random
+import dotenv
+dotenv.load_dotenv()
 from functii import search_cars, infer_car_details
 from car_database import car_db_optimizer
-import random
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-TARGETS = [{'make': 'BMW', 'model': 'X6'}, {'make': 'BMW', 'model': 'Seria 3'}, {'make': 'BMW', 'model': 'Seria 5'}, {'make': 'Audi', 'model': 'A4'}, {'make': 'Audi', 'model': 'Q7'}, {'make': 'Audi', 'model': 'Q8'}, {'make': 'Mercedes', 'model': 'Clasa E'}, {'make': 'Volkswagen', 'model': 'Golf'}]
+TARGETS = [{'make': 'BMW', 'model': 'X6'}, {'make': 'BMW', 'model': 'Seria 3'}, {'make': 'BMW', 'model': 'Seria 5'}, {'make': 'Audi', 'model': 'A4'}, {'make': 'Audi', 'model': 'Q7'}, {'make': 'Audi', 'model': 'Q8'}, {'make': 'Mercedes', 'model': 'Clasa E'}, {'make': 'Volkswagen', 'model': 'Golf'}, {'make': 'Mercedes', 'model': 'GLC'}]
 
 async def crawl_target(target):
     make = target['make']
     model = target['model']
     logging.info(f'Crawling {make} {model} (using Unified Scraper Logic)...')
     try:
-        results = await search_cars(make=make, model=model, max_price=10000000, site='both', limit=1000, max_pages=20)
+        results = await search_cars(make=make, model=model, max_price=10000000, site='both', limit=15000, max_pages=500)
         count = 0
         valid_db_ads = []
         for ad in results:
@@ -98,9 +100,11 @@ async def run_crawler():
         for target in TARGETS:
             await crawl_target(target)
             await asyncio.sleep(random.randint(5, 10))
-        cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=24)
-        if cleaned > 0:
-            logging.info(f'🧹 Deactivated {cleaned} stale ads.')
+        try:
+            cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=24)
+            logging.info(f"🧹 Cleaned up {cleaned} stale ads from database.")
+        except Exception as e:
+            logging.error(f"Error during stale ads cleanup: {e}")
         logging.info('💤 Cycle done. Sleeping for 10 minutes...')
         await asyncio.sleep(600)
 if __name__ == '__main__':

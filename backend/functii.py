@@ -75,7 +75,7 @@ def ttl_cache(func):
     return wrapper
 
 @ttl_cache
-async def search_cars(make: str, model: str, site: str='olx', sort: str='price_asc', *, min_price: int | None=None, max_price: int, min_km: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=100, max_pages: int=5):
+async def search_cars(make: str, model: str, site: str='olx', sort: str='price_asc', *, min_price: int | None=None, max_price: int | None=None, min_km: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=100, max_pages: int=5):
     if limit > 50:
         calculated_pages = limit // 30 + 2
         max_pages = max(max_pages, calculated_pages)
@@ -179,7 +179,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         if 'mercedes' in make_lc:
             if 'class' in model_lc or 'clasa' in model_lc:
                 letter = re.search('([a-z])[- ]?clas', model_lc)
-                if letter:
+                if not letter:
+                    letter = re.search('clas(?:s|a)[- ]?([a-z])', model_lc)
+                    if letter:
+                        return f'{letter.group(1)}_classe'
+                else:
                     return f'{letter.group(1)}_classe'
             return model_lc.replace('-', '_')
         if make_lc == 'bmw':
@@ -246,6 +250,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     cars = []
     for res in results_list:
         if isinstance(res, list):
+            for car in res:
+                if 'make' not in car or not car['make']:
+                    car['make'] = make
+                if 'model' not in car or not car['model']:
+                    car['model'] = model
             cars.extend(res)
         else:
             print(f'Scraper error: {res}')
@@ -309,7 +318,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             hp_val = int(hp_raw) if hp_raw else None
         except:
             pass
-        if price > max_price:
+        if max_price is not None and price > max_price:
             continue
         if min_price is not None and price < min_price:
             continue
@@ -408,7 +417,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                         html = await r.text()
                         soup = BeautifulSoup(html, 'html.parser')
                         nd = soup.find('script', {'id': '__NEXT_DATA__'})
-                        current_price = int(ad.get('price', 0))
+                        p_str = str(ad.get('price', '0'))
+                        p_digits = ''.join(filter(str.isdigit, p_str))
+                        current_price = int(p_digits) if p_digits else 0
                         if nd and nd.string:
                             d = _json_live.loads(nd.string)
                             pp = d.get('props', {}).get('pageProps', {})

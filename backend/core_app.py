@@ -67,7 +67,10 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
         parsed = []
         for car in car_list:
             try:
-                p = int(str(car.get('price', 0)).replace(' ', '').replace('€', '') or 0)
+                p_str = str(car.get('price', '0'))
+                p_digits = ''.join(filter(str.isdigit, p_str))
+                p = int(p_digits) if p_digits else 0
+                
                 y_str = ''.join(filter(str.isdigit, str(car.get('year', 0))))
                 y = int(y_str) if y_str else 0
                 k_str = ''.join(filter(str.isdigit, str(car.get('km', 0))))
@@ -133,12 +136,12 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-async def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, max_price: int, site: str='both', min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+async def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, site: str='both', max_price: int | None=None, min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
     print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}, fuel={fuel}, transmission={transmission}')
     
     parts = sort.split('_')
     sort_by = parts[0] if len(parts) > 0 else 'price'
-    order = parts[1] if len(parts) > 1 else 'asc'
+    order = parts[1] if len(parts) > 1 else ('desc' if sort_by == 'newest' else 'asc')
     
     # Normalizăm modelul (ex: "Seria 3" devine "seria-3")
     norm_model = car_db_optimizer.normalize_model_name(make, model)
@@ -274,8 +277,8 @@ def get_top_deals(request: Request):
         # 5. Sort by deal score descending (highest first)
         valid_deals.sort(key=lambda x: x['deal_score'], reverse=True)
 
-        # 6. Take top 5 and format their price with " €" to match other endpoints
-        top_deals = valid_deals[:5]
+        # 6. Take top 8 and format their price with " €" to match other endpoints
+        top_deals = valid_deals[:8]
         for ad in top_deals:
             price_val = ad.get('price')
             if price_val is not None:
@@ -415,8 +418,8 @@ import datetime
 
 JWT_SECRET = os.environ.get("JWT_SECRET")
 if not JWT_SECRET:
-    print("WARNING: JWT_SECRET environment variable is missing! Falling back to generated token for safety, but login will not persist across restarts.")
-    JWT_SECRET = "temp-secret-" + str(datetime.datetime.now().timestamp())
+    print("WARNING: JWT_SECRET environment variable is missing! Falling back to static token for local dev safety.")
+    JWT_SECRET = "dev-fallback-secret-12345"
 JWT_ALGORITHM = "HS256"
 security = HTTPBearer()
 
@@ -626,7 +629,7 @@ async def api_cron_run(request: Request, authorization: str = Header(None)):
             make = group['make']
             model = group['model']
             
-            results = search_cars(make=make, model=model, min_year=None, max_year=None, min_price=None, max_price=None, max_km=None, site="both", limit=20, max_pages=1)
+            results = await search_cars(make=make, model=model, min_year=None, max_year=None, min_price=None, max_price=None, max_km=None, site="both", limit=20, max_pages=1)
             
             if not results:
                 continue
