@@ -641,9 +641,9 @@ class CarDatabaseOptimizer:
                 optimized_max = min(user_max_year, db_max_year)
         return (optimized_min, optimized_max)
 
-    def normalize_model_name(self, make: str, model: str) -> str:
-        make_lc = make.lower().strip()
-        model_lc = model.lower().strip()
+    def normalize_model_name(self, make: str | None, model: str | None) -> str:
+        make_lc = make.lower().strip() if make else ''
+        model_lc = model.lower().strip() if model else ''
         if make_lc == 'bmw':
             m = re.match('^(x)?(\\d)', model_lc)
             if m:

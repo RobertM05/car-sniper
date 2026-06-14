@@ -136,7 +136,7 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-async def api_search(request: Request, background_tasks: BackgroundTasks, make: str, model: str, site: str='both', max_price: int | None=None, min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+async def api_search(request: Request, background_tasks: BackgroundTasks, make: str | None=None, model: str | None=None, site: str='both', max_price: int | None=None, min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
     print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}, fuel={fuel}, transmission={transmission}')
     
     parts = sort.split('_')
