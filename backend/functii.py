@@ -126,6 +126,13 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         model_lc = (model_text or '').strip().lower()
         if 'mercedes' in make_lc:
             if 'class' in model_lc or 'clasa' in model_lc:
+                letter = re.search('([a-z])[- ]?clas', model_lc)
+                if not letter:
+                    letter = re.search('clas(?:s|a)[- ]?([a-z])', model_lc)
+                    if letter:
+                        return f'{letter.group(1)}-class'
+                else:
+                    return f'{letter.group(1)}-class'
                 return None
             if model_lc in ['glc', 'gle', 'gls', 'gla', 'glb', 'cla', 'cls']:
                 return model_lc
