@@ -129,10 +129,14 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 letter = re.search('([a-z])[- ]?clas', model_lc)
                 if not letter:
                     letter = re.search('clas(?:s|a)[- ]?([a-z])', model_lc)
-                    if letter:
-                        return f'{letter.group(1)}-class'
-                else:
-                    return f'{letter.group(1)}-class'
+                if letter:
+                    char = letter.group(1)
+                    if char == 'e':
+                        return 'e-class'
+                    elif char == 'm':
+                        return 'm-klasse' # Just a guess, or ml
+                    else:
+                        return char
                 return None
             if model_lc in ['glc', 'gle', 'gls', 'gla', 'glb', 'cla', 'cls']:
                 return model_lc
@@ -150,6 +154,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                     return None
                 return f'{m.group(1)}{m.group(2)}'
         if make_lc in ['volkswagen', 'vw']:
+            vw_models = {'golf', 'passat', 'polo', 'tiguan', 'touareg', 'touran', 'arteon', 't-roc', 't-cross', 'jetta', 'scirocco'}
+            if model_lc in vw_models:
+                return model_lc
             return None
         if make_lc == 'ford':
             ford_models = {'focus', 'fiesta', 'mondeo', 'kuga', 'puma', 'mustang', 'ranger', 'transit', 'ecosport', 's-max', 'c-max', 'galaxy'}
@@ -179,6 +186,14 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 return model_lc
         if make_lc == 'peugeot':
             if re.match('^\\d{3,4}$', model_lc):
+                return model_lc
+        if make_lc == 'hyundai':
+            hyundai_models = {'tucson', 'i30', 'i20', 'i10', 'santa-fe', 'kona', 'ioniq', 'elantra'}
+            if model_lc in hyundai_models or model_lc.replace(' ', '-') in hyundai_models:
+                return model_lc.replace(' ', '-')
+        if make_lc == 'kia':
+            kia_models = {'sportage', 'ceed', 'rio', 'picanto', 'stonic', 'sorento', 'niro', 'optima', 'xceed'}
+            if model_lc in kia_models:
                 return model_lc
         return None
 
