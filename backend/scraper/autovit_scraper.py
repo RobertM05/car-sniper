@@ -128,16 +128,15 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         name = item.get('name')
                         if not name:
                             continue
-                        price_spec = elem.get('priceSpecification', {})
                         price_raw = price_spec.get('price')
                         link = item.get('url') or elem.get('url')
-                        if not link:
-                            link = url
-                        if link.startswith('/'):
-                            link = 'https://www.autovit.ro' + link
                         img_url = item.get('image')
                         if isinstance(img_url, list) and img_url:
                             img_url = img_url[0]
+                        if not link or link == url:
+                            continue
+                        if link.startswith('/'):
+                            link = 'https://www.autovit.ro' + link
                         fingerprint = link if '-ID' in link else f'{link}__img__{img_url}'
                         car_year_raw = item.get('productionDate') or item.get('modelDate')
                         car_year = None

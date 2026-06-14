@@ -311,11 +311,11 @@ class CarDatabaseOptimizer:
                 params.append(f'%{make}%')
             if model:
                 if len(model) <= 2:
-                    # Folosim regex cu limite (^, space, dash) pentru modele scurte gen 'e', 'c', 'a4', 'x5' ca sa evitam match in cuvinte gen "GLE"
+                    # Folosim regex strict pentru modele scurte. La model coloana, acceptam 'e' izolat.
+                    # La titlu, obligam sa fie urmat de numere gen 'E 220' sau sa fie 'E-Class' pentru a evita hibrizi gen '300 e'
                     query += r' AND (model ~* %s OR title ~* %s)'
-                    pattern = rf'(^|\s|-){model}(\s|$|-)'
-                    params.append(pattern)
-                    params.append(pattern)
+                    params.append(rf'(^|\s|-){model}(\s|$|-)')
+                    params.append(rf'(^|\s|-){model}\s?\d{{2,3}}')
                 else:
                     query += ' AND (model ILIKE %s OR title ILIKE %s)'
                     params.append(f'%{model}%')

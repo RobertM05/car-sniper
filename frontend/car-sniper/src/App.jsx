@@ -37,8 +37,8 @@ const AppContent = () => {
     maxKm: "",
     minCc: "",
     minHp: "",
-    limit: "50",
-    maxPages: "5"
+    limit: "1000",
+    maxPages: "15"
   });
 
 
