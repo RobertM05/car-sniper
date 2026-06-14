@@ -94,7 +94,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                     search_model = letter.group(2)
             else:
                 search_model = letter.group(1)
-        query = f'{search_model}'
+            query = f'{make} clasa {search_model}'
+        else:
+            query = f'{make} {search_model}'
     else:
         query = f'{make} {search_model}'
 
