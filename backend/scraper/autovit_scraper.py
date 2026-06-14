@@ -128,6 +128,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         name = item.get('name')
                         if not name:
                             continue
+                        price_spec = elem.get('priceSpecification', {})
                         price_raw = price_spec.get('price')
                         link = item.get('url') or elem.get('url')
                         img_url = item.get('image')
