@@ -91,14 +91,18 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
         car_km = data['km']
         car_gen = car_db_optimizer.get_generation_for_year(car.get('make', ''), car.get('model', ''), car_year)
         
-        # Find peers. If we know the exact generation, only compare to that generation. 
-        # Otherwise, fall back to comparing with cars +/- 2 years old.
+        # Find peers. Try to find cars of the EXACT same generation AND within +/- 2 years!
+        peers = []
         if car_gen:
             peers = [
                 p for p in valid_peers 
                 if car_db_optimizer.get_generation_for_year(p['ref'].get('make', ''), p['ref'].get('model', ''), p['year']) == car_gen
+                and abs(p['year'] - car_year) <= 2
             ]
-        else:
+            
+        # If we don't know the generation OR we couldn't find enough peers of the same generation, 
+        # fall back to comparing with any cars +/- 2 years old.
+        if not peers or len(peers) < 3:
             peers = [p for p in valid_peers if abs(p['year'] - car_year) <= 2]
         
         if len(peers) >= 3:

@@ -84,12 +84,12 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     optimized_min_year = optimized_params['min_year']
     optimized_max_year = optimized_params['max_year']
     normalized_model = optimized_params['normalized_model']
-    search_model = normalized_model
+    search_model = normalized_model if normalized_model else model
     if 'mercedes' in make.lower():
-        if 'class' in normalized_model.lower() or 'clasa' in normalized_model.lower():
-            letter = re.search('([a-zA-Z])[- ]?([cC]las)', normalized_model)
+        if 'class' in search_model.lower() or 'clasa' in search_model.lower():
+            letter = re.search('([a-zA-Z])[- ]?([cC]las)', search_model)
             if not letter:
-                letter = re.search('([cC]las)[a-z]*[- ]?([a-zA-Z])', normalized_model)
+                letter = re.search('([cC]las)[a-z]*[- ]?([a-zA-Z])', search_model)
                 if letter:
                     search_model = letter.group(2)
             else:
@@ -206,9 +206,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 if not letter:
                     letter = re.search('clas(?:s|a)[- ]?([a-z])', model_lc)
                     if letter:
-                        return f'{letter.group(1)}_classe'
+                        return f'{letter.group(1)}-class'
                 else:
-                    return f'{letter.group(1)}_classe'
+                    return f'{letter.group(1)}-class'
             return model_lc.replace('-', '_')
         if make_lc == 'bmw':
             m = re.match('seria[- ]?(\\d)', model_lc)
@@ -266,8 +266,14 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     tasks = []
     olx_model_slug = get_olx_model_slug(make, model)
     autovit_model_slug = get_autovit_model_slug(make, model)
+    
+    # Ensure fallback query for OLX if native category doesn't exist
+    olx_query = query
+    if not olx_query and make and model and olx_model_slug is None:
+        olx_query = f"{make} {model}"
+
     if site_lc in ['olx', 'both']:
-        tasks.append(scrape_olx(query, limit=limit, max_price=max_price, min_price=min_price, min_year=optimized_min_year, max_year=optimized_max_year, max_km=max_km, sort_order=sort, make=make, model_slug=olx_model_slug, max_pages=max_pages))
+        tasks.append(scrape_olx(olx_query, limit=limit, max_price=max_price, min_price=min_price, min_year=optimized_min_year, max_year=optimized_max_year, max_km=max_km, sort_order=sort, make=make if olx_model_slug else None, model_slug=olx_model_slug, max_pages=max_pages))
     if site_lc in ['autovit', 'both']:
         tasks.append(scrape_autovit(make=make, model=autovit_model_slug, limit=limit, max_pages=max_pages, max_price=max_price, min_price=min_price, min_year=optimized_min_year, max_year=optimized_max_year, max_km=max_km, sort_order=sort))
     results_list = await asyncio.gather(*tasks, return_exceptions=True)
@@ -289,9 +295,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     for car in cars:
         try:
             raw_price = str(car.get('price', ''))
-            price_val = int(re.sub('\\D', '', raw_price))
+            price_str = raw_price.split(',')[0]
+            price_val = int(re.sub('\\D', '', price_str)) if price_str else 0
             if 'ron' in raw_price.lower() or 'lei' in raw_price.lower():
                 price_val = int(price_val / 5)
+                car['price'] = f"{price_val} EUR" # Ensure crawler saves the converted price
             price = price_val
         except ValueError:
             filter_stats['price_parse'] += 1
@@ -357,6 +365,20 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         if min_hp is not None and hp_val is not None and (hp_val < min_hp):
             continue
         car['price'] = price
+        
+        has_native_filter = False
+        link_str = car.get('link', '').lower()
+        if 'olx' in link_str:
+            if olx_model_slug is not None:
+                has_native_filter = True
+        elif 'autovit' in link_str:
+            if autovit_model_slug is not None:
+                has_native_filter = True
+                
+        if has_native_filter:
+            strict_filtered.append(car)
+            continue
+
         if model_matches:
             strict_filtered.append(car)
         else:
