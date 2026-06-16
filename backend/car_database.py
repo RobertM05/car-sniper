@@ -653,11 +653,15 @@ class CarDatabaseOptimizer:
                     return f'x{digit}'
                 return f'seria-{digit}'
         elif make_lc == 'audi':
+            # Preserve "allroad" suffix before truncating
+            is_allroad = 'allroad' in model_lc
             m = re.match('^([aq])(\\d+)', model_lc)
             if m:
                 series = m.group(1)
                 number = m.group(2)
-                return f'{series}{number}'
+                base = f'{series}{number}'
+                return f'{base} allroad' if is_allroad else base
+            return model_lc
         elif make_lc in ['mercedes', 'mercedesbenz', 'mercedes-benz']:
             if 'clasa' in model_lc or 'class' in model_lc:
                 m = re.search(r'\b([a-z])\b', model_lc.replace('clasa', '').replace('class', ''))
