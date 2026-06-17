@@ -49,8 +49,8 @@ async def scrape_and_classify(make, possible_models):
                 model=model, 
                 max_price=999999,
                 site='both',
-                limit=50 if is_github_actions else 5000,
-                max_pages=3 if is_github_actions else 150,
+                limit=50 if is_github_actions else 25000,
+                max_pages=3 if is_github_actions else 1000,
                 sort='newest'
             )
             
