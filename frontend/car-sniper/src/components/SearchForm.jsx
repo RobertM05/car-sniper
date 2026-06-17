@@ -168,7 +168,7 @@ const SearchForm = ({
                 <option value="50">{t('search', 'fast')}</option>
                 <option value="100">{t('search', 'normal')}</option>
                 <option value="300">{t('search', 'extended')}</option>
-                <option value="1000">{t('search', 'all')}</option>
+                <option value="25000">{t('search', 'all')}</option>
               </select>
             </div>
           </div>
