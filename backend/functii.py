@@ -137,7 +137,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                         return 'm-klasse' # Just a guess, or ml
                     else:
                         return char
-                return None
+                return model_lc.replace(" ", "-")
             if model_lc in ['glc', 'gle', 'gls', 'gla', 'glb', 'cla', 'cls']:
                 return model_lc
         if make_lc == 'bmw':
@@ -151,13 +151,13 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
             if m:
                 if m.group(1) == 'a' and m.group(2) == '5':
-                    return None
+                    return model_lc.replace(" ", "-")
                 return f'{m.group(1)}{m.group(2)}'
         if make_lc in ['volkswagen', 'vw']:
             vw_models = {'golf', 'passat', 'polo', 'tiguan', 'touareg', 'touran', 'arteon', 't-roc', 't-cross', 'jetta', 'scirocco'}
             if model_lc in vw_models:
                 return model_lc
-            return None
+            return model_lc.replace(" ", "-")
         if make_lc == 'ford':
             ford_models = {'focus', 'fiesta', 'mondeo', 'kuga', 'puma', 'mustang', 'ranger', 'transit', 'ecosport', 's-max', 'c-max', 'galaxy'}
             if model_lc in ford_models:
@@ -195,7 +195,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             kia_models = {'sportage', 'ceed', 'rio', 'picanto', 'stonic', 'sorento', 'niro', 'optima', 'xceed'}
             if model_lc in kia_models:
                 return model_lc
-        return None
+        return model_lc.replace(' ', '-')
 
     def get_autovit_model_slug(make_text: str, model_text: str) -> str:
         make_lc = (make_text or '').strip().lower()
@@ -458,7 +458,7 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             try:
                 async with session.get(ad.get('link'), timeout=5) as r:
                     if r.status == 404 or len(str(r.url)) < 30:
-                        return None
+                        return model_lc.replace(" ", "-")
                     if r.status == 200:
                         html = await r.text()
                         soup = BeautifulSoup(html, 'html.parser')
