@@ -668,6 +668,8 @@ class CarDatabaseOptimizer:
                 if m:
                     return m.group(1)
             return model_lc
+            
+        return model_lc
 
     def update_search_stats(self, make: str, model: str, avg_price: float=None, avg_year: float=None, avg_km: float=None):
         with self.get_connection() as conn:

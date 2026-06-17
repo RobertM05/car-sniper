@@ -113,9 +113,15 @@ async def main():
             await asyncio.sleep(10)
             
         # 2. Curățenia generală (The Cleaner)
-        print(f"\n--- Rulăm curățenia (Dezactivare anunțuri expirate) ---")
-        cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=48)
-        print(f"Rezultat: Am marcat {cleaned} mașini ca fiind VÂNDUTE/EXPIRATE.\n")
+        # O Rulăm DOAR dacă facem Full Sync (local). Dacă suntem pe Rapid Sync (GitHub), am scanat 
+        # doar primele 50 de anunțuri, deci nu putem asuma că restul au dispărut!
+        if not os.environ.get("GITHUB_ACTIONS"):
+            print(f"\n--- Rulăm curățenia (Dezactivare anunțuri expirate) ---")
+            cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=48)
+            print(f"Rezultat: Am marcat {cleaned} mașini ca fiind VÂNDUTE/EXPIRATE.\n")
+        else:
+            print("\n--- Curățenia de 48h a fost omisă ---")
+            print("Motiv: Executăm Rapid Sync. Anunțurile mai vechi nu au fost scanate pentru a proteja IP-ul.")
         
         # 3. Oprește scriptul dacă suntem pe GitHub Actions
         if os.environ.get("GITHUB_ACTIONS"):
