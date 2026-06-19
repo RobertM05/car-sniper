@@ -124,6 +124,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
     def get_olx_model_slug(make_text: str, model_text: str) -> str | None:
         make_lc = (make_text or '').strip().lower()
         model_lc = (model_text or '').strip().lower()
+        
+        # Exact Map Overrides
+        if make_lc == 'bentley' and model_lc == 'flying spur':
+            return None # OLX does not have a native category for Flying Spur, force query string
+            
         if 'mercedes' in make_lc:
             if 'class' in model_lc or 'clasa' in model_lc:
                 letter = re.search('([a-z])[- ]?clas', model_lc)
@@ -134,9 +139,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                     if char == 'e':
                         return 'e-class'
                     elif char == 'm':
-                        return 'm-klasse' # Just a guess, or ml
+                        return 'm-klasse'
                     else:
-                        return char
+                        return f'{char}-class' # ALWAYS format as {char}-class for OLX
                 return model_lc.replace(" ", "-")
             if model_lc in ['glc', 'gle', 'gls', 'gla', 'glb', 'cla', 'cls']:
                 return model_lc
@@ -148,6 +153,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             if m:
                 return f'x{m.group(1)}'
         if make_lc == 'audi':
+            # Support Audi Allroad correctly
+            if 'allroad' in model_lc:
+                m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
+                if m:
+                    return f'{m.group(1)}{m.group(2)}-allroad'
             m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
             if m:
                 if m.group(1) == 'a' and m.group(2) == '5':
@@ -205,10 +215,9 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 letter = re.search('([a-z])[- ]?clas', model_lc)
                 if not letter:
                     letter = re.search('clas(?:s|a)[- ]?([a-z])', model_lc)
-                    if letter:
-                        return f'{letter.group(1)}-class'
-                else:
-                    return f'{letter.group(1)}-class'
+                
+                if letter:
+                    return f'clasa-{letter.group(1)}' # ALWAYS format as clasa-{char} for Autovit
             return model_lc.replace('-', '_')
         if make_lc == 'bmw':
             m = re.match('seria[- ]?(\\d)', model_lc)
@@ -218,6 +227,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             if m:
                 return f'x{m.group(1)}'
         if make_lc == 'audi':
+            # Support Audi Allroad correctly
+            if 'allroad' in model_lc:
+                m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
+                if m:
+                    return f'{m.group(1)}{m.group(2)}-allroad'
             m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
             if m:
                 return f'{m.group(1)}{m.group(2)}'
@@ -384,10 +398,11 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
         else:
             make_is_bmw = make_norm == 'bmw'
             model_is_x = model_norm.startswith('x') if model_norm else False
+            model_is_z_or_i = model_norm.startswith('z') or model_norm.startswith('i') if model_norm else False
             contains_x_series = any((x in title_norm or x in link_norm for x in ['x1', 'x2', 'x3', 'x4', 'x5', 'x6', 'x7'])) if title_norm or link_norm else False
             if make_is_bmw and (not model_is_x) and contains_x_series:
                 continue
-            if make_is_bmw and (not model_is_x) and model_norm:
+            if make_is_bmw and (not model_is_x) and (not model_is_z_or_i) and model_norm:
                 import re as _re
                 m_num = _re.search('(\\d{3})', model_norm)
                 model_num = m_num.group(1) if m_num else ''

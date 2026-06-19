@@ -277,6 +277,13 @@ class CarDatabaseOptimizer:
                 year_val = ad_data.get('year')
                 if year_val:
                     year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
+                    if year_val > 0:
+                        year_val = max(1950, min(year_val, 2026))
+
+                # Upscale image quality by altering OLX/Autovit CDN params
+                img_url = ad_data.get('image')
+                if img_url and 'image;s=' in img_url:
+                    img_url = re.sub(r'image;s=\d+x\d+.*$', 'image;s=1000x750;q=90', img_url)
 
                 values.append((
                     ad_id, 
@@ -285,7 +292,7 @@ class CarDatabaseOptimizer:
                     price_val, 
                     price_val,
                     link, 
-                    ad_data.get('image'), 
+                    img_url, 
                     ad_data.get('make'), 
                     ad_data.get('model'), 
                     year_val, 
@@ -311,11 +318,9 @@ class CarDatabaseOptimizer:
                 params.append(f'%{make}%')
             if model:
                 if len(model) <= 2:
-                    # Folosim regex strict pentru modele scurte. La model coloana, acceptam 'e' izolat.
-                    # La titlu, obligam sa fie urmat de numere gen 'E 220' sau sa fie 'E-Class' pentru a evita hibrizi gen '300 e'
-                    query += r' AND (model ~* %s OR title ~* %s)'
+                    # STRICT matching for short models (like M3, Q5). Do not fallback to title!
+                    query += r' AND model ~* %s'
                     params.append(rf'(^|\s|-){model}(\s|$|-)')
-                    params.append(rf'(^|\s|-){model}\s?\d{{2,3}}')
                 else:
                     query += ' AND (model ILIKE %s OR title ILIKE %s)'
                     params.append(f'%{model}%')
@@ -323,6 +328,9 @@ class CarDatabaseOptimizer:
             if min_price:
                 query += ' AND price >= %s'
                 params.append(min_price)
+            else:
+                # Default filter: allow price=0 (e.g., 'Schimb'/Trade), but reject price < 500 if it's > 0 (parts/toys)
+                query += ' AND (price = 0 OR price >= 500)'
             if max_price:
                 query += ' AND price <= %s'
                 params.append(max_price)
@@ -378,8 +386,8 @@ class CarDatabaseOptimizer:
             query = '''
                 SELECT * FROM ads 
                 WHERE active = TRUE 
-                  AND make = %s 
-                  AND model = %s
+                  AND make ILIKE %s 
+                  AND model ILIKE %s
             '''
             cursor.execute(query, (make, model))
             rows = cursor.fetchall()

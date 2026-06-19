@@ -13,7 +13,8 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
         while len(ads) < limit and current_page <= max_pages:
             path = 'autoturisme'
             if make and model_slug:
-                url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/{make}/{model_slug}/'
+                make_formatted = make.lower().replace(" ", "-")
+                url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/{make_formatted}/{model_slug}/'
             elif query:
                 url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/q-{query.lower().replace(" ", "-")}/'
             else:

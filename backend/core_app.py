@@ -105,7 +105,7 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
         if not peers or len(peers) < 3:
             peers = [p for p in valid_peers if abs(p['year'] - car_year) <= 2]
         
-        if len(peers) >= 3:
+        if len(peers) >= 1:
             peer_avg_price = sum(p['price'] for p in peers) / len(peers)
             peer_avg_km = sum(p['km'] for p in peers) / len(peers)
         else:

@@ -220,6 +220,8 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                             continue
                         html_year = None
                         html_km = None
+                        html_make = None
+                        html_model = None
                         nd = soup.find('script', {'id': '__NEXT_DATA__'})
                         if nd and nd.string:
                             try:
@@ -238,10 +240,32 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                                                             html_year = param.get('value')
                                                         elif param.get('key') == 'mileage':
                                                             html_km = param.get('value')
+                                                        elif param.get('key') == 'make':
+                                                            html_make = param.get('value')
+                                                        elif param.get('key') == 'model':
+                                                            html_model = param.get('value')
                                                     break
                                             break
                             except:
                                 pass
+                        
+                        expected_make = make.lower().replace(' ', '-') if make else None
+                        expected_model = model.lower() if model else None
+                        
+                        if html_make and expected_make:
+                            if html_make != expected_make and html_make not in expected_make and expected_make not in html_make:
+                                scrape_stats['invalid'] += 1
+                                continue
+                        if html_model and expected_model:
+                            html_model_lc = html_model.lower()
+                            if html_model_lc != expected_model:
+                                # For cases like 'e' and 'e-class'
+                                if html_model_lc in expected_model.split('-') or expected_model in html_model_lc.split('-'):
+                                    pass
+                                else:
+                                    scrape_stats['invalid'] += 1
+                                    continue
+
                         page_ads.append({'title': title, 'price': f'{price} €', 'link': lnk, 'image': image_url, 'subsource': 'Autovit', 'year': html_year, 'km': f'{html_km} km' if html_km else None})
                     except:
                         pass
