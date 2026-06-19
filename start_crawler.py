@@ -44,15 +44,39 @@ async def scrape_and_classify(make, possible_models):
                 print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD FULL SYNC)")
                 
             # Caută mașini PENTRU UN MODEL SPECIFIC, respectând filtrele site-urilor!
-            results = await search_cars(
-                make=make,
-                model=model, 
-                max_price=999999,
-                site='both',
-                limit=50 if is_github_actions else 25000,
-                max_pages=3 if is_github_actions else 1000,
-                sort='newest'
-            )
+            # MASTER BLUEPRINT: Temporal Search Space Sharding
+            async def get_all_cars_sharded(m_make, m_model, min_y=1950, max_y=2026):
+                res = await search_cars(
+                    make=m_make,
+                    model=m_model,
+                    min_year=min_y,
+                    max_year=max_y,
+                    max_price=999999,
+                    site='both',
+                    limit=50 if is_github_actions else 25000,
+                    max_pages=3 if is_github_actions else 1000,
+                    sort='newest'
+                )
+                # If we hit near the 1000-ad pagination wall, split the year range
+                if len(res) >= 800 and not is_github_actions and min_y < max_y:
+                    mid_y = (min_y + max_y) // 2
+                    print(f"[{time.strftime('%X')}] SHARDING TRIGGERED: {m_make} {m_model} ({min_y}-{max_y}) hit {len(res)} ads. Splitting into {min_y}-{mid_y} and {mid_y+1}-{max_y}")
+                    res1 = await get_all_cars_sharded(m_make, m_model, min_y, mid_y)
+                    await asyncio.sleep(1)
+                    res2 = await get_all_cars_sharded(m_make, m_model, mid_y + 1, max_y)
+                    
+                    # Deduplicate combined results by link
+                    seen_links = set()
+                    combined_res = []
+                    for c in res1 + res2:
+                        link = c.get('link')
+                        if link not in seen_links:
+                            seen_links.add(link)
+                            combined_res.append(c)
+                    return combined_res
+                return res
+            
+            results = await get_all_cars_sharded(make, model, 1950, 2026)
             
             valid_cars = []
             for car in results:
