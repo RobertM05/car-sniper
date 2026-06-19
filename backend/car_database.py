@@ -668,6 +668,10 @@ class CarDatabaseOptimizer:
                 if m:
                     return m.group(1)
             return model_lc
+        elif make_lc == 'mazda':
+            if model_lc.startswith('cx ') or model_lc.startswith('mx '):
+                return model_lc.replace(' ', '-')
+            return model_lc
             
         return model_lc
 
