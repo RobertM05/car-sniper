@@ -388,6 +388,12 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             continue
         car['price'] = price
         
+        # Scrub PII (phones and names) for GDPR Compliance
+        for key in ['phone', 'seller_name', 'seller', 'contact', 'user_id']:
+            car.pop(key, None)
+        title_str = str(car.get('title', ''))
+        car['title'] = re.sub(r'\b07\d{8}\b', '[REDACTED]', title_str)
+        
         has_native_filter = False
         link_str = car.get('link', '').lower()
         if 'olx' in link_str:

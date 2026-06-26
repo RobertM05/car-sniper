@@ -4,12 +4,17 @@ import { useLanguage } from '../LanguageContext';
 const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
     const { t } = useLanguage();
     const [email, setEmail] = useState("");
+    const [consent, setConsent] = useState(false);
     const [loading, setLoading] = useState(false);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!consent) {
+            alert("You must agree to the Privacy Policy to proceed.");
+            return;
+        }
         setLoading(true);
         await onSubmit(email);
         setLoading(false);
@@ -67,6 +72,20 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                         />
                     </div>
 
+                    <div className="form-group" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                        <input 
+                            type="checkbox" 
+                            id="gdpr-consent" 
+                            checked={consent} 
+                            onChange={(e) => setConsent(e.target.checked)} 
+                            required 
+                            style={{ marginTop: '0.2rem' }}
+                        />
+                        <label htmlFor="gdpr-consent" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                            I agree to the <a href="/confidentialitate" target="_blank" style={{ color: 'var(--primary-color)' }}>Privacy Policy</a> and consent to the processing of my data for email alerts.
+                        </label>
+                    </div>
+
                     <div style={{ display: 'flex', gap: '1rem' }}>
                         <button
                             type="button"
@@ -84,7 +103,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                         </button>
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || !consent}
                             className="submit-btn"
                             style={{ marginTop: 0, flex: 1 }}
                         >
