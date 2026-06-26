@@ -163,6 +163,10 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 if m.group(1) == 'a' and m.group(2) == '5':
                     return model_lc.replace(" ", "-")
                 return f'{m.group(1)}{m.group(2)}'
+        if make_lc == 'volvo':
+            if re.match(r'^xc[\- ]?\d+$', model_lc):
+                return model_lc.replace(' ', '').replace('-', '').replace('xc', 'xc-')
+            return model_lc.replace(' ', '').replace('-', '')
         if make_lc in ['volkswagen', 'vw']:
             vw_models = {'golf', 'passat', 'polo', 'tiguan', 'touareg', 'touran', 'arteon', 't-roc', 't-cross', 'jetta', 'scirocco'}
             if model_lc in vw_models:
@@ -235,6 +239,10 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
             m = re.match('([aq])[\\- ]?(\\d+)', model_lc)
             if m:
                 return f'{m.group(1)}{m.group(2)}'
+        if make_lc == 'volvo':
+            if re.match(r'^xc[\- ]?\d+$', model_lc):
+                return model_lc.replace(' ', '').replace('-', '').replace('xc', 'xc-')
+            return model_lc.replace(' ', '').replace('-', '')
         if make_lc in ['volkswagen', 'vw']:
             vw_models = {'golf', 'passat', 'polo', 'tiguan', 'touareg', 'touran', 'arteon', 't-roc', 't-cross', 'jetta', 'scirocco'}
             if model_lc in vw_models:

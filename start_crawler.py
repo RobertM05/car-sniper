@@ -127,11 +127,27 @@ async def main():
     print("=======================================")
     print("Apasă CTRL+C pentru a opri scriptul.\n")
     
+    resume_make = None
+    if len(sys.argv) > 1 and sys.argv[1] == '--resume' and len(sys.argv) > 2:
+        resume_make = sys.argv[2]
+        if resume_make not in BRANDS_AND_MODELS:
+            print(f"Brand '{resume_make}' not found in catalog, ignoring resume flag.")
+            resume_make = None
+        else:
+            print(f"Initial resume from brand: {resume_make}")
+
     while True:
         print(f"--- Începere Ciclu Nou de Scraping: {time.strftime('%X')} ---")
         
+        if resume_make:
+            print(f"Resuming from brand: {resume_make} for this cycle.")
+        
         # 1. Scraping pentru fiecare marcă în parte (descărcăm sute de mașini și le clasificăm local)
         for make, models in BRANDS_AND_MODELS.items():
+            if resume_make and make != resume_make:
+                continue
+            if resume_make and make == resume_make:
+                resume_make = None # Resume matched, continue normally from here
             await scrape_and_classify(make, models)
             # Așteptăm 10 secunde între mărci ca să nu dăm prea multe requesturi simultan
             await asyncio.sleep(10)

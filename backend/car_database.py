@@ -29,11 +29,33 @@ class CarDatabaseOptimizer:
     def get_connection(self):
         # Using RealDictCursor allows us to fetch rows as dictionaries, similar to sqlite3.Row
         if self.connection_pool:
-            conn = self.connection_pool.getconn()
+            from_pool = False
+            try:
+                conn = self.connection_pool.getconn()
+                from_pool = True
+                try:
+                    with conn.cursor() as cur:
+                        cur.execute("SELECT 1")
+                except psycopg2.OperationalError:
+                    self.connection_pool.putconn(conn, close=True)
+                    conn = self.connection_pool.getconn()
+                    from_pool = True
+            except Exception as e:
+                print(f"Pool error: {e}, falling back to new connection")
+                conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
+                from_pool = False
+
             try:
                 yield conn
             finally:
-                self.connection_pool.putconn(conn)
+                if from_pool and self.connection_pool:
+                    try:
+                        self.connection_pool.putconn(conn, close=bool(conn.closed))
+                    except:
+                        pass
+                else:
+                    if conn:
+                        conn.close()
         else:
             conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
             try:
