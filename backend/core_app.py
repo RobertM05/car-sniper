@@ -17,6 +17,19 @@ from functii import search_cars, add_alert, check_alerts
 from car_database import car_db_optimizer, get_optimized_search_params
 import logging
 logging.basicConfig(level=logging.INFO)
+import json
+
+try:
+    import redis.asyncio as redis
+    import os
+    redis_url = os.environ.get('REDIS_URL') or os.environ.get('UPSTASH_REDIS_REST_URL')
+    if redis_url:
+        # Some Upstash redis URLs might start with http, but we're assuming a standard redis connection
+        redis_client = redis.from_url(redis_url.replace('https://', 'redis://').replace('http://', 'redis://'))
+    else:
+        redis_client = None
+except ImportError:
+    redis_client = None
 
 # Custom IP extractor for Vercel (care folosește x-forwarded-for)
 def get_real_ip(request: Request) -> str:
@@ -140,9 +153,20 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
 
 @app.get('/api/search')
 @limiter.limit("30/minute")
-async def api_search(request: Request, background_tasks: BackgroundTasks, make: str | None=None, model: str | None=None, site: str='both', max_price: int | None=None, min_price: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
+async def api_search(request: Request, background_tasks: BackgroundTasks, make: str | None=None, model: str | None=None, site: str='both', max_price: int | None=None, min_price: int | None=None, min_km: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, fuel: str | None=None, transmission: str | None=None, limit: int=200, max_pages: int=5, sort: str='price_asc'):
     print(f'API CALL (DB Search): make={make}, model={model}, limit={limit}, max_price={max_price}, min_year={min_year}, max_year={max_year}, fuel={fuel}, transmission={transmission}')
     
+    cache_key = f"search:{make}:{model}:{site}:{min_price}:{max_price}:{min_km}:{max_km}:{min_year}:{max_year}:{min_cc}:{min_hp}:{fuel}:{transmission}:{limit}:{sort}"
+    
+    if redis_client:
+        try:
+            cached_data = await redis_client.get(cache_key)
+            if cached_data:
+                logging.info(f"Redis cache HIT for {cache_key}")
+                return {'results': json.loads(cached_data)}
+        except Exception as e:
+            logging.error(f"Redis cache read error: {e}")
+
     parts = sort.split('_')
     sort_by = parts[0] if len(parts) > 0 else 'price'
     order = parts[1] if len(parts) > 1 else ('desc' if sort_by == 'newest' else 'asc')
@@ -157,6 +181,7 @@ async def api_search(request: Request, background_tasks: BackgroundTasks, make: 
         max_price=max_price,
         min_year=min_year,
         max_year=max_year,
+        min_km=min_km,
         max_km=max_km,
         fuel=fuel,
         transmission=transmission,
@@ -175,7 +200,7 @@ async def api_search(request: Request, background_tasks: BackgroundTasks, make: 
             site=site,
             min_price=min_price,
             max_price=live_max,
-            min_km=None,
+            min_km=min_km,
             max_km=max_km,
             min_year=min_year,
             max_year=max_year,
@@ -192,6 +217,7 @@ async def api_search(request: Request, background_tasks: BackgroundTasks, make: 
                 max_price=max_price,
                 min_year=min_year,
                 max_year=max_year,
+                min_km=min_km,
                 max_km=max_km,
                 fuel=fuel,
                 transmission=transmission,
@@ -213,6 +239,14 @@ async def api_search(request: Request, background_tasks: BackgroundTasks, make: 
         # asyncio.run is not ideal inside FastAPI background_tasks directly if the function is async,
         # but BackgroundTasks in FastAPI natively supports async functions.
         background_tasks.add_task(verify_ads_liveness, results)
+        
+        if redis_client:
+            from fastapi.encoders import jsonable_encoder
+            try:
+                # 15 minute TTL
+                await redis_client.setex(cache_key, 900, json.dumps(jsonable_encoder(results)))
+            except Exception as e:
+                logging.error(f"Redis cache write error: {e}")
     
     return {'results': results}
 
