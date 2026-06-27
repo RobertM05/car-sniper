@@ -811,4 +811,62 @@ class CarDatabaseOptimizer:
             rows = cursor.fetchall()
             return [dict(r) for r in rows]
 
+    def _hash_password(self, password: str) -> str:
+        salt = bcrypt.gensalt()
+        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+    def register_user(self, email: str, password: str) -> dict:
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            try:
+                hashed = self._hash_password(password)
+                cursor.execute('INSERT INTO users (email, hashed_password) VALUES (%s, %s) RETURNING id', (email, hashed))
+                row = cursor.fetchone()
+                user_id = row['id']
+                conn.commit()
+                return {"success": True, "id": user_id, "email": email}
+            except psycopg2.IntegrityError:
+                conn.rollback() # necesar in Postgres
+                return {"success": False, "error": "Email already registered"}
+
+    def verify_login(self, email: str, password: str) -> dict:
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+        
+            cursor.execute('SELECT id, email, hashed_password, role FROM users WHERE email = %s', (email,))
+            user = cursor.fetchone()
+        
+            if not user:
+                return {"success": False, "error": "User not found"}
+            
+            try:
+                if bcrypt.checkpw(password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
+                    return {"success": True, "id": user["id"], "email": user["email"], "role": user.get("role", "user")}
+                else:
+                    return {"success": False, "error": "Incorrect password"}
+            except ValueError:
+                return {"success": False, "error": "Incorrect password or outdated security hash"}
+
+    def get_all_brands(self) -> List[str]:
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT DISTINCT make FROM car_models ORDER BY make ASC')
+            rows = cursor.fetchall()
+            brands = [self.format_brand_name(row['make']) for row in rows if row['make']]
+            return sorted(list(set(brands)))
+
+    def get_models(self, make: str) -> List[str]:
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT DISTINCT model FROM car_models WHERE make = %s ORDER BY model ASC', (make.lower(),))
+            rows = cursor.fetchall()
+            models = [self.format_model_name(row['model']) for row in rows if row['model']]
+            return sorted(list(set(models)))
+        
 car_db_optimizer = CarDatabaseOptimizer()
+
+def get_optimized_search_params(make: str, model: str, user_min_year: int=None, user_max_year: int=None) -> Dict:
+    (optimized_min_year, optimized_max_year) = car_db_optimizer.get_optimized_year_range(make, model, user_min_year, user_max_year)
+    model_info = car_db_optimizer.get_model_info(make, model)
+    generations = car_db_optimizer.get_generations_for_model(make, model)
+    return {'min_year': optimized_min_year, 'max_year': optimized_max_year, 'model_info': model_info, 'generations': generations, 'selected_generation': None, 'normalized_model': car_db_optimizer.normalize_model_name(make, model)}
