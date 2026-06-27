@@ -262,6 +262,8 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                                 # For cases like 'e' and 'e-class'
                                 if html_model_lc in expected_model.split('-') or expected_model in html_model_lc.split('-'):
                                     pass
+                                elif html_model_lc.replace('-', ' ') == expected_model.replace('-', ' '):
+                                    pass
                                 else:
                                     scrape_stats['invalid'] += 1
                                     continue

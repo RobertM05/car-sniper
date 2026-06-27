@@ -110,6 +110,10 @@ async def scrape_and_classify(make, possible_models):
                 try:
                     car_db_optimizer.upsert_ads(valid_cars)
                     saved_count += len(valid_cars)
+                    if not is_github_actions:
+                        ghosts = car_db_optimizer.mark_ghost_ads_inactive(make, model, buffer_hours=12)
+                        if ghosts > 0:
+                            print(f"[{time.strftime('%X')}] 🧹 Curățenie: Am marcat {ghosts} anunțuri fantomă ca INACTIVE pentru {make} {model}.")
                 except Exception as db_err:
                     print(f" Eroare DB batch upsert: {db_err}")
             

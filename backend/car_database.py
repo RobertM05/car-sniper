@@ -228,7 +228,7 @@ class CarDatabaseOptimizer:
                     id, source, title, price, link, image, make, model, year, km, 
                     fuel, transmission, body_type, city, last_seen, active, updated_at
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)
-                ON CONFLICT(link) DO UPDATE SET
+                ON CONFLICT(id) DO UPDATE SET
                     price = EXCLUDED.price,
                     last_seen = CURRENT_TIMESTAMP,
                     active = TRUE,
@@ -267,7 +267,7 @@ class CarDatabaseOptimizer:
                     id, source, title, price, original_price, link, image, make, model, year, km, 
                     fuel, transmission, body_type, city, last_seen, active, updated_at
                 ) VALUES %s
-                ON CONFLICT(link) DO UPDATE SET
+                ON CONFLICT(id) DO UPDATE SET
                     price = EXCLUDED.price,
                     original_price = COALESCE(ads.original_price, EXCLUDED.price),
                     last_seen = CURRENT_TIMESTAMP,
@@ -329,6 +329,17 @@ class CarDatabaseOptimizer:
             execute_values(cursor, insert_query, values, template="(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)")
             conn.commit()
             return ad_ids
+
+    def mark_ghost_ads_inactive(self, make: str, model: str, buffer_hours: int = 12):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE ads SET active = FALSE 
+                WHERE make = %s AND model = %s AND active = TRUE AND last_seen < NOW() - CAST(%s AS interval)
+            ''', (make, model, f"{buffer_hours} hours"))
+            count = cursor.rowcount
+            conn.commit()
+            return count
 
     def search_ads_db(self, make: str, model: str, min_price=None, max_price=None, min_year=None, max_year=None, min_km=None, max_km=None, fuel=None, transmission=None, limit=100, sort_by='price', order='asc') -> List[Dict]:
         with self.get_connection() as conn:
@@ -798,65 +809,6 @@ class CarDatabaseOptimizer:
             cursor = conn.cursor()
             cursor.execute('SELECT * FROM alerts')
             rows = cursor.fetchall()
-            alerts = [dict(row) for row in rows]
-            return alerts
+            return [dict(r) for r in rows]
 
-    def _hash_password(self, password: str) -> str:
-        salt = bcrypt.gensalt()
-        return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
-
-    def register_user(self, email: str, password: str) -> dict:
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            try:
-                hashed = self._hash_password(password)
-                cursor.execute('INSERT INTO users (email, hashed_password) VALUES (%s, %s) RETURNING id', (email, hashed))
-                row = cursor.fetchone()
-                user_id = row['id']
-                conn.commit()
-                return {"success": True, "id": user_id, "email": email}
-            except psycopg2.IntegrityError:
-                conn.rollback() # necesar in Postgres
-                return {"success": False, "error": "Email already registered"}
-
-    def verify_login(self, email: str, password: str) -> dict:
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-        
-            cursor.execute('SELECT id, email, hashed_password, role FROM users WHERE email = %s', (email,))
-            user = cursor.fetchone()
-        
-            if not user:
-                return {"success": False, "error": "User not found"}
-            
-            try:
-                if bcrypt.checkpw(password.encode('utf-8'), user["hashed_password"].encode('utf-8')):
-                    return {"success": True, "id": user["id"], "email": user["email"], "role": user.get("role", "user")}
-                else:
-                    return {"success": False, "error": "Incorrect password"}
-            except ValueError:
-                return {"success": False, "error": "Incorrect password or outdated security hash"}
-
-    def get_all_brands(self) -> List[str]:
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT DISTINCT make FROM car_models ORDER BY make ASC')
-            rows = cursor.fetchall()
-            brands = [self.format_brand_name(row['make']) for row in rows if row['make']]
-            return sorted(list(set(brands)))
-
-    def get_models(self, make: str) -> List[str]:
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT DISTINCT model FROM car_models WHERE make = %s ORDER BY model ASC', (make.lower(),))
-            rows = cursor.fetchall()
-            models = [self.format_model_name(row['model']) for row in rows if row['model']]
-            return sorted(list(set(models)))
-        
 car_db_optimizer = CarDatabaseOptimizer()
-
-def get_optimized_search_params(make: str, model: str, user_min_year: int=None, user_max_year: int=None) -> Dict:
-    (optimized_min_year, optimized_max_year) = car_db_optimizer.get_optimized_year_range(make, model, user_min_year, user_max_year)
-    model_info = car_db_optimizer.get_model_info(make, model)
-    generations = car_db_optimizer.get_generations_for_model(make, model)
-    return {'min_year': optimized_min_year, 'max_year': optimized_max_year, 'model_info': model_info, 'generations': generations, 'selected_generation': None, 'normalized_model': car_db_optimizer.normalize_model_name(make, model)}
