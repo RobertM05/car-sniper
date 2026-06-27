@@ -74,8 +74,8 @@ import re
 def get_performance_tier(car_dict):
     text = f"{car_dict.get('make', '')} {car_dict.get('model', '')} {car_dict.get('title', '')} {car_dict.get('version', '')}".upper()
     clean_text = text.replace('M SPORT', '').replace('AMG LINE', '').replace('S LINE', '').replace('R LINE', '')
-    clean_text = clean_text.replace('M-SPORT', '').replace('S-LINE', '').replace('R-LINE', '')
-    if re.search(r'\b(AMG|RS\d?|M\d?|X\d\s?M|GTI|GOLF R|CUPRA|QUADRIFOGLIO)\b', clean_text):
+    clean_text = clean_text.replace('M-SPORT', '').replace('AMG-LINE', '').replace('S-LINE', '').replace('R-LINE', '')
+    if re.search(r'\b(AMG|RS\d?|S\d|M\d?|X\d\s?M|GTI|GOLF R|CUPRA|QUADRIFOGLIO)\b', clean_text):
         return 'high_performance'
     return 'base'
 
@@ -86,9 +86,10 @@ def get_car_generation_enhanced(car_dict, year):
     
     gens = car_db_optimizer.get_generations_for_model(make, model)
     if gens:
-        for gen in gens:
+        gens_sorted = sorted(gens, key=lambda x: len(x['generation']), reverse=True)
+        for gen in gens_sorted:
             gen_name = gen['generation'].upper()
-            if gen_name in text:
+            if re.search(r'\b' + re.escape(gen_name) + r'\b', text):
                 return gen_name
                 
     return car_db_optimizer.get_generation_for_year(make, model, year)
