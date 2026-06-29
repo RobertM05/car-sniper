@@ -4,13 +4,7 @@ import re
 import json
 from bs4 import BeautifulSoup
 BASE_URL = 'https://www.autovit.ro/autoturisme/{}/{}'
-from logger import get_logger
-from metrics import metrics
-from dead_letter import dead_letter
 
-log = get_logger('autovit_scraper')
-
-@metrics.timed('scrape_autovit')
 async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max_pages: int=5, enrich: bool=False, *, min_price: int | None=None, max_price: int | None=None, min_year: int | None=None, max_year: int | None=None, max_km: int | None=None, sort_order: str='price_asc'):
     USER_AGENTS = ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/119.0', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15']
     import random
@@ -99,21 +93,20 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         async with sess.get(url, params=params, headers=headers_req, timeout=15) as response:
                             if response.status == 429:
                                 wait_time = 5 * (attempt + 1)
-                                log.warning('Autovit 429', extra={'page': page_num, 'attempt': attempt+1, 'wait_s': wait_time})
+                                print(f'Autovit 429 on Page {page_num}, attempt {attempt + 1}. Waiting {wait_time}s...')
                                 await asyncio.sleep(wait_time)
                                 continue
                             if response.status != 200:
-                                log.warning('Autovit non-200', extra={'status': response.status, 'page': page_num})
+                                print(f'Autovit non-200 ({response.status}) on Page {page_num}')
                                 return None
                             html = await response.text()
                             break
                 except Exception as e:
-                    log.error('Autovit page error', extra={'page': page_num, 'error': str(e)})
-                    metrics.increment('errors')
+                    print(f'Autovit error on Page {page_num}: {e}')
                     await asyncio.sleep(3)
                     continue
             else:
-                log.error('Autovit page exhausted retries', extra={'page': page_num, 'retries': retries})
+                print(f' Autovit Page {page_num} failed after {retries} retries')
                 return None
             soup = BeautifulSoup(html, 'html.parser')
             detail_links = []
@@ -164,7 +157,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                             except:
                                 pass
                 except Exception as e:
-                    log.warning('JSON-LD parsing error', extra={'error': str(e)})
+                    print(f'JSON-LD Parsing Error: {e}')
             if True:
                 articles = soup.find_all('article')
                 for art in articles:
@@ -276,14 +269,10 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                                     continue
 
                         page_ads.append({'title': title, 'price': f'{price} €', 'link': lnk, 'image': image_url, 'subsource': 'Autovit', 'year': html_year, 'km': f'{html_km} km' if html_km else None})
-                    except Exception as _parse_err:
-                        dead_letter.save({'link': lnk, 'title': title if 'title' in dir() else 'unknown'}, error=str(_parse_err), source='autovit_scraper_parse')
+                    except:
+                        pass
             return page_ads
         except Exception as e:
-            log.error('Autovit fetch_page failed', extra={'page': page_num, 'error': str(e)})
-            metrics.increment('errors')
-            import traceback
-            traceback.print_exc()
             return None
     current_p = page
     empty_pages = 0
@@ -298,10 +287,10 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
             current_p += 1
             continue
         if ads is None or len(ads) == 0:
-            log.warning('Autovit empty page', extra={'page': current_p, 'consecutive_empty': empty_pages+1})
+            print(f'Warning: Page {current_p} returned 0 ads. (Consecutive empty: {empty_pages + 1})')
             empty_pages += 1
             if empty_pages >= 2:
-                log.warning('Autovit stopping: too many empty pages')
+                print('Stopping: Too many consecutive empty pages.')
                 break
         else:
             empty_pages = 0
@@ -330,7 +319,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
         if len(results) >= limit:
             break
     if failed_pages:
-        log.info("Autovit retrying failed pages", extra={"count": len(failed_pages), "pages": failed_pages})
+        print(f'🔄 Retrying {len(failed_pages)} failed pages: {failed_pages}')
         for p_idx in failed_pages:
             if len(results) >= limit:
                 break
@@ -342,5 +331,5 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         seen_links_total.add(ad['link'])
                         results.append(ad)
     await _shared_enrich.close()
-    log.info('Autovit stats', extra={'found': len(results), 'dupes': scrape_stats['dupes'], 'invalid': scrape_stats['invalid']})
+    print(f"Autovit Stats: Found {len(results)} | Skipped {scrape_stats['dupes']} Duplicates | Skipped {scrape_stats['invalid']} Invalid (Price=0)")
     return results[:limit]

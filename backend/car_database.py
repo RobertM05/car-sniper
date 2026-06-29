@@ -7,10 +7,6 @@ import re
 import bcrypt
 import os
 from contextlib import contextmanager
-from logger import get_logger
-from metrics import metrics
-
-log = get_logger('car_database')
 
 class CarDatabaseOptimizer:
 
@@ -24,8 +20,7 @@ class CarDatabaseOptimizer:
         try:
             self.connection_pool = pool.ThreadedConnectionPool(1, 20, self.db_path, cursor_factory=RealDictCursor)
         except Exception as e:
-            log.error("Connection pool error", extra={"error": str(e)})
-            metrics.increment("errors")
+            print(f"Error creating connection pool: {e}")
             self.connection_pool = None
             
         self.init_database()
@@ -46,7 +41,7 @@ class CarDatabaseOptimizer:
                     conn = self.connection_pool.getconn()
                     from_pool = True
             except Exception as e:
-                log.warning("Pool connection fallback", extra={"error": str(e)})
+                print(f"Pool error: {e}, falling back to new connection")
                 conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
                 from_pool = False
 
@@ -73,19 +68,9 @@ class CarDatabaseOptimizer:
         special_cases = {'bmw': 'BMW', 'vw': 'VW', 'volkswagen': 'Volkswagen', 'mercedes': 'Mercedes-Benz', 'mercedes-benz': 'Mercedes-Benz', 'mercedesbenz': 'Mercedes-Benz', 'mg': 'MG', 'gmc': 'GMC', 'acura': 'Acura', 'alfa romeo': 'Alfa Romeo', 'aston martin': 'Aston Martin', 'land rover': 'Land Rover', 'range rover': 'Range Rover', 'rolls-royce': 'Rolls-Royce', 'seat': 'SEAT', 'fiat': 'FIAT', 'mini': 'MINI'}
         return special_cases.get(brand, brand.title())
 
-    # Known numeric model names that should NOT be stripped as year patterns
-    _NUMERIC_MODEL_NAMES = {'2008', '3008', '5008', '4007', '1007'}
-
     def format_model_name(self, model: str) -> str:
         model = model.lower().strip()
-        # Remove standalone year-like tokens UNLESS they are known numeric model names
-        tokens = model.split()
-        filtered_tokens = []
-        for token in tokens:
-            if re.match(r"^(?:19|20)\d{2}$", token) and token not in self._NUMERIC_MODEL_NAMES:
-                continue  # skip this year token
-            filtered_tokens.append(token)
-        model = " ".join(filtered_tokens)
+        model = re.sub('\\b(19|20)\\d{2}\\b', '', model).strip()
         model = model.replace('-', ' ')
         words = model.split()
         formatted_words = []
@@ -206,8 +191,7 @@ class CarDatabaseOptimizer:
             
                 conn.commit()
         except Exception as e:
-            log.error("Database creation error", extra={"error": str(e)})
-            metrics.increment("errors")
+            print(f"Eroare la crearea bazei de date (probabil nu e configurat DATABASE_URL): {e}")
 
     def delete_ad(self, ad_id: str):
         with self.get_connection() as conn:
@@ -236,9 +220,8 @@ class CarDatabaseOptimizer:
                 km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
             
             year_val = ad_data.get('year')
-            if year_val is not None:
+            if year_val:
                 year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
-                year_val = max(1950, min(year_val, 2026))
                 
                 cursor.execute('''
                 INSERT INTO ads (
@@ -270,7 +253,6 @@ class CarDatabaseOptimizer:
             conn.commit()
             return ad_id
 
-    @metrics.timed('upsert_ads')
     def upsert_ads(self, ads_data: List[Dict]):
         if not ads_data:
             return []
@@ -300,8 +282,7 @@ class CarDatabaseOptimizer:
             for ad_data in ads_data:
                 link = ad_data.get('link', '')
                 if not ad_data.get('id'):
-                    clean_link = link.split('?')[0]
-                    ad_id = hashlib.md5(clean_link.encode()).hexdigest()
+                    ad_id = hashlib.md5(link.encode()).hexdigest()
                 else:
                     ad_id = ad_data['id']
                 try:
@@ -316,9 +297,10 @@ class CarDatabaseOptimizer:
                     km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
                 
                 year_val = ad_data.get('year')
-                if year_val is not None:
+                if year_val:
                     year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
-                    year_val = max(1950, min(year_val, 2026))
+                    if year_val > 0:
+                        year_val = max(1950, min(year_val, 2026))
 
                 # Upscale image quality by altering OLX/Autovit CDN params
                 img_url = ad_data.get('image')
@@ -469,8 +451,7 @@ class CarDatabaseOptimizer:
                 cursor.close()
                 return [{'make': r[0], 'model': r[1]} for r in groups]
         except Exception as e:
-                log.error("Cron groups error", extra={"error": str(e)})
-                metrics.increment("errors")
+                print(f"Error getting cron groups: {e}")
                 return []
 
     def get_alerts_for_group(self, make, model):
@@ -495,8 +476,7 @@ class CarDatabaseOptimizer:
                     'min_year': r[4], 'max_year': r[5], 'max_km': r[6]
                 } for r in alerts]
         except Exception as e:
-                log.error("Alerts for group error", extra={"error": str(e)})
-                metrics.increment("errors")
+                print(f"Error getting alerts for group: {e}")
                 return []
 
     def insert_cron_ads(self, ads):
@@ -528,8 +508,7 @@ class CarDatabaseOptimizer:
                 cursor.close()
                 return new_ads
         except Exception as e:
-                log.error("Cron ads insert error", extra={"error": str(e)})
-                metrics.increment("errors")
+                print(f"Error inserting cron ads: {e}")
                 return []
 
     def add_car_model(self, make: str, model: str, min_year: int=None, max_year: int=None, generation: str=None, body_type: str=None, model_variants: List[str]=None, engine_types: List[str]=None):
@@ -801,9 +780,9 @@ class CarDatabaseOptimizer:
     def populate_from_scraper(self, max_brands: int=None, max_models_per_brand: int=None):
         from auto_data_scraper import AutoDataScraper
         scraper = AutoDataScraper(self)
-        log.info("Populating database from auto-data.net")
+        print('Încep popularea bazei de date cu date din auto-data.net...')
         data = scraper.scrape_all_data(max_brands, max_models_per_brand)
-        log.info('Database population complete', extra={'models': len(data)})
+        print(f'Popularea s-a terminat. Am procesat {len(data)} modele.')
         return data
 
     def add_alert(self, user_email: str, make: str, model: str, min_price: int=None, max_price: int=None, min_year: int=None, max_year: int=None, max_km: int=None):

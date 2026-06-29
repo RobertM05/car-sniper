@@ -4,11 +4,6 @@ from bs4 import BeautifulSoup
 import re
 import json
 BASE_URL = 'https://www.olx.ro/auto-masini-moto-ambarcatiuni/autoturisme/q-{}/'
-from logger import get_logger
-from metrics import metrics
-from dead_letter import dead_letter
-
-log = get_logger('olx_scraper')
 
 async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int | None=None, max_price: int | None=None, min_year: int | None=None, max_year: int | None=None, max_km: int | None=None, sort_order: str='price_asc', make: str | None=None, model_slug: str | None=None, max_pages: int=15):
     ads = []
@@ -40,9 +35,9 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
             if max_year is not None:
                 params['search[filter_float_year:to]'] = str(max_year)
             try:
-                log.debug('OLX request', extra={'url': url, 'params': dict(params)})
+                print(f'OLX Request URL: {url} with params: {params}')
                 async with session.get(url, params=params, timeout=10) as response:
-                    log.debug('OLX response', extra={'status': response.status})
+                    print(f'OLX Response Status: {response.status}')
                     if response.status != 200:
                         break
                     html_text = await response.text()
@@ -115,7 +110,7 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                     new_img = None
                     new_price = None
                     try:
-                        async with session.get(ad_item['link'], timeout=15) as r_det:
+                        async with session.get(ad_item['link'], timeout=5) as r_det:
                             if r_det.status == 200:
                                 t_det = await r_det.text()
                                 s = BeautifulSoup(t_det, 'html.parser')
@@ -137,8 +132,8 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                                             val = advert.get('price', {}).get('value')
                                             if val:
                                                 new_price = f'{int(val)} €'
-                    except Exception as _enrich_err:
-                        dead_letter.save(ad_item, error=str(_enrich_err), source='olx_scraper_enrich')
+                    except:
+                        pass
                     return (new_img, new_price)
                 if page_ads:
                     enrich_tasks = [enrich_ad_data_async(ad) for ad in page_ads]
@@ -154,7 +149,7 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                 current_page += 1
             except Exception as e:
                 import traceback
-                log.error('OLX page error', extra={'page': current_page, 'error': str(e), 'traceback': traceback.format_exc()})
-                metrics.increment('errors')
+                print(f'Error scraping OLX page {current_page}: {e}')
+                print(traceback.format_exc())
                 break
     return ads
