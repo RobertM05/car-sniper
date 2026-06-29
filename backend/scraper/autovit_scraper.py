@@ -273,6 +273,9 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         pass
             return page_ads
         except Exception as e:
+            print(f"Autovit fetch_page({page_num}) error: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     current_p = page
     empty_pages = 0
