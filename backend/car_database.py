@@ -282,7 +282,8 @@ class CarDatabaseOptimizer:
             for ad_data in ads_data:
                 link = ad_data.get('link', '')
                 if not ad_data.get('id'):
-                    ad_id = hashlib.md5(link.encode()).hexdigest()
+                    clean_link = link.split('?')[0]
+                    ad_id = hashlib.md5(clean_link.encode()).hexdigest()
                 else:
                     ad_id = ad_data['id']
                 try:
