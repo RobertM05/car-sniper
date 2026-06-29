@@ -226,8 +226,9 @@ class CarDatabaseOptimizer:
                 km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
             
             year_val = ad_data.get('year')
-            if year_val:
+            if year_val is not None:
                 year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
+                year_val = max(1950, min(year_val, 2026))
                 
                 cursor.execute('''
                 INSERT INTO ads (
@@ -305,10 +306,9 @@ class CarDatabaseOptimizer:
                     km_val = int(''.join(c for c in str(km_val) if c.isdigit()) or 0)
                 
                 year_val = ad_data.get('year')
-                if year_val:
+                if year_val is not None:
                     year_val = int(''.join(c for c in str(year_val) if c.isdigit()) or 0)
-                    if year_val > 0:
-                        year_val = max(1950, min(year_val, 2026))
+                    year_val = max(1950, min(year_val, 2026))
 
                 # Upscale image quality by altering OLX/Autovit CDN params
                 img_url = ad_data.get('image')
