@@ -27,6 +27,7 @@ ALL_BRANDS = [
 
 MAX_PAGES_PER_BRAND = 150  # 150 pagini per marcă per site
 
+@metrics.timed('run_deep_scrape')
 async def run_deep_scrape():
     log.info("Deep scrape starting", extra={"brands": len(ALL_BRANDS), "pages_per_brand": MAX_PAGES_PER_BRAND})
 

@@ -10,6 +10,7 @@ from dead_letter import dead_letter
 
 log = get_logger('olx_scraper')
 
+@metrics.timed('scrape_olx')
 async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int | None=None, max_price: int | None=None, min_year: int | None=None, max_year: int | None=None, max_km: int | None=None, sort_order: str='price_asc', make: str | None=None, model_slug: str | None=None, max_pages: int=15):
     ads = []
     seen_links = set()

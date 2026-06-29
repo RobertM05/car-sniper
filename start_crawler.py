@@ -33,6 +33,7 @@ except Exception as e:
         "Mercedes-Benz": ["Clasa C", "Clasa E", "Clasa S", "GLC", "GLE"]
     }
 
+@metrics.timed('scrape_and_classify')
 async def scrape_and_classify(make, possible_models):
     log.info("Starting brand scrape", extra={"make": make, "models_count": len(possible_models)})
     log.info("Starting brand scrape", extra={"make": make, "models_count": len(possible_models)})

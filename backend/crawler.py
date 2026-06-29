@@ -11,6 +11,7 @@ from dead_letter import dead_letter
 log = get_logger('crawler')
 TARGETS = [{'make': 'BMW', 'model': 'X6'}, {'make': 'BMW', 'model': 'Seria 3'}, {'make': 'BMW', 'model': 'Seria 5'}, {'make': 'Audi', 'model': 'A4'}, {'make': 'Audi', 'model': 'Q7'}, {'make': 'Audi', 'model': 'Q8'}, {'make': 'Mercedes', 'model': 'Clasa E'}, {'make': 'Volkswagen', 'model': 'Golf'}, {'make': 'Mercedes', 'model': 'GLC'}]
 
+@metrics.timed("crawl_target")
 async def crawl_target(target):
     make = target['make']
     model = target['model']
@@ -95,6 +96,7 @@ async def crawl_target(target):
     except Exception as e:
         log.error(f'Error crawling {make} {model}: {e}')
 
+@metrics.timed("run_crawler")
 async def run_crawler():
     log.info(' Starting Search Engine Crawler (Unified Mode)...')
     car_db_optimizer.init_database()

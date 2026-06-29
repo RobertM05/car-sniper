@@ -80,6 +80,7 @@ def ttl_cache(func):
     return wrapper
 
 @ttl_cache
+@metrics.timed('search_cars')
 async def search_cars(make: str, model: str, site: str='olx', sort: str='price_asc', *, min_price: int | None=None, max_price: int | None=None, min_km: int | None=None, max_km: int | None=None, min_year: int | None=None, max_year: int | None=None, min_cc: int | None=None, min_hp: int | None=None, limit: int=100, max_pages: int=5):
     if limit > 50:
         calculated_pages = limit // 30 + 2

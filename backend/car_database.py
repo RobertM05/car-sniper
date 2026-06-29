@@ -259,6 +259,7 @@ class CarDatabaseOptimizer:
             conn.commit()
             return ad_id
 
+    @metrics.timed('upsert_ads')
     def upsert_ads(self, ads_data: List[Dict]):
         if not ads_data:
             return []
