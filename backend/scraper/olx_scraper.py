@@ -110,7 +110,7 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                     new_img = None
                     new_price = None
                     try:
-                        async with session.get(ad_item['link'], timeout=5) as r_det:
+                        async with session.get(ad_item['link'], timeout=15) as r_det:
                             if r_det.status == 200:
                                 t_det = await r_det.text()
                                 s = BeautifulSoup(t_det, 'html.parser')
