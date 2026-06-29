@@ -94,11 +94,41 @@ Key supporting files: `backend/olx_scraper.py`, `backend/autovit_scraper.py`, `b
 
 ## Remediation Priority
 
-- **P0 (Immediate):** Fix price truncation (`split(',')[0]`), `original_price` upsert, wire `is_suspicious_price`, add coordination lock
-- **P1 (This week):** UA rotation, remove `ssl=False`, 429/403 detection with backoff, replace bare `except: pass`
-- **P2 (This sprint):** Structured logging (JSON), metrics, dead-letter queue
-- **P3 (Next sprint):** Unify 3 scripts into single coordinated pipeline
+### ✅ Fixed (2026-06-29 — Session 2)
+| Bug | Description | Commit |
+|---|---|---|
+| 1.3 | Wire `is_suspicious_price` to skip luxury cars below €15k | `8574944` |
+| 1.4 | Clamp year=0 to valid range | `c9bf971` |
+| 1.7 | Preserve numeric model names during year stripping | `8366225` |
+| 4.2 | Log exceptions in autovit before returning None | `dbaedca` |
+| 4.3 | File-based dead-letter queue for failed ad payloads | `8142acb` |
+| 4.4 | Graceful degradation — per-model try/except | `d6d3a1d` |
+| 4.5 | Increase OLX enrichment timeout 5s → 15s | `0c29267` |
+| 5.4 | Strip URL query params before MD5 hashing | `85824c6` |
+| 6.1 | Structured JSON-line logging (replaced all `print()`) | `6a303b2`, `5474d5e` |
+| 6.2 | In-process metrics registry + @timed decorators | `e1c742b`, `3c4e884` |
+
+**Plus:** CI pipeline, rollback workflow, PR template (`dcc83df`)
+
+### ⚠️ Remaining (require website-interaction changes — skipped to avoid risk)
+| Bug | Description | Risk Reason |
+|---|---|---|
+| 1.1 | Fix `split(',')[0]` price truncation | Changes how prices are parsed from scraped HTML |
+| 1.2 | `original_price` only on first insert | Needs DB schema change (trigger or separate paths) |
+| 1.5 | No year/km for "expensive" Autovit ads | Changes Autovit scraping logic |
+| 1.6 | Wrong enrichment threshold | Changes OLX enrichment behavior |
+| 2.1–2.4 | Coverage gaps | Major feature work, not a quick fix |
+| 3.1–3.5 | Anti-detection (UA, SSL, delays, 429/403) | Directly changes how we interact with websites |
+| 4.1 | Bare `except: pass` in enrichment | Changes OLX enrichment flow |
+| 5.1–5.3 | Cross-model/shard dedup | Changes scraping dedup architecture |
+| 6.3–6.6 | Performance tuning | Changes concurrency/query patterns |
+| 7.1 | Coordination lock | Major architectural change |
+
+### 🏗️ GitHub Environment Added
+- `.github/workflows/ci.yml` — lint (ruff), type-check (pyright), test (pytest) on every PR
+- `.github/workflows/rollback.yml` — one-click manual rollback to any commit
+- `.github/PULL_REQUEST_TEMPLATE.md` — standardized review checklist
 
 ---
 
-*Last updated: 2026-06-29 — no fixes applied yet*
+*Last updated: 2026-06-29 — 10 of 28 bugs fixed*
