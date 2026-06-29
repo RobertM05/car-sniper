@@ -38,88 +38,93 @@ async def scrape_and_classify(make, possible_models):
         total_found = 0
         
         for model in possible_models:
-            if is_github_actions:
-                print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD UPDATER RAPID)")
-            else:
-                print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD FULL SYNC)")
+            try:
+                if is_github_actions:
+                    print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD UPDATER RAPID)")
+                else:
+                    print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD FULL SYNC)")
                 
-            # Caută mașini PENTRU UN MODEL SPECIFIC, respectând filtrele site-urilor!
-            # MASTER BLUEPRINT: Temporal Search Space Sharding
-            async def get_all_cars_sharded(m_make, m_model, min_y=1950, max_y=2026):
-                res = await search_cars(
-                    make=m_make,
-                    model=m_model,
-                    min_year=min_y,
-                    max_year=max_y,
-                    max_price=999999,
-                    site='both',
-                    limit=50 if is_github_actions else 25000,
-                    max_pages=3 if is_github_actions else 1000,
-                    sort='newest'
-                )
-                # If we hit near the 1000-ad pagination wall, split the year range
-                if len(res) >= 800 and not is_github_actions and min_y < max_y:
-                    mid_y = (min_y + max_y) // 2
-                    print(f"[{time.strftime('%X')}] SHARDING TRIGGERED: {m_make} {m_model} ({min_y}-{max_y}) hit {len(res)} ads. Splitting into {min_y}-{mid_y} and {mid_y+1}-{max_y}")
-                    res1 = await get_all_cars_sharded(m_make, m_model, min_y, mid_y)
-                    await asyncio.sleep(1)
-                    res2 = await get_all_cars_sharded(m_make, m_model, mid_y + 1, max_y)
+                # Caută mașini PENTRU UN MODEL SPECIFIC, respectând filtrele site-urilor!
+                # MASTER BLUEPRINT: Temporal Search Space Sharding
+                async def get_all_cars_sharded(m_make, m_model, min_y=1950, max_y=2026):
+                    res = await search_cars(
+                        make=m_make,
+                        model=m_model,
+                        min_year=min_y,
+                        max_year=max_y,
+                        max_price=999999,
+                        site='both',
+                        limit=50 if is_github_actions else 25000,
+                        max_pages=3 if is_github_actions else 1000,
+                        sort='newest'
+                    )
+                    # If we hit near the 1000-ad pagination wall, split the year range
+                    if len(res) >= 800 and not is_github_actions and min_y < max_y:
+                        mid_y = (min_y + max_y) // 2
+                        print(f"[{time.strftime('%X')}] SHARDING TRIGGERED: {m_make} {m_model} ({min_y}-{max_y}) hit {len(res)} ads. Splitting into {min_y}-{mid_y} and {mid_y+1}-{max_y}")
+                        res1 = await get_all_cars_sharded(m_make, m_model, min_y, mid_y)
+                        await asyncio.sleep(1)
+                        res2 = await get_all_cars_sharded(m_make, m_model, mid_y + 1, max_y)
                     
-                    # Deduplicate combined results by link
-                    seen_links = set()
-                    combined_res = []
-                    for c in res1 + res2:
-                        link = c.get('link')
-                        if link not in seen_links:
-                            seen_links.add(link)
-                            combined_res.append(c)
-                    return combined_res
-                return res
+                        # Deduplicate combined results by link
+                        seen_links = set()
+                        combined_res = []
+                        for c in res1 + res2:
+                            link = c.get('link')
+                            if link not in seen_links:
+                                seen_links.add(link)
+                                combined_res.append(c)
+                        return combined_res
+                    return res
             
-            results = await get_all_cars_sharded(make, model, 1950, 2026)
+                results = await get_all_cars_sharded(make, model, 1950, 2026)
             
-            valid_cars = []
-            for car in results:
-                try:
-                    # Ne bazăm exact pe filtrul din OLX/Autovit, nu mai ghicim modelul din titlu!
-                    car['make'] = make
-                    car['model'] = model
+                valid_cars = []
+                for car in results:
+                    try:
+                        # Ne bazăm exact pe filtrul din OLX/Autovit, nu mai ghicim modelul din titlu!
+                        car['make'] = make
+                        car['model'] = model
                     
-                    # Curățăm datele pentru PostgreSQL
-                    import re
-                    if car.get('year'):
-                        try:
-                            car['year'] = int(str(car['year']).strip())
-                        except:
-                            car['year'] = None
+                        # Curățăm datele pentru PostgreSQL
+                        import re
+                        if car.get('year'):
+                            try:
+                                car['year'] = int(str(car['year']).strip())
+                            except:
+                                car['year'] = None
                             
-                    if car.get('km'):
-                        km_raw = re.sub(r'\D', '', str(car['km']))
-                        car['km'] = int(km_raw) if km_raw else None
+                        if car.get('km'):
+                            km_raw = re.sub(r'\D', '', str(car['km']))
+                            car['km'] = int(km_raw) if km_raw else None
                         
-                    if car.get('price'):
-                        price_str = str(car['price']).split(',')[0]
-                        price_raw = re.sub(r'\D', '', price_str)
-                        car['price'] = int(price_raw) if price_raw else 0
+                        if car.get('price'):
+                            price_str = str(car['price']).split(',')[0]
+                            price_raw = re.sub(r'\D', '', price_str)
+                            car['price'] = int(price_raw) if price_raw else 0
                     
-                    valid_cars.append(car)
-                except Exception as e:
-                    print(f" Eroare parsare masina {car.get('link')[:30]}: {e}")
+                        valid_cars.append(car)
+                    except Exception as e:
+                        print(f" Eroare parsare masina {car.get('link')[:30]}: {e}")
                     
-            if valid_cars:
-                try:
-                    car_db_optimizer.upsert_ads(valid_cars)
-                    saved_count += len(valid_cars)
-                    if not is_github_actions:
-                        ghosts = car_db_optimizer.mark_ghost_ads_inactive(make, model, buffer_hours=12)
-                        if ghosts > 0:
-                            print(f"[{time.strftime('%X')}] 🧹 Curățenie: Am marcat {ghosts} anunțuri fantomă ca INACTIVE pentru {make} {model}.")
-                except Exception as db_err:
-                    print(f" Eroare DB batch upsert: {db_err}")
+                if valid_cars:
+                    try:
+                        car_db_optimizer.upsert_ads(valid_cars)
+                        saved_count += len(valid_cars)
+                        if not is_github_actions:
+                            ghosts = car_db_optimizer.mark_ghost_ads_inactive(make, model, buffer_hours=12)
+                            if ghosts > 0:
+                                print(f"[{time.strftime('%X')}] 🧹 Curățenie: Am marcat {ghosts} anunțuri fantomă ca INACTIVE pentru {make} {model}.")
+                    except Exception as db_err:
+                        print(f" Eroare DB batch upsert: {db_err}")
             
-            total_found += len(results)
-            # Sleep scurt între modele pentru a nu fi blocați de Autovit/OLX
-            await asyncio.sleep(2)
+                total_found += len(results)
+                # Sleep scurt între modele pentru a nu fi blocați de Autovit/OLX
+                await asyncio.sleep(2)
+            except Exception as model_err:
+                print(f"[{time.strftime('%X')}] ❌ Model {make} {model} FAILED: {model_err}")
+                import traceback
+                traceback.print_exc()
                 
         print(f"[{time.strftime('%X')}] Succes! Am salvat {saved_count} mașini exact filtrate din {total_found} găsite pentru {make.upper()}.")
     except Exception as e:
