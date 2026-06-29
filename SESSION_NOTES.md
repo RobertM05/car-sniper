@@ -1,6 +1,8 @@
-# Car-Sniper Audit Notes
+# Car-Sniper — Session Notes
 
-> **Session:** 2026-06-29 | **Mode:** Plan | **Status:** Analysis complete, no fixes applied yet  
+> **📋 Master bug registry:** [`docs/BUG_TRACKER.md`](docs/BUG_TRACKER.md) — always check there first  
+> **📝 Changelog:** [`docs/CHANGELOG.md`](docs/CHANGELOG.md)  
+> **Session:** 2026-06-29 | **Mode:** Plan → Act | **Status:** 10/28 bugs fixed  
 > **Prompt:** "use a data analyst to check the scraping script for the deep sync"
 
 ---
