@@ -32,6 +32,9 @@ async def crawl_target(target):
                     price_val = int(p_clean) if p_clean else 0
                 is_luxury = any((x in model.lower() for x in ['x6', 'x7', 'q8', 'q7', 'gle', 'gls', 'g-class']))
                 is_suspicious_price = is_luxury and 0 < price_val < 15000
+                if is_suspicious_price:
+                    log.warning(f"🚨 SKIPPING suspicious listing: {ad.get('title')} — {make} {model} at €{price_val} (luxury model below market threshold)")
+                    continue
                 is_missing_image = not ad.get('image') or 'no_thumbnail' in str(ad.get('image'))
                 if is_missing_image:
                     log.info(f"🔧 Attempting repair for: {ad.get('title')} (Price: {price_val})")
