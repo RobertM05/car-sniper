@@ -1,6 +1,11 @@
 from scraper.olx_scraper import scrape_olx
 from scraper.autovit_scraper import scrape_autovit
 from car_database import get_optimized_search_params, car_db_optimizer
+from logger import get_logger
+from metrics import metrics
+from dead_letter import dead_letter
+
+log = get_logger('functii')
 import re
 import time
 import functools
@@ -303,7 +308,8 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                     car['model'] = model
             cars.extend(res)
         else:
-            print(f'Scraper error: {res}')
+            log.error('Scraper error', extra={'error': str(res)})
+                metrics.increment('errors')
     strict_filtered = []
     loose_filtered = []
     filter_stats = {'price_parse': 0, 'make_fail': 0, 'bad_keyword': 0, 'price_over': 0, 'price_under': 0, 'passed': 0}
@@ -457,14 +463,14 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                         continue
             loose_filtered.append(car)
     filter_stats['passed'] = len(strict_filtered) + len(loose_filtered)
-    print(f'Filter Stats: {filter_stats}')
+    log.info('Filter stats', extra={'stats': str(filter_stats)})
     if skipped_ads:
-        print(f'\n🚫 SKIPPED ADS ({len(skipped_ads)} total):')
+        log.info('Skipped ads summary', extra={'count': len(skipped_ads)})
         for (reason, link, title) in skipped_ads:
-            print(f'  [{reason}] {title} → {link[:60]}...')
-    print(f'📋 strict_filtered: {len(strict_filtered)}, loose_filtered: {len(loose_filtered)}')
+            log.debug('Skipped ad detail', extra={'reason': reason, 'title': title, 'link': link[:60]})
+    log.info('Filter results', extra={'strict': len(strict_filtered), 'loose': len(loose_filtered)})
     final_results = strict_filtered if strict_filtered else loose_filtered if model else []
-    print(f'📋 final_results before repair: {len(final_results)}')
+    log.info('Results before repair', extra={'count': len(final_results)})
     import aiohttp
     from bs4 import BeautifulSoup
     import json as _json_live
@@ -561,13 +567,13 @@ async def search_cars(make: str, model: str, site: str='olx', sort: str='price_a
                 unique_list.append(c)
             else:
                 removed_duplicates.append((c.get('title', '?')[:40], c.get('subsource', '?'), lnk[:60]))
-    print(f'After deduplication: {len(unique_list)} (removed {len(removed_duplicates)} duplicates)')
+    log.info('Deduplication complete', extra={'unique': len(unique_list), 'removed': len(removed_duplicates)})
     if removed_duplicates:
-        print(f'\nREMOVED DUPLICATES ({len(removed_duplicates)} total):')
+        log.info('Removed duplicates', extra={'count': len(removed_duplicates)})
         for (title, source, link) in removed_duplicates[:15]:
-            print(f'  [{source}] {title} → {link}...')
+            log.debug('Duplicate detail', extra={'source': source, 'title': title, 'link': link})
         if len(removed_duplicates) > 15:
-            print(f'  ... and {len(removed_duplicates) - 15} more')
+            log.debug('Duplicate overflow', extra={'remaining': len(removed_duplicates) - 15})
     final_results = unique_list
     if final_results and make and model:
         prices = []
@@ -604,7 +610,7 @@ def send_email_notification(to_email: str, car_list: list, search_details: str):
     resend.api_key = os.environ.get("RESEND_API_KEY", "")
     
     if not resend.api_key:
-        print("Eroare: RESEND_API_KEY nu este setat pentru trimiterea mașinilor găsite.")
+        log.error("RESEND_API_KEY not set")
         return
 
     subject = f'CarSniper: {len(car_list)} oferte noi pentru {search_details}'
@@ -648,14 +654,15 @@ def send_email_notification(to_email: str, car_list: list, search_details: str):
 
     try:
         email = resend.Emails.send(params)
-        print(f"Notificare cu {len(car_list)} mașini trimisă către {to_email} (ID: {email['id']})")
+        log.info('Email notification sent', extra={'cars': len(car_list), 'to': to_email, 'email_id': email.get('id')})
     except Exception as e:
-        print(f"Eroare la trimiterea emailului cu mașini via Resend: {e}")
+        log.error('Email send failed', extra={'error': str(e)})
+        metrics.increment('errors')
 
 async def check_alerts():
     alerts = car_db_optimizer.get_alerts()
     active_alerts = [a for a in alerts if a.get('active', 1) == 1]
-    print(f'[Scheduler] Verific {len(active_alerts)} alerte active (din {len(alerts)} totale)...')
+    log.info('Checking alerts', extra={'active': len(active_alerts), 'total': len(alerts)})
     
     for alert in active_alerts:
         try:
@@ -672,9 +679,10 @@ async def check_alerts():
             )
             
             if results:
-                print(f"ALERT MATCH for {alert['user_email']}: Found {len(results)} cars. Deactivating alert...")
+                log.info('Alert match', extra={'email': alert['user_email'], 'found': len(results)})
                 send_email_notification(alert['user_email'], results, f"{alert['make']} {alert['model']}")
                 car_db_optimizer.deactivate_alert(alert['id'])
                 
         except Exception as e:
-            print(f"Eroare la verificarea alertei {alert['id']}: {e}")
+            log.error('Alert check failed', extra={'alert_id': alert['id'], 'error': str(e)})
+            metrics.increment('errors')

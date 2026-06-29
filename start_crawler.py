@@ -13,6 +13,11 @@ load_dotenv(dotenv_path=env_path)
 
 from backend.functii import search_cars
 from backend.car_database import car_db_optimizer
+from backend.logger import get_logger
+from backend.metrics import metrics
+from backend.dead_letter import dead_letter
+
+log = get_logger('start_crawler')
 
 import json
 
@@ -20,17 +25,17 @@ catalog_path = os.path.join(os.path.dirname(__file__), 'backend', 'autovit_catal
 try:
     with open(catalog_path, 'r') as f:
         BRANDS_AND_MODELS = json.load(f)
-    print(f"Loaded {sum(len(m) for m in BRANDS_AND_MODELS.values())} models across {len(BRANDS_AND_MODELS)} brands from catalog.")
+    log.info("Loaded catalog", extra={"brands": len(BRANDS_AND_MODELS), "models": sum(len(m) for m in BRANDS_AND_MODELS.values())})
 except Exception as e:
-    print(f"Eroare la incarcarea catalogului, se foloseste fallback. {e}")
+    log.warning("Catalog load failed, using fallback", extra={"error": str(e)})
     BRANDS_AND_MODELS = {
         "BMW": ["Seria 1", "Seria 3", "Seria 5", "X3", "X5"],
         "Mercedes-Benz": ["Clasa C", "Clasa E", "Clasa S", "GLC", "GLE"]
     }
 
 async def scrape_and_classify(make, possible_models):
-    print(f"[{time.strftime('%X')}] ----------------------------------------------------")
-    print(f"[{time.strftime('%X')}] Căutare Detaliată pentru Marca: {make.upper()}...")
+    log.info("Starting brand scrape", extra={"make": make, "models_count": len(possible_models)})
+    log.info("Starting brand scrape", extra={"make": make, "models_count": len(possible_models)})
     try:
         is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
         
@@ -40,10 +45,8 @@ async def scrape_and_classify(make, possible_models):
         for model in possible_models:
             try:
                 if is_github_actions:
-                    print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD UPDATER RAPID)")
-                else:
-                    print(f"[{time.strftime('%X')}] Se caută exact modelul: {make} {model} (MOD FULL SYNC)")
-                
+                    mode = "RAPID" if is_github_actions else "FULL_SYNC"
+                    mode = "RAPID" if is_github_actions else "FULL_SYNC"
                 # Caută mașini PENTRU UN MODEL SPECIFIC, respectând filtrele site-urilor!
                 # MASTER BLUEPRINT: Temporal Search Space Sharding
                 async def get_all_cars_sharded(m_make, m_model, min_y=1950, max_y=2026):
@@ -61,7 +64,7 @@ async def scrape_and_classify(make, possible_models):
                     # If we hit near the 1000-ad pagination wall, split the year range
                     if len(res) >= 800 and not is_github_actions and min_y < max_y:
                         mid_y = (min_y + max_y) // 2
-                        print(f"[{time.strftime('%X')}] SHARDING TRIGGERED: {m_make} {m_model} ({min_y}-{max_y}) hit {len(res)} ads. Splitting into {min_y}-{mid_y} and {mid_y+1}-{max_y}")
+                        log.warning("Sharding triggered", extra={"make": m_make, "model": m_model, "min_y": min_y, "max_y": max_y, "hit_count": len(res)})
                         res1 = await get_all_cars_sharded(m_make, m_model, min_y, mid_y)
                         await asyncio.sleep(1)
                         res2 = await get_all_cars_sharded(m_make, m_model, mid_y + 1, max_y)
@@ -105,7 +108,7 @@ async def scrape_and_classify(make, possible_models):
                     
                         valid_cars.append(car)
                     except Exception as e:
-                        print(f" Eroare parsare masina {car.get('link')[:30]}: {e}")
+                        log.error("Car parse error", extra={"link": car.get("link", "")[:60], "error": str(e)})
                     
                 if valid_cars:
                     try:
@@ -114,42 +117,49 @@ async def scrape_and_classify(make, possible_models):
                         if not is_github_actions:
                             ghosts = car_db_optimizer.mark_ghost_ads_inactive(make, model, buffer_hours=12)
                             if ghosts > 0:
-                                print(f"[{time.strftime('%X')}] 🧹 Curățenie: Am marcat {ghosts} anunțuri fantomă ca INACTIVE pentru {make} {model}.")
+                                log.info("Ghost ads marked inactive", extra={"make": make, "model": model, "ghosts": ghosts})
                     except Exception as db_err:
-                        print(f" Eroare DB batch upsert: {db_err}")
+                        log.error("DB batch upsert failed", extra={"make": make, "model": model, "error": str(db_err)})
+                    for c in valid_cars:
+                        try:
+                            dead_letter.save(c, error=str(db_err), source="start_crawler")
+                        except Exception:
+                            pass
             
                 total_found += len(results)
                 # Sleep scurt între modele pentru a nu fi blocați de Autovit/OLX
                 await asyncio.sleep(2)
             except Exception as model_err:
-                print(f"[{time.strftime('%X')}] ❌ Model {make} {model} FAILED: {model_err}")
+                log.error("Model scrape failed", extra={"make": make, "model": model, "error": str(model_err)})
                 import traceback
                 traceback.print_exc()
                 
-        print(f"[{time.strftime('%X')}] Succes! Am salvat {saved_count} mașini exact filtrate din {total_found} găsite pentru {make.upper()}.")
+        metrics.increment("ads_scraped", total_found)
+        metrics.increment("ads_inserted", saved_count)
+        log.info("Brand scrape complete", extra={"make": make, "saved": saved_count, "found": total_found})
     except Exception as e:
-        print(f"[{time.strftime('%X')}] Eroare la scraping pt {make}: {e}")
+        log.error("Brand scrape failed", extra={"make": make, "error": str(e)})
+        metrics.increment("errors")
 
 async def main():
-    print("=======================================")
-    print(" CAR SNIPER - GLOBAL CRAWLER INITIATED ")
-    print("=======================================")
-    print("Apasă CTRL+C pentru a opri scriptul.\n")
+    log.info("Car Sniper global crawler initiated")
+    log.info("Car Sniper global crawler initiated")
+    log.info("Car Sniper global crawler initiated")
     
     resume_make = None
     if len(sys.argv) > 1 and sys.argv[1] == '--resume' and len(sys.argv) > 2:
         resume_make = sys.argv[2]
         if resume_make not in BRANDS_AND_MODELS:
-            print(f"Brand '{resume_make}' not found in catalog, ignoring resume flag.")
+            log.warning("Resume brand not found", extra={"brand": resume_make})
             resume_make = None
         else:
-            print(f"Initial resume from brand: {resume_make}")
+            log.info("Resuming from brand", extra={"brand": resume_make})
 
     while True:
-        print(f"--- Începere Ciclu Nou de Scraping: {time.strftime('%X')} ---")
+        log.info("Starting new scrape cycle")
         
         if resume_make:
-            print(f"Resuming from brand: {resume_make} for this cycle.")
+            log.info("Resuming cycle", extra={"brand": resume_make})
         
         # 1. Scraping pentru fiecare marcă în parte (descărcăm sute de mașini și le clasificăm local)
         for make, models in BRANDS_AND_MODELS.items():
@@ -165,21 +175,20 @@ async def main():
         # O Rulăm DOAR dacă facem Full Sync (local). Dacă suntem pe Rapid Sync (GitHub), am scanat 
         # doar primele 50 de anunțuri, deci nu putem asuma că restul au dispărut!
         if not os.environ.get("GITHUB_ACTIONS"):
-            print(f"\n--- Rulăm curățenia (Dezactivare anunțuri expirate) ---")
+            log.info("Running stale ad cleanup (48h threshold)")
             cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=48)
-            print(f"Rezultat: Am marcat {cleaned} mașini ca fiind VÂNDUTE/EXPIRATE.\n")
+            log.info("Stale ads deactivated", extra={"count": cleaned})
         else:
-            print("\n--- Curățenia de 48h a fost omisă ---")
-            print("Motiv: Executăm Rapid Sync. Anunțurile mai vechi nu au fost scanate pentru a proteja IP-ul.")
+            log.info("Running stale ad cleanup (48h threshold)")
         
         # 3. Oprește scriptul dacă suntem pe GitHub Actions
         if os.environ.get("GITHUB_ACTIONS"):
-            print("Execuție pe GitHub Actions detectată. Se încheie procesul fără repaus.")
+            log.info("GitHub Actions detected, stopping after one cycle")
             break
             
         # 4. Pauză până la următorul ciclu (Doar local)
         wait_hours = 4
-        print(f"Ciclu complet finalizat! Așteptăm {wait_hours} ore...")
+        log.info("Cycle complete, sleeping", extra={"wait_hours": wait_hours})
         await asyncio.sleep(wait_hours * 3600) 
 
 if __name__ == "__main__":

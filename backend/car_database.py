@@ -7,6 +7,10 @@ import re
 import bcrypt
 import os
 from contextlib import contextmanager
+from logger import get_logger
+from metrics import metrics
+
+log = get_logger('car_database')
 
 class CarDatabaseOptimizer:
 
@@ -20,7 +24,8 @@ class CarDatabaseOptimizer:
         try:
             self.connection_pool = pool.ThreadedConnectionPool(1, 20, self.db_path, cursor_factory=RealDictCursor)
         except Exception as e:
-            print(f"Error creating connection pool: {e}")
+            log.error("Connection pool error", extra={"error": str(e)})
+            metrics.increment("errors")
             self.connection_pool = None
             
         self.init_database()
@@ -41,7 +46,7 @@ class CarDatabaseOptimizer:
                     conn = self.connection_pool.getconn()
                     from_pool = True
             except Exception as e:
-                print(f"Pool error: {e}, falling back to new connection")
+                log.warning("Pool connection fallback", extra={"error": str(e)})
                 conn = psycopg2.connect(self.db_path, cursor_factory=RealDictCursor)
                 from_pool = False
 
@@ -191,7 +196,8 @@ class CarDatabaseOptimizer:
             
                 conn.commit()
         except Exception as e:
-            print(f"Eroare la crearea bazei de date (probabil nu e configurat DATABASE_URL): {e}")
+            log.error("Database creation error", extra={"error": str(e)})
+            metrics.increment("errors")
 
     def delete_ad(self, ad_id: str):
         with self.get_connection() as conn:
@@ -452,7 +458,8 @@ class CarDatabaseOptimizer:
                 cursor.close()
                 return [{'make': r[0], 'model': r[1]} for r in groups]
         except Exception as e:
-                print(f"Error getting cron groups: {e}")
+                log.error("Cron groups error", extra={"error": str(e)})
+                metrics.increment("errors")
                 return []
 
     def get_alerts_for_group(self, make, model):
@@ -477,7 +484,8 @@ class CarDatabaseOptimizer:
                     'min_year': r[4], 'max_year': r[5], 'max_km': r[6]
                 } for r in alerts]
         except Exception as e:
-                print(f"Error getting alerts for group: {e}")
+                log.error("Alerts for group error", extra={"error": str(e)})
+                metrics.increment("errors")
                 return []
 
     def insert_cron_ads(self, ads):
@@ -509,7 +517,8 @@ class CarDatabaseOptimizer:
                 cursor.close()
                 return new_ads
         except Exception as e:
-                print(f"Error inserting cron ads: {e}")
+                log.error("Cron ads insert error", extra={"error": str(e)})
+                metrics.increment("errors")
                 return []
 
     def add_car_model(self, make: str, model: str, min_year: int=None, max_year: int=None, generation: str=None, body_type: str=None, model_variants: List[str]=None, engine_types: List[str]=None):
@@ -781,9 +790,9 @@ class CarDatabaseOptimizer:
     def populate_from_scraper(self, max_brands: int=None, max_models_per_brand: int=None):
         from auto_data_scraper import AutoDataScraper
         scraper = AutoDataScraper(self)
-        print('Încep popularea bazei de date cu date din auto-data.net...')
+        log.info("Populating database from auto-data.net")
         data = scraper.scrape_all_data(max_brands, max_models_per_brand)
-        print(f'Popularea s-a terminat. Am procesat {len(data)} modele.')
+        log.info('Database population complete', extra={'models': len(data)})
         return data
 
     def add_alert(self, user_email: str, make: str, model: str, min_price: int=None, max_price: int=None, min_year: int=None, max_year: int=None, max_km: int=None):
