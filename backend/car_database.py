@@ -73,9 +73,19 @@ class CarDatabaseOptimizer:
         special_cases = {'bmw': 'BMW', 'vw': 'VW', 'volkswagen': 'Volkswagen', 'mercedes': 'Mercedes-Benz', 'mercedes-benz': 'Mercedes-Benz', 'mercedesbenz': 'Mercedes-Benz', 'mg': 'MG', 'gmc': 'GMC', 'acura': 'Acura', 'alfa romeo': 'Alfa Romeo', 'aston martin': 'Aston Martin', 'land rover': 'Land Rover', 'range rover': 'Range Rover', 'rolls-royce': 'Rolls-Royce', 'seat': 'SEAT', 'fiat': 'FIAT', 'mini': 'MINI'}
         return special_cases.get(brand, brand.title())
 
+    # Known numeric model names that should NOT be stripped as year patterns
+    _NUMERIC_MODEL_NAMES = {'2008', '3008', '5008', '4007', '1007'}
+
     def format_model_name(self, model: str) -> str:
         model = model.lower().strip()
-        model = re.sub('\\b(19|20)\\d{2}\\b', '', model).strip()
+        # Remove standalone year-like tokens UNLESS they are known numeric model names
+        tokens = model.split()
+        filtered_tokens = []
+        for token in tokens:
+            if re.match(r"^(?:19|20)\d{2}$", token) and token not in self._NUMERIC_MODEL_NAMES:
+                continue  # skip this year token
+            filtered_tokens.append(token)
+        model = " ".join(filtered_tokens)
         model = model.replace('-', ' ')
         words = model.split()
         formatted_words = []
