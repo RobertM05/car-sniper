@@ -332,6 +332,7 @@ async def api_search(
     # Skipped on Vercel to save CPU — cron/cleanup handles this instead.
     if results and not IS_VERCEL:
         from link_verifier import verify_ads_liveness
+
         background_tasks.add_task(verify_ads_liveness, results)
 
         if redis_client:
