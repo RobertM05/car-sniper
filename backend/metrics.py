@@ -61,6 +61,7 @@ class MetricsRegistry:
                     self._record_timing(name, elapsed)
 
             import asyncio
+
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
             return sync_wrapper
