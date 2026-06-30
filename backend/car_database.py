@@ -15,6 +15,8 @@ log = get_logger("car_database")
 
 
 class CarDatabaseOptimizer:
+    _NUMERIC_MODEL_NAMES: set[str] = {"2008", "3008", "5008", "4007", "1007"}
+
     def __init__(self, db_path: str = None):
         if db_path is None:
             # Preluam de la Vercel sau din mediul local. Daca lipsește, dăm un fallback simulat.
@@ -99,7 +101,11 @@ class CarDatabaseOptimizer:
 
     def format_model_name(self, model: str) -> str:
         model = model.lower().strip()
-        model = re.sub("\\b(19|20)\\d{2}\\b", "", model).strip()
+        model = re.sub(
+            "\\b(19|20)\\d{2}\\b",
+            lambda m: m.group(0) if m.group(0) in self._NUMERIC_MODEL_NAMES else "",
+            model,
+        ).strip()
         model = model.replace("-", " ")
         words = model.split()
         formatted_words = []
