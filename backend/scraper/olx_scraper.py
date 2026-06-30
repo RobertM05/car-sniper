@@ -154,15 +154,29 @@ async def scrape_olx(
                                     car_year = m.group(1)
                                     car_km = m.group(2).replace(" ", "") + " km"
                                     break
+                        title_text = title_tag.get_text(strip=True)
+                        # Extract model: strip known brand prefix from title
+                        olx_make = make or query
+                        olx_model = None
+                        if olx_make and title_text.lower().startswith(olx_make.lower()):
+                            remainder = title_text[len(olx_make) :].strip()
+                            # Take everything before the first year-like number or engine spec
+                            olx_model = remainder.split()[0] if remainder else None
+                            # Try to get multi-word model (e.g., "Seria 3")
+                            parts = remainder.split()
+                            if len(parts) >= 2 and parts[1].isdigit():
+                                olx_model = f"{parts[0]} {parts[1]}"
                         page_ads.append(
                             {
-                                "title": title_tag.get_text(strip=True),
+                                "title": title_text,
                                 "price": price_tag.get_text(strip=True),
                                 "link": link_href,
                                 "image": image_src,
                                 "subsource": "Autovit" if is_autovit else "OLX",
                                 "year": car_year,
                                 "km": car_km,
+                                "make": olx_make,
+                                "model": olx_model,
                             }
                         )
 

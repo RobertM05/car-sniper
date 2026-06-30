@@ -62,6 +62,8 @@ async def scrape_autovit(
                     s = BeautifulSoup(text, "html.parser")
                     price = None
                     image = None
+                    year = None
+                    km = None
                     nd = s.find("script", {"id": "__NEXT_DATA__"})
                     if nd and nd.string:
                         data = json.loads(nd.string)
@@ -106,7 +108,7 @@ async def scrape_autovit(
                         og = s.find("meta", attrs={"property": "og:image"})
                         if og and og.get("content"):
                             image = og.get("content")
-                    return (price, image)
+                    return (price, image, year, km)
             except Exception:
                 pass
             return (None, None, None, None)
@@ -245,6 +247,13 @@ async def scrape_autovit(
                         if price_raw:
                             try:
                                 final_price = int(float(price_raw))
+                                jld_make = (
+                                    item.get("manufacturer")
+                                    or item.get("brand", {}).get("name")
+                                    if isinstance(item.get("brand"), dict)
+                                    else item.get("brand")
+                                )
+                                jld_model = item.get("model") or item.get("name")
                                 page_ads.append(
                                     {
                                         "title": name,
@@ -254,6 +263,8 @@ async def scrape_autovit(
                                         "subsource": "Autovit",
                                         "year": car_year,
                                         "km": f"{car_km} km" if car_km else None,
+                                        "make": jld_make or make,
+                                        "model": jld_model,
                                     }
                                 )
                                 _found_json = True
@@ -415,6 +426,8 @@ async def scrape_autovit(
                                 "subsource": "Autovit",
                                 "year": html_year,
                                 "km": f"{html_km} km" if html_km else None,
+                                "make": html_make or make,
+                                "model": html_model or model,
                             }
                         )
                     except Exception as _parse_err:
@@ -437,6 +450,8 @@ async def scrape_autovit(
     current_p = page
     empty_pages = 0
     failed_pages = []
+    _is_bucket_mode = min_price is not None or max_price is not None
+    _empty_page_limit = 10 if _is_bucket_mode else 2
     _shared_enrich = aiohttp.ClientSession(
         connector=aiohttp.TCPConnector(ssl=False, limit=10)
     )
@@ -454,13 +469,13 @@ async def scrape_autovit(
                 extra={"page": current_p, "consecutive_empty": empty_pages + 1},
             )
             empty_pages += 1
-            if empty_pages >= 2:
+            if empty_pages >= _empty_page_limit:
                 log.warning("Autovit stopping: too many empty pages")
                 break
         else:
             empty_pages = 0
         enrich_tasks = []
-        _enrich_ads = []
+        enrich_ads = []
         for ad in ads:
             if ad["link"] not in seen_links_total:
                 seen_links_total.add(ad["link"])
@@ -469,20 +484,33 @@ async def scrape_autovit(
                     p_n = int(ad["price"].replace("€", "").strip())
                 except Exception:
                     pass
-                if p_n < 15000 or not ad["image"]:
+                if (
+                    p_n < 15000
+                    or not ad["image"]
+                    or not ad.get("year")
+                    or not ad.get("km")
+                ):
                     enrich_tasks.append(
                         _fetch_next_data_details(ad["link"], _shared_enrich)
                     )
+                    enrich_ads.append(ad)
                 else:
                     results.append(ad)
         if enrich_tasks:
             enriched_data = await asyncio.gather(*enrich_tasks)
             for idx, e_data in enumerate(enriched_data):
-                (p_new, i_new) = e_data
-                pass
-        for ad in ads:
-            if ad["link"] not in [r["link"] for r in results]:
-                results.append(ad)
+                (price, image, year, km) = e_data
+                if price:
+                    enrich_ads[idx]["price"] = f"{price} EUR"
+                if image:
+                    enrich_ads[idx]["image"] = image
+                if year and not enrich_ads[idx].get("year"):
+                    enrich_ads[idx]["year"] = year
+                if km and not enrich_ads[idx].get("km"):
+                    enrich_ads[idx]["km"] = (
+                        f"{km} km" if not str(km).endswith("km") else str(km)
+                    )
+            results.extend(enrich_ads)
         current_p += 1
         if len(results) >= limit:
             break
