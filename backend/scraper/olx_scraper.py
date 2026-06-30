@@ -5,7 +5,7 @@ import re
 import json
 BASE_URL = 'https://www.olx.ro/auto-masini-moto-ambarcatiuni/autoturisme/q-{}/'
 
-async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int | None=None, max_price: int | None=None, min_year: int | None=None, max_year: int | None=None, max_km: int | None=None, sort_order: str='price_asc', make: str | None=None, model_slug: str | None=None, max_pages: int=15):
+async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int | None=None, max_price: int | None=None, min_year: int | None=None, max_year: int | None=None, max_km: int | None=None, sort_order: str='price_asc', make: str | None=None, model_slug: str | None=None, max_pages: int=15, require_photos: bool=True):
     ads = []
     seen_links = set()
     current_page = page
@@ -19,7 +19,9 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                 url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/q-{query.lower().replace(" ", "-")}/'
             else:
                 url = f'https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/'
-            params = {'page': str(current_page), 'currency': 'EUR', 'search[photos]': '1'}
+            params = {'page': str(current_page), 'currency': 'EUR'}
+            if require_photos:
+                params['search[photos]'] = '1'
             if sort_order == 'price_asc':
                 params['search[order]'] = 'filter_float_price:asc'
             elif sort_order == 'price_desc':

@@ -78,7 +78,7 @@ async def run_deep_scrape():
         # 2. Scrape OLX
         try:
             print(f"Scraping OLX pentru {brand}...")
-            olx_results = await scrape_olx(query=brand, limit=max_pages * 40, max_pages=max_pages)
+            olx_results = await scrape_olx(query=brand, limit=max_pages * 40, max_pages=max_pages, require_photos=False)
             
             if olx_results:
                 inserted_ids = car_db_optimizer.upsert_ads(olx_results)
