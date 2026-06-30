@@ -61,6 +61,18 @@ BRAND_TIERS = {
             "Infiniti",
             "Saab",
             "Rover",
+            "Ferrari",
+            "Lamborghini",
+            "Rolls-Royce",
+            "Aston Martin",
+            "McLaren",
+            "Lotus",
+            "Acura",
+            "Lincoln",
+            "Isuzu",
+            "Daewoo",
+            "Daihatsu",
+            "Bugatti",
         ],
     },
 }
@@ -117,6 +129,10 @@ async def scrape_buckets(site_name, scraper_fn):
                 all_results.append(ad)
                 new += 1
         print(f"{new} new, {len(all_results)} total")
+        if len(bucket) >= 3900:
+            print(
+                f"    WARNING: bucket EUR{p_min}-EUR{p_max} returned {len(bucket)} ads (near 4000 limit)"
+            )
         await asyncio.sleep(1.5)
     return all_results
 

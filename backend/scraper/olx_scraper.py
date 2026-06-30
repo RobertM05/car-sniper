@@ -26,13 +26,16 @@ async def scrape_olx(
     make: str | None = None,
     model_slug: str | None = None,
     max_pages: int = 15,
+    require_photos: bool = True,
 ):
     ads = []
     seen_links = set()
     current_page = page
+    page_errors = 0
     async with aiohttp.ClientSession(
         headers={"User-Agent": "Mozilla/5.0"}, connector=aiohttp.TCPConnector(ssl=False)
     ) as session:
+        empty_pages = 0
         while len(ads) < limit and current_page <= max_pages:
             path = "autoturisme"
             if make and model_slug:
@@ -45,8 +48,9 @@ async def scrape_olx(
             params = {
                 "page": str(current_page),
                 "currency": "EUR",
-                "search[photos]": "1",
             }
+            if require_photos:
+                params["search[photos]"] = "1"
             if sort_order == "price_asc":
                 params["search[order]"] = "filter_float_price:asc"
             elif sort_order == "price_desc":
@@ -66,14 +70,23 @@ async def scrape_olx(
                 async with session.get(url, params=params, timeout=10) as response:
                     log.debug("OLX response", extra={"status": response.status})
                     if response.status != 200:
-                        break
+                        page_errors += 1
+                        if page_errors >= 3:
+                            break
+                        await asyncio.sleep(2)
+                        continue
                     html_text = await response.text()
                 soup = BeautifulSoup(html_text, "html.parser")
                 items = soup.find_all("div", attrs={"data-cy": "l-card"})
                 if not items:
                     items = soup.select("div.css-1sw7q4x")
                 if not items:
-                    break
+                    empty_pages += 1
+                    if empty_pages >= 2:
+                        log.warning("OLX stopping: too many empty pages")
+                        break
+                else:
+                    empty_pages = 0
                 page_ads = []
                 for item in items:
                     if len(ads) + len(page_ads) >= limit:
@@ -216,14 +229,20 @@ async def scrape_olx(
             except Exception as e:
                 import traceback
 
+                page_errors += 1
                 log.error(
                     "OLX page error",
                     extra={
                         "page": current_page,
                         "error": str(e),
                         "traceback": traceback.format_exc(),
+                        "error_count": page_errors,
                     },
                 )
                 metrics.increment("errors")
-                break
+                if page_errors >= 3:
+                    log.error("OLX stopping: too many page errors")
+                    break
+                await asyncio.sleep(2 * page_errors)  # backoff
+                continue
     return ads
