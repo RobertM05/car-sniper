@@ -965,7 +965,7 @@ async def search_cars(
         if m_auto:
             return "autovit_" + m_auto.group(1)
         if "olx.ro" in link_str:
-            m_olx = _re_dedup.search("-([a-zA-Z0-9]+)\\.html", link_str)
+            m_olx = _re_dedup.search("-ID([a-zA-Z0-9]+)\\.html", link_str)
             if m_olx:
                 return "olx_" + m_olx.group(1)
         return link_str
