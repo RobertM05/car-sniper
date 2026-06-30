@@ -26,13 +26,16 @@ async def scrape_olx(
     make: str | None = None,
     model_slug: str | None = None,
     max_pages: int = 15,
+    require_photos: bool = True,
 ):
     ads = []
     seen_links = set()
     current_page = page
+    page_errors = 0
     async with aiohttp.ClientSession(
         headers={"User-Agent": "Mozilla/5.0"}, connector=aiohttp.TCPConnector(ssl=False)
     ) as session:
+        empty_pages = 0
         while len(ads) < limit and current_page <= max_pages:
             path = "autoturisme"
             if make and model_slug:
@@ -45,8 +48,9 @@ async def scrape_olx(
             params = {
                 "page": str(current_page),
                 "currency": "EUR",
-                "search[photos]": "1",
             }
+            if require_photos:
+                params["search[photos]"] = "1"
             if sort_order == "price_asc":
                 params["search[order]"] = "filter_float_price:asc"
             elif sort_order == "price_desc":
@@ -66,14 +70,23 @@ async def scrape_olx(
                 async with session.get(url, params=params, timeout=10) as response:
                     log.debug("OLX response", extra={"status": response.status})
                     if response.status != 200:
-                        break
+                        page_errors += 1
+                        if page_errors >= 3:
+                            break
+                        await asyncio.sleep(2)
+                        continue
                     html_text = await response.text()
                 soup = BeautifulSoup(html_text, "html.parser")
                 items = soup.find_all("div", attrs={"data-cy": "l-card"})
                 if not items:
                     items = soup.select("div.css-1sw7q4x")
                 if not items:
-                    break
+                    empty_pages += 1
+                    if empty_pages >= 2:
+                        log.warning("OLX stopping: too many empty pages")
+                        break
+                else:
+                    empty_pages = 0
                 page_ads = []
                 for item in items:
                     if len(ads) + len(page_ads) >= limit:
@@ -141,15 +154,29 @@ async def scrape_olx(
                                     car_year = m.group(1)
                                     car_km = m.group(2).replace(" ", "") + " km"
                                     break
+                        title_text = title_tag.get_text(strip=True)
+                        # Extract model: strip known brand prefix from title
+                        olx_make = make or query
+                        olx_model = None
+                        if olx_make and title_text.lower().startswith(olx_make.lower()):
+                            remainder = title_text[len(olx_make) :].strip()
+                            # Take everything before the first year-like number or engine spec
+                            olx_model = remainder.split()[0] if remainder else None
+                            # Try to get multi-word model (e.g., "Seria 3")
+                            parts = remainder.split()
+                            if len(parts) >= 2 and parts[1].isdigit():
+                                olx_model = f"{parts[0]} {parts[1]}"
                         page_ads.append(
                             {
-                                "title": title_tag.get_text(strip=True),
+                                "title": title_text,
                                 "price": price_tag.get_text(strip=True),
                                 "link": link_href,
                                 "image": image_src,
                                 "subsource": "Autovit" if is_autovit else "OLX",
                                 "year": car_year,
                                 "km": car_km,
+                                "make": olx_make,
+                                "model": olx_model,
                             }
                         )
 
@@ -216,14 +243,20 @@ async def scrape_olx(
             except Exception as e:
                 import traceback
 
+                page_errors += 1
                 log.error(
                     "OLX page error",
                     extra={
                         "page": current_page,
                         "error": str(e),
                         "traceback": traceback.format_exc(),
+                        "error_count": page_errors,
                     },
                 )
                 metrics.increment("errors")
-                break
+                if page_errors >= 3:
+                    log.error("OLX stopping: too many page errors")
+                    break
+                await asyncio.sleep(2 * page_errors)  # backoff
+                continue
     return ads
