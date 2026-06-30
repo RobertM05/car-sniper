@@ -37,7 +37,7 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install -r backend/requirements.txt pyright
-      - run: pyright backend/ --ignoreexternal
+      - run: pyright backend/
 
   import-check:
     runs-on: ubuntu-latest
