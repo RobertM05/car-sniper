@@ -9,7 +9,6 @@ Usage:
 
 import json
 import os
-import time
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -55,6 +54,7 @@ class DeadLetterQueue:
         except Exception:
             # Last-resort: don't crash the scraper because of DLQ file I/O
             import sys
+
             print(
                 f"dead_letter: failed to write to {path}",
                 file=sys.stderr,
@@ -68,6 +68,7 @@ class DeadLetterQueue:
             date_str: 'YYYY-MM-DD'. If empty, defaults to today.
         """
         from glob import glob
+
         date_str = date_str or datetime.now(timezone.utc).strftime("%Y-%m-%d")
         pattern = f"{source}_*{date_str}.jsonl" if source else f"*_{date_str}.jsonl"
         for path in sorted(glob(os.path.join(self.directory, pattern))):
