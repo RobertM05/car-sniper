@@ -48,7 +48,8 @@ for tier in BRAND_TIERS.values():
 PRICE_BUCKETS = (
     [(i, i + 499) for i in range(0, 5000, 500)] +
     [(i, i + 999) for i in range(5000, 20000, 1000)] +
-    [(i, i + 4999) for i in range(20000, 200000, 5000)]
+    [(i, i + 4999) for i in range(20000, 200000, 5000)] +
+    [(200000, 999999)]  # catch cars ≥ €200k
 )
 
 async def scrape_with_buckets(scraper_fn, brand, site_name, bucket_pause=1.5):
