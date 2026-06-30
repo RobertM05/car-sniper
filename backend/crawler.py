@@ -6,7 +6,20 @@ dotenv.load_dotenv()
 from functii import search_cars, infer_car_details
 from car_database import car_db_optimizer
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-TARGETS = [{'make': 'BMW', 'model': 'X6'}, {'make': 'BMW', 'model': 'Seria 3'}, {'make': 'BMW', 'model': 'Seria 5'}, {'make': 'Audi', 'model': 'A4'}, {'make': 'Audi', 'model': 'Q7'}, {'make': 'Audi', 'model': 'Q8'}, {'make': 'Mercedes', 'model': 'Clasa E'}, {'make': 'Volkswagen', 'model': 'Golf'}, {'make': 'Mercedes', 'model': 'GLC'}]
+TARGETS = [
+    {'make': 'BMW', 'model': 'Seria 1'}, {'make': 'BMW', 'model': 'Seria 3'},
+    {'make': 'BMW', 'model': 'Seria 4'}, {'make': 'BMW', 'model': 'Seria 5'},
+    {'make': 'BMW', 'model': 'X3'}, {'make': 'BMW', 'model': 'X5'}, {'make': 'BMW', 'model': 'X6'},
+    {'make': 'Audi', 'model': 'A3'}, {'make': 'Audi', 'model': 'A4'},
+    {'make': 'Audi', 'model': 'A5'}, {'make': 'Audi', 'model': 'A6'},
+    {'make': 'Audi', 'model': 'Q3'}, {'make': 'Audi', 'model': 'Q5'},
+    {'make': 'Audi', 'model': 'Q7'}, {'make': 'Audi', 'model': 'Q8'},
+    {'make': 'Mercedes', 'model': 'Clasa A'}, {'make': 'Mercedes', 'model': 'Clasa C'},
+    {'make': 'Mercedes', 'model': 'Clasa E'}, {'make': 'Mercedes', 'model': 'GLC'},
+    {'make': 'Mercedes', 'model': 'GLE'},
+    {'make': 'Volkswagen', 'model': 'Golf'}, {'make': 'Volkswagen', 'model': 'Passat'},
+    {'make': 'Volkswagen', 'model': 'Polo'}, {'make': 'Volkswagen', 'model': 'Tiguan'},
+]
 
 async def crawl_target(target):
     make = target['make']
