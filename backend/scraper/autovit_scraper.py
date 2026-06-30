@@ -57,7 +57,7 @@ async def scrape_autovit(
             try:
                 async with enrich_session.get(url, headers=headers_det, timeout=8) as r:
                     if r.status != 200:
-                        return (None, None)
+                        return (None, None, None, None)
                     text = await r.text()
                     s = BeautifulSoup(text, "html.parser")
                     price = None
@@ -86,6 +86,13 @@ async def scrape_autovit(
                                     )
                                 elif isinstance(first_photo, str):
                                     image = first_photo
+                            # Extract year and km from advert parameters
+                            for param in advert.get("parameters", []):
+                                key = (param.get("key") or "").lower()
+                                if key == "year":
+                                    _year = param.get("value")
+                                elif key in ("mileage", "kilometers", "km"):
+                                    _km = param.get("value")
                     if not price:
                         jld = s.find("script", {"id": "listing-json-ld"})
                         if jld and jld.string:
@@ -102,7 +109,7 @@ async def scrape_autovit(
                     return (price, image)
             except Exception:
                 pass
-            return (None, None)
+            return (None, None, None, None)
 
     async def fetch_page(page_num: int, enrich_session=None):
         try:
@@ -453,6 +460,7 @@ async def scrape_autovit(
         else:
             empty_pages = 0
         enrich_tasks = []
+        _enrich_ads = []
         for ad in ads:
             if ad["link"] not in seen_links_total:
                 seen_links_total.add(ad["link"])
