@@ -218,7 +218,7 @@ async def search_cars(
                     letter = re.search("clas(?:s|a)[- ]?([a-z])", model_lc)
                 if letter:
                     return f"clasa-{letter.group(1)}"
-                return model_lc.replace(" ", "-")
+                return model_lc.replace(" ", "-").replace(".", "-")
             if model_lc in ["glc", "gle", "gls", "gla", "glb", "cla", "cls"]:
                 return model_lc
         if make_lc == "bmw":
@@ -228,8 +228,17 @@ async def search_cars(
             m = re.match("x(\\d)", model_lc)
             if m:
                 return f"x{m.group(1)}"
+            m = re.match("^m([2-6])$", model_lc)
+            if m:
+                return f"bmw-m{m.group(1)}"
+            if model_lc in ("z4", "i8"):
+                return f"bmw-{model_lc}"
         if make_lc == "audi":
             # Support Audi Allroad correctly
+            if "e-tron" in model_lc:
+                m = re.match("([aq])[\\- ]?(\\d+)", model_lc)
+                if m:
+                    return f"{m.group(1)}{m.group(2)}-e-tron"
             if "allroad" in model_lc:
                 m = re.match("([aq])[\\- ]?(\\d+)", model_lc)
                 if m:
@@ -237,7 +246,7 @@ async def search_cars(
             m = re.match("([aq])[\\- ]?(\\d+)", model_lc)
             if m:
                 if m.group(1) == "a" and m.group(2) == "5":
-                    return model_lc.replace(" ", "-")
+                    return model_lc.replace(" ", "-").replace(".", "-")
                 return f"{m.group(1)}{m.group(2)}"
         if make_lc == "volvo":
             if re.match(r"^xc[\- ]?\d+$", model_lc):
@@ -259,7 +268,7 @@ async def search_cars(
             }
             if model_lc in vw_models:
                 return model_lc
-            return model_lc.replace(" ", "-")
+            return model_lc.replace(" ", "-").replace(".", "-")
         if make_lc == "ford":
             ford_models = {
                 "focus",
@@ -328,7 +337,7 @@ async def search_cars(
             if model_lc in toyota_models or model_lc.replace("-", "") in [
                 m.replace("-", "") for m in toyota_models
             ]:
-                return model_lc.replace(" ", "-")
+                return model_lc.replace(" ", "-").replace(".", "-")
         if make_lc == "dacia":
             dacia_models = {
                 "logan",
@@ -375,7 +384,7 @@ async def search_cars(
                 model_lc in hyundai_models
                 or model_lc.replace(" ", "-") in hyundai_models
             ):
-                return model_lc.replace(" ", "-")
+                return model_lc.replace(" ", "-").replace(".", "-")
         if make_lc == "kia":
             kia_models = {
                 "sportage",
@@ -390,12 +399,16 @@ async def search_cars(
             }
             if model_lc in kia_models:
                 return model_lc
-        return model_lc.replace(" ", "-")
+        return model_lc.replace(" ", "-").replace(".", "-")
 
     def get_autovit_model_slug(make_text: str, model_text: str) -> str:
         make_lc = (make_text or "").strip().lower()
         model_lc = (model_text or "").strip().lower()
         if "mercedes" in make_lc:
+            if "amg" in model_lc and "gt" not in model_lc:
+                letter = re.search("([aecs])[\\- ]?\\d", model_lc)
+                if letter:
+                    return f"clasa-{letter.group(1)}"
             if "class" in model_lc or "clasa" in model_lc:
                 letter = re.search("([a-z])[- ]?clas", model_lc)
                 if not letter:
@@ -403,7 +416,7 @@ async def search_cars(
 
                 if letter:
                     return f"clasa-{letter.group(1)}"  # ALWAYS format as clasa-{char} for Autovit
-            return model_lc.replace("-", "_")
+            return model_lc.replace("-", "_").replace(" ", "-")
         if make_lc == "bmw":
             m = re.match("seria[- ]?(\\d)", model_lc)
             if m:
@@ -411,8 +424,17 @@ async def search_cars(
             m = re.match("x(\\d)", model_lc)
             if m:
                 return f"x{m.group(1)}"
+            m = re.match("^m([2-6])$", model_lc)
+            if m:
+                return f"bmw-m{m.group(1)}"
+            if model_lc in ("z4", "i8"):
+                return f"bmw-{model_lc}"
         if make_lc == "audi":
             # Support Audi Allroad correctly
+            if "e-tron" in model_lc:
+                m = re.match("([aq])[\\- ]?(\\d+)", model_lc)
+                if m:
+                    return f"{m.group(1)}{m.group(2)}-e-tron"
             if "allroad" in model_lc:
                 m = re.match("([aq])[\\- ]?(\\d+)", model_lc)
                 if m:
@@ -503,7 +525,7 @@ async def search_cars(
             if model_lc in toyota_models or model_lc.replace("-", "") in [
                 m.replace("-", "") for m in toyota_models
             ]:
-                return model_lc.replace(" ", "-")
+                return model_lc.replace(" ", "-").replace(".", "-")
         if make_lc == "dacia":
             dacia_models = {
                 "logan",
@@ -549,7 +571,7 @@ async def search_cars(
                 model_lc in hyundai_models
                 or model_lc.replace(" ", "-") in hyundai_models
             ):
-                return model_lc.replace(" ", "-")
+                return model_lc.replace(" ", "-").replace(".", "-")
         if make_lc == "kia":
             kia_models = {
                 "sportage",
@@ -564,7 +586,7 @@ async def search_cars(
             }
             if model_lc in kia_models:
                 return model_lc
-        return model_lc.replace(" ", "-")
+        return model_lc.replace(" ", "-").replace(".", "-")
 
     tasks = []
     olx_model_slug = get_olx_model_slug(make, model)
