@@ -103,8 +103,7 @@ async def scrape_and_classify(make, possible_models):
                             car['km'] = int(km_raw) if km_raw else None
                         
                         if car.get('price'):
-                            price_str = str(car['price']).split(',')[0]
-                            price_raw = re.sub(r'\D', '', price_str)
+                            price_raw = re.sub(r'\D', '', str(car['price']))
                             car['price'] = int(price_raw) if price_raw else 0
                     
                         valid_cars.append(car)
