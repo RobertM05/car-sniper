@@ -14,7 +14,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
 
     _enrich_sem = asyncio.Semaphore(5)
 
-    async def _fetch_next_data_details(url: str, enrich_session) -> tuple[str | None, str | None]:
+    async def _fetch_next_data_details(url: str, enrich_session) -> tuple[str | None, str | None, str | None, str | None]:
         ua = random.choice(USER_AGENTS)
         headers_det = {'User-Agent': ua, 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8', 'Referer': 'https://www.autovit.ro/'}
         async with _enrich_sem:
@@ -22,11 +22,13 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
             try:
                 async with enrich_session.get(url, headers=headers_det, timeout=8) as r:
                     if r.status != 200:
-                        return (None, None)
+                        return (None, None, None, None)
                     text = await r.text()
                     s = BeautifulSoup(text, 'html.parser')
                     price = None
                     image = None
+                    year = None
+                    km = None
                     nd = s.find('script', {'id': '__NEXT_DATA__'})
                     if nd and nd.string:
                         data = json.loads(nd.string)
@@ -43,6 +45,13 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                                     image = first_photo.get('large') or first_photo.get('medium') or first_photo.get('src')
                                 elif isinstance(first_photo, str):
                                     image = first_photo
+                            # Extract year and km from advert parameters
+                            for param in advert.get('parameters', []):
+                                key = (param.get('key') or '').lower()
+                                if key == 'year':
+                                    year = param.get('value')
+                                elif key in ('mileage', 'kilometers', 'km'):
+                                    km = param.get('value')
                     if not price:
                         jld = s.find('script', {'id': 'listing-json-ld'})
                         if jld and jld.string:
@@ -56,10 +65,10 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         og = s.find('meta', attrs={'property': 'og:image'})
                         if og and og.get('content'):
                             image = og.get('content')
-                    return (price, image)
+                    return (price, image, year, km)
             except:
                 pass
-            return (None, None)
+            return (None, None, None, None)
 
     async def fetch_page(page_num: int, enrich_session=None):
         try:
@@ -202,7 +211,7 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                         needs_enrichment = p_num < 15000 or not image_url
                         if needs_enrichment:
                             try:
-                                (new_p, new_img) = await _fetch_next_data_details(lnk, enrich_session)
+                                (new_p, new_img, *_discard) = await _fetch_next_data_details(lnk, enrich_session)
                                 if new_p:
                                     try:
                                         new_p_val = int(float(str(new_p).replace('€', '')))
@@ -277,6 +286,8 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
     current_p = page
     empty_pages = 0
     failed_pages = []
+    _is_bucket_mode = min_price is not None or max_price is not None
+    _empty_page_limit = 10 if _is_bucket_mode else 2  # buckets legitimately have gaps
     _shared_enrich = aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False, limit=10))
     while len(results) < limit:
         if current_p > max_pages:
@@ -289,12 +300,13 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
         if ads is None or len(ads) == 0:
             print(f'Warning: Page {current_p} returned 0 ads. (Consecutive empty: {empty_pages + 1})')
             empty_pages += 1
-            if empty_pages >= 2:
+            if empty_pages >= _empty_page_limit:
                 print('Stopping: Too many consecutive empty pages.')
                 break
         else:
             empty_pages = 0
         enrich_tasks = []
+        enrich_ads = []
         for ad in ads:
             if ad['link'] not in seen_links_total:
                 seen_links_total.add(ad['link'])
@@ -303,18 +315,24 @@ async def scrape_autovit(make: str, model: str, page: int=1, limit: int=100, max
                     p_n = int(ad['price'].replace('€', '').strip())
                 except:
                     pass
-                if p_n < 15000 or not ad['image']:
+                if p_n < 15000 or not ad['image'] or not ad.get('year') or not ad.get('km'):
                     enrich_tasks.append(_fetch_next_data_details(ad['link'], _shared_enrich))
+                    enrich_ads.append(ad)
                 else:
                     results.append(ad)
         if enrich_tasks:
             enriched_data = await asyncio.gather(*enrich_tasks)
             for (idx, e_data) in enumerate(enriched_data):
-                (p_new, i_new) = e_data
-                pass
-        for ad in ads:
-            if ad['link'] not in [r['link'] for r in results]:
-                results.append(ad)
+                (price, image, year, km) = e_data
+                if price:
+                    enrich_ads[idx]['price'] = f'{price} €'
+                if image:
+                    enrich_ads[idx]['image'] = image
+                if year and not enrich_ads[idx].get('year'):
+                    enrich_ads[idx]['year'] = year
+                if km and not enrich_ads[idx].get('km'):
+                    enrich_ads[idx]['km'] = f'{km} km' if not str(km).endswith('km') else str(km)
+            results.extend(enrich_ads)
         current_p += 1
         if len(results) >= limit:
             break
