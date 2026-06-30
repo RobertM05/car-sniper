@@ -112,7 +112,7 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                     new_img = None
                     new_price = None
                     try:
-                        async with session.get(ad_item['link'], timeout=5) as r_det:
+                        async with session.get(ad_item['link'], timeout=15) as r_det:
                             if r_det.status == 200:
                                 t_det = await r_det.text()
                                 s = BeautifulSoup(t_det, 'html.parser')
@@ -134,8 +134,9 @@ async def scrape_olx(query: str, page: int=1, limit: int=100, *, min_price: int 
                                             val = advert.get('price', {}).get('value')
                                             if val:
                                                 new_price = f'{int(val)} €'
-                    except:
-                        pass
+                    except Exception:
+                        import traceback
+                        traceback.print_exc()
                     return (new_img, new_price)
                 if page_ads:
                     enrich_tasks = [enrich_ad_data_async(ad) for ad in page_ads]
