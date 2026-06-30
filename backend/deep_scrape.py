@@ -75,14 +75,37 @@ async def run_deep_scrape():
         # Pauză între site-uri pentru a evita IP ban-ul
         await asyncio.sleep(2)
 
-        # 2. Scrape OLX
+        # 2. Scrape OLX — split into price buckets to bypass OLX's ~100 page search cap
         try:
-            print(f"Scraping OLX pentru {brand}...")
-            olx_results = await scrape_olx(query=brand, limit=max_pages * 40, max_pages=max_pages, require_photos=False)
+            # Price buckets: €500 steps up to €5k, €1k up to €20k, €5k up to €200k
+            price_ranges = (
+                [(i, i + 499) for i in range(0, 5000, 500)] +
+                [(i, i + 999) for i in range(5000, 20000, 1000)] +
+                [(i, i + 4999) for i in range(20000, 200000, 5000)]
+            )
+            olx_all_results = []
+            seen_ids = set()
             
-            if olx_results:
-                inserted_ids = car_db_optimizer.upsert_ads(olx_results)
-                print(f"✅ OLX: Găsite {len(olx_results)} | Inserate/Updatate: {len(inserted_ids)}")
+            for p_min, p_max in price_ranges:
+                print(f"  OLX bucket €{p_min}-€{p_max}...", end=" ")
+                bucket_results = await scrape_olx(
+                    query=brand, limit=4000, max_pages=100,
+                    min_price=p_min, max_price=p_max,
+                    require_photos=False
+                )
+                new_count = 0
+                for ad in bucket_results:
+                    ad_id = ad.get('id') or ad.get('link', '')
+                    if ad_id not in seen_ids:
+                        seen_ids.add(ad_id)
+                        olx_all_results.append(ad)
+                        new_count += 1
+                print(f"{new_count} new, {len(olx_all_results)} total")
+                await asyncio.sleep(1.5)  # gentle on OLX
+            
+            if olx_all_results:
+                inserted_ids = car_db_optimizer.upsert_ads(olx_all_results)
+                print(f"✅ OLX: Găsite {len(olx_all_results)} | Inserate/Updatate: {len(inserted_ids)}")
                 total_ads_inserted += len(inserted_ids)
             else:
                 print("❌ OLX: 0 rezultate găsite.")
