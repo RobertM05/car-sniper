@@ -6,6 +6,15 @@ on:
   workflow_dispatch:
 
 jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m compileall -q backend/ start_crawler.py
+
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -15,10 +24,12 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install ruff
-      - run: ruff check backend/
+      - run: ruff check backend/ start_crawler.py
+      - run: ruff format --check backend/ start_crawler.py
 
   type-check:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -26,9 +37,9 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install -r backend/requirements.txt pyright
-      - run: pyright backend/ --ignoreexternal || true
+      - run: pyright backend/ --ignoreexternal
 
-  test:
+  import-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -36,5 +47,28 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
-      - run: pip install -r backend/requirements.txt pytest
-      - run: python -m pytest backend/ -x --timeout=30 --tb=short || echo "::warning ::Tests not yet implemented — add tests to backend/tests/"
+      - run: pip install -r backend/requirements.txt
+      - run: |
+          python -c "
+          import sys; sys.path.insert(0, 'backend')
+          from scraper.olx_scraper import scrape_olx
+          from scraper.autovit_scraper import scrape_autovit
+          from car_database import car_db_optimizer
+          from functii import search_cars
+          from logger import get_logger
+          from metrics import metrics
+          from dead_letter import dead_letter
+          print('All modules imported successfully')
+          "
+
+  test:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r backend/requirements.txt pytest pytest-timeout
+      - run: python -m pytest backend/ -x --timeout=30 --tb=short -v
