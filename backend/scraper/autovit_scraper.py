@@ -90,9 +90,9 @@ async def scrape_autovit(
                             for param in advert.get('parameters', []):
                                 key = (param.get('key') or '').lower()
                                 if key == 'year':
-                                    year = param.get('value')
+                                    _year = param.get('value')
                                 elif key in ('mileage', 'kilometers', 'km'):
-                                    km = param.get('value')
+                                    _km = param.get('value')
                     if not price:
                         jld = s.find("script", {"id": "listing-json-ld"})
                         if jld and jld.string:
@@ -460,7 +460,7 @@ async def scrape_autovit(
         else:
             empty_pages = 0
         enrich_tasks = []
-        enrich_ads = []
+        _enrich_ads = []
         for ad in ads:
             if ad["link"] not in seen_links_total:
                 seen_links_total.add(ad["link"])
