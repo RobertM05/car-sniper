@@ -155,6 +155,7 @@ async def search_cars(
     min_cc: int | None = None,
     min_hp: int | None = None,
     limit: int = 100,
+    require_photos: bool = True,
     max_pages: int = 5,
 ):
     if limit > 50:
@@ -611,6 +612,7 @@ async def search_cars(
                 make=make if olx_model_slug else None,
                 model_slug=olx_model_slug,
                 max_pages=max_pages,
+                require_photos=require_photos,
             )
         )
     if site_lc in ["autovit", "both"]:

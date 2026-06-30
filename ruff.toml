@@ -7,3 +7,4 @@
 "scrape_eclass.py" = ["E402"]
 "scrape_glc.py" = ["E402"]
 "start_crawler.py" = ["E402"]
+"deep_scrape_v2.py" = ["E402"]
