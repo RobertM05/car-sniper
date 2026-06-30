@@ -87,12 +87,12 @@ async def scrape_autovit(
                                 elif isinstance(first_photo, str):
                                     image = first_photo
                             # Extract year and km from advert parameters
-                            for param in advert.get('parameters', []):
-                                key = (param.get('key') or '').lower()
-                                if key == 'year':
-                                    _year = param.get('value')
-                                elif key in ('mileage', 'kilometers', 'km'):
-                                    _km = param.get('value')
+                            for param in advert.get("parameters", []):
+                                key = (param.get("key") or "").lower()
+                                if key == "year":
+                                    _year = param.get("value")
+                                elif key in ("mileage", "kilometers", "km"):
+                                    _km = param.get("value")
                     if not price:
                         jld = s.find("script", {"id": "listing-json-ld"})
                         if jld and jld.string:
