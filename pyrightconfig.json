@@ -1,0 +1,21 @@
+{
+  "include": [
+    "backend"
+  ],
+  "exclude": [
+    "backend/venv",
+    "backend/test_*.py",
+    "backend/scrape_*.py"
+  ],
+  "reportMissingImports": false,
+  "reportArgumentType": false,
+  "reportAttributeAccessIssue": false,
+  "reportCallIssue": false,
+  "reportOptionalSubscript": false,
+  "reportReturnType": false,
+  "reportOperatorIssue": false,
+  "reportOptionalIterable": false,
+  "typeCheckingMode": "basic",
+  "reportIndexIssue": false,
+  "reportMissingModuleSource": false
+}
