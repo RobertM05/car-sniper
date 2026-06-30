@@ -92,9 +92,9 @@ async def scrape_autovit(
                             for param in advert.get("parameters", []):
                                 key = (param.get("key") or "").lower()
                                 if key == "year":
-                                    _year = param.get("value")
+                                    year = param.get("value")
                                 elif key in ("mileage", "kilometers", "km"):
-                                    _km = param.get("value")
+                                    km = param.get("value")
                     if not price:
                         jld = s.find("script", {"id": "listing-json-ld"})
                         if jld and jld.string:
@@ -150,6 +150,7 @@ async def scrape_autovit(
                 "Cache-Control": "no-cache",
             }
             page_ads = []
+            seen_links = set()
             retries = 3
             for attempt in range(retries):
                 try:
@@ -284,9 +285,9 @@ async def scrape_autovit(
                         lnk = a["href"]
                         if lnk.startswith("/"):
                             lnk = "https://www.autovit.ro" + lnk
-                        if lnk in seen_links_total:
+                        if lnk in seen_links:
                             continue
-                        seen_links_total.add(lnk)
+                        seen_links.add(lnk)
                         h2 = art.find("h2") or art.find("h1")
                         title = h2.get_text(strip=True) if h2 else "No Title"
                         price = "0"
