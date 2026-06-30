@@ -299,8 +299,8 @@ async def api_search(
             max_km=max_km,
             min_year=min_year,
             max_year=max_year,
-            limit=50,
-            max_pages=2,
+            limit=20000,
+            max_pages=1000,
         )
         if live_results:
             car_db_optimizer.upsert_ads(live_results)
@@ -316,7 +316,7 @@ async def api_search(
                 max_km=max_km,
                 fuel=fuel,
                 transmission=transmission,
-                limit=limit,
+                limit=20000,
                 sort_by=sort_by,
                 order=order,
             )
