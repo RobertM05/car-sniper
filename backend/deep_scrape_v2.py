@@ -11,7 +11,9 @@ auto-shards by year ranges to ensure complete coverage.
 import asyncio
 import json
 import os
+import random
 import sys
+import time
 from dotenv import load_dotenv
 
 # Must load .env BEFORE importing car_database (which connects to DB at import time)
@@ -24,6 +26,14 @@ OVERFLOW_THRESHOLD = 800
 YEAR_SHARD_SIZE = 5
 MIN_YEAR = 1950
 MAX_YEAR = 2026
+
+# Rate limiting — prevents IP bans
+MODEL_DELAY_MIN = 8
+MODEL_DELAY_MAX = 15
+BRAND_DELAY_MIN = 20
+BRAND_DELAY_MAX = 35
+COOLDOWN_EVERY_N = 20
+COOLDOWN_SECONDS = 120
 
 
 def load_catalog():
@@ -93,9 +103,13 @@ async def main():
     print(f"Deep Scrape v2: {len(catalog)} brands, {total_models} models\n")
 
     total_inserted = 0
+    model_count = 0
+    start_time = time.time()
+
     for brand, models in catalog.items():
-        print(f"-- {brand.upper()} ({len(models)} models) --")
+        print(f"\n-- {brand.upper()} ({len(models)} models) --")
         for model in models:
+            model_count += 1
             results = await scrape_model(brand, model)
             if results:
                 try:
@@ -105,8 +119,22 @@ async def main():
                     print(f"    upserted {inserted}")
                 except Exception as e:
                     print(f"    DB error: {e}")
-            await asyncio.sleep(2)
-        await asyncio.sleep(5)
+
+            # Rate limiting
+            delay = random.uniform(MODEL_DELAY_MIN, MODEL_DELAY_MAX)
+            if model_count % COOLDOWN_EVERY_N == 0:
+                elapsed = time.time() - start_time
+                print(
+                    f"    ⏸  Cooldown ({COOLDOWN_SECONDS}s) — {model_count} models done, {elapsed:.0f}s elapsed"
+                )
+                await asyncio.sleep(COOLDOWN_SECONDS)
+            else:
+                await asyncio.sleep(delay)
+
+        # Longer pause between brands
+        brand_delay = random.uniform(BRAND_DELAY_MIN, BRAND_DELAY_MAX)
+        print(f"  ⏸  Brand pause {brand_delay:.0f}s...")
+        await asyncio.sleep(brand_delay)
 
     print(f"\nDONE. {total_inserted} total ads upserted.")
 
