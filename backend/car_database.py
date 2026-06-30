@@ -185,6 +185,8 @@ class CarDatabaseOptimizer:
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_make_model ON ads(make, model)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)')
                 cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_last_seen ON ads(last_seen)')
+                cursor.execute('CREATE INDEX IF NOT EXISTS idx_ads_active_last_seen ON ads(active, last_seen)')
                 
                 # Setup column for Price Drop Tracking
                 cursor.execute('ALTER TABLE ads ADD COLUMN IF NOT EXISTS original_price INTEGER')
