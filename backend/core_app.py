@@ -12,6 +12,12 @@ from slowapi.errors import RateLimitExceeded
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 load_dotenv(dotenv_path=env_path)
 
+# Kill switches for expensive operations on Vercel serverless functions.
+# Set VERCEL_LIVE_SCRAPING=true in Vercel dashboard to re-enable.
+IS_VERCEL = os.environ.get("VERCEL") == "1"
+VERCEL_LIVE_SCRAPING = os.environ.get("VERCEL_LIVE_SCRAPING", "false").lower() == "true"
+ALLOW_LIVE_SCRAPING = not IS_VERCEL or VERCEL_LIVE_SCRAPING
+
 from scraper.olx_scraper import scrape_olx
 from functii import search_cars, add_alert
 from car_database import car_db_optimizer, get_optimized_search_params
@@ -278,8 +284,8 @@ async def api_search(
         order=order,
     )
 
-    if not results:
-        # DB has no active results, let's scrape on the fly
+    if not results and ALLOW_LIVE_SCRAPING:
+        # DB has no active results — scrape on the fly (disabled on Vercel by default)
         from functii import search_cars
 
         live_max = max_price if max_price and max_price < 99999 else 999999
@@ -322,12 +328,10 @@ async def api_search(
         peer_pool = car_db_optimizer.get_active_ads_for_make_model(make, norm_model)
         results = calculate_deal_scores(results, stats, peer_pool=peer_pool)
 
-    # Run the background verifier to clean up any dead links asynchronously
-    if results:
+    # Run the background verifier to clean up any dead links asynchronously.
+    # Skipped on Vercel to save CPU — cron/cleanup handles this instead.
+    if results and not IS_VERCEL:
         from link_verifier import verify_ads_liveness
-
-        # asyncio.run is not ideal inside FastAPI background_tasks directly if the function is async,
-        # but BackgroundTasks in FastAPI natively supports async functions.
         background_tasks.add_task(verify_ads_liveness, results)
 
         if redis_client:
