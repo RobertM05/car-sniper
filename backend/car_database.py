@@ -426,7 +426,7 @@ class CarDatabaseOptimizer:
             rows = cursor.fetchall()
             return [dict(r) for r in rows]
 
-    def deactivate_stale_ads(self, hours_threshold=24):
+    def deactivate_stale_ads(self, hours_threshold=168):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             # PostgreSQL syntax for interval
