@@ -12,6 +12,7 @@ env_path = os.path.join(os.path.dirname(__file__), ".env")
 load_dotenv(dotenv_path=env_path)
 _SEARCH_CACHE = {}
 _CACHE_TTL = 600
+_CACHE_MAX_SIZE = 1000
 
 
 def infer_car_details(title: str, make: str = "") -> tuple:
@@ -118,6 +119,15 @@ def ttl_cache(func):
                 del _SEARCH_CACHE[key]
         result = await func(*args, **kwargs)
         _SEARCH_CACHE[key] = (current_time, result)
+        # Evict oldest entries if cache exceeds max size
+        if len(_SEARCH_CACHE) > _CACHE_MAX_SIZE:
+            stale_keys = [k for k, (ts, _) in _SEARCH_CACHE.items() if current_time - ts >= _CACHE_TTL]
+            for k in stale_keys:
+                del _SEARCH_CACHE[k]
+        if len(_SEARCH_CACHE) > _CACHE_MAX_SIZE:
+            sorted_keys = sorted(_SEARCH_CACHE.keys(), key=lambda k: _SEARCH_CACHE[k][0])
+            for k in sorted_keys[:len(_SEARCH_CACHE) - _CACHE_MAX_SIZE]:
+                del _SEARCH_CACHE[k]
         return result
 
     return wrapper
