@@ -213,6 +213,22 @@ async def search_cars(
             return None  # OLX does not have a native category for Flying Spur, force query string
 
         if "mercedes" in make_lc:
+            # AMG model -> native site slug mapping
+            _amg_slugs = {
+                "amg c63": "c-63-amg",
+                "amg c43": "c-43-amg",
+                "amg a45": "a-45-amg",
+                "amg s63": "s-63-amg",
+                "amg gt": "amg-gt",
+                "amg g63": "clasa-g",  # G63 lives under G-Class
+                "amg e63": "clasa-e",  # E63 lives under E-Class
+                "amg c63 s": "c-63-amg",  # C63 S maps to C63
+                "amg gt 63": "amg-gt",  # GT 63 maps to AMG GT
+                "amg gt 43": "amg-gt",
+            }
+            _amg_key = model_lc.replace("-", " ").replace("  ", " ").strip()
+            if _amg_key in _amg_slugs:
+                return _amg_slugs[_amg_key]
             if "class" in model_lc or "clasa" in model_lc:
                 letter = re.search("([a-z])[- ]?clas", model_lc)
                 if not letter:
@@ -410,6 +426,22 @@ async def search_cars(
                 letter = re.search("([aecs])[\\- ]?\\d", model_lc)
                 if letter:
                     return f"clasa-{letter.group(1)}"
+            # AMG model -> native site slug mapping
+            _amg_slugs = {
+                "amg c63": "c-63-amg",
+                "amg c43": "c-43-amg",
+                "amg a45": "a-45-amg",
+                "amg s63": "s-63-amg",
+                "amg gt": "amg-gt",
+                "amg g63": "clasa-g",  # G63 lives under G-Class
+                "amg e63": "clasa-e",  # E63 lives under E-Class
+                "amg c63 s": "c-63-amg",  # C63 S maps to C63
+                "amg gt 63": "amg-gt",  # GT 63 maps to AMG GT
+                "amg gt 43": "amg-gt",
+            }
+            _amg_key = model_lc.replace("-", " ").replace("  ", " ").strip()
+            if _amg_key in _amg_slugs:
+                return _amg_slugs[_amg_key]
             if "class" in model_lc or "clasa" in model_lc:
                 letter = re.search("([a-z])[- ]?clas", model_lc)
                 if not letter:
