@@ -9,36 +9,59 @@ from scraper.autovit_scraper import scrape_autovit
 from scraper.olx_scraper import scrape_olx
 from car_database import car_db_optimizer
 
-# O listă exhaustivă de mărci auto prezente pe piața din România
-ALL_BRANDS = [
-    "Volkswagen", "BMW", "Audi", "Mercedes-Benz", "Skoda", "Ford", "Renault",
-    "Opel", "Dacia", "Peugeot", "Toyota", "Volvo", "Hyundai", "Kia", "Seat",
-    "Nissan", "Mazda", "Honda", "Suzuki", "Fiat", "Mini", "Land Rover",
-    "Porsche", "Jeep", "Alfa Romeo", "Lexus", "Jaguar", "Chevrolet",
-    "Subaru", "Mitsubishi", "Smart", "Citroen", "Dodge", "Chrysler",
-    "Maserati", "Bentley", "Tesla", "Cupra", "DS Automobiles", "Lancia",
-    "SsangYong", "Abarth", "Infiniti", "Saab", "Rover"
-]
+# Brand tiers based on Romanian market volume (ads on OLX + Autovit)
+BRAND_TIERS = {
+    # Tier 1 — 15,000–30,000 ads: needs 400+ pages to cover fully
+    "tier1": {
+        "pages": 500,
+        "brands": ["Volkswagen", "BMW", "Audi", "Mercedes-Benz"]
+    },
+    # Tier 2 — 5,000–15,000 ads: 250 pages
+    "tier2": {
+        "pages": 250,
+        "brands": ["Skoda", "Ford", "Renault", "Opel", "Dacia", "Toyota", "Hyundai"]
+    },
+    # Tier 3 — 2,000–5,000 ads: 100 pages
+    "tier3": {
+        "pages": 100,
+        "brands": ["Peugeot", "Volvo", "Kia", "Seat", "Nissan", "Mazda", "Honda",
+                    "Suzuki", "Fiat", "Mini", "Land Rover", "Citroen"]
+    },
+    # Tier 4 — <2,000 ads: 50 pages is more than enough
+    "tier4": {
+        "pages": 50,
+        "brands": ["Porsche", "Jeep", "Alfa Romeo", "Lexus", "Jaguar", "Chevrolet",
+                    "Subaru", "Mitsubishi", "Smart", "Dodge", "Chrysler",
+                    "Maserati", "Bentley", "Tesla", "Cupra", "DS Automobiles", "Lancia",
+                    "SsangYong", "Abarth", "Infiniti", "Saab", "Rover"]
+    }
+}
 
-MAX_PAGES_PER_BRAND = 150  # 150 pagini per marcă per site
+# Build flat lookup: brand → max_pages
+BRAND_PAGES = {}
+for tier in BRAND_TIERS.values():
+    for brand in tier["brands"]:
+        BRAND_PAGES[brand] = tier["pages"]
 
 async def run_deep_scrape():
     print("==============================================")
     print("🚗 INIȚIERE DEEP SCRAPE (TOATE MĂRCILE) 🚗")
-    print(f"Număr mărci: {len(ALL_BRANDS)}")
-    print(f"Pagini per marcă per site: {MAX_PAGES_PER_BRAND}")
+    print(f"Număr mărci: {len(BRAND_PAGES)}")
+    print(f"Tier 1 (500p): {BRAND_TIERS['tier1']['brands']}")
+    print(f"Tier 2 (250p): {BRAND_TIERS['tier2']['brands']}")
+    print(f"Tier 3 (100p): {BRAND_TIERS['tier3']['brands']}")
+    print(f"Tier 4 (50p):  {BRAND_TIERS['tier4']['brands']}")
     print("==============================================\n")
 
     total_ads_inserted = 0
 
-    for brand in ALL_BRANDS:
-        print(f"\n---> Începem procesarea mărcii: {brand.upper()} <---")
+    for brand, max_pages in BRAND_PAGES.items():
+        print(f"\n---> Începem procesarea mărcii: {brand.upper()} (max {max_pages} pagini) <---")
         
         # 1. Scrape Autovit
         try:
             print(f"Scraping Autovit pentru {brand}...")
-            # Preluăm toate anunțurile pentru brand, indiferent de model
-            autovit_results = await scrape_autovit(make=brand, model="", limit=MAX_PAGES_PER_BRAND * 40, max_pages=MAX_PAGES_PER_BRAND)
+            autovit_results = await scrape_autovit(make=brand, model="", limit=max_pages * 40, max_pages=max_pages)
             
             if autovit_results:
                 inserted_ids = car_db_optimizer.upsert_ads(autovit_results)
@@ -49,13 +72,13 @@ async def run_deep_scrape():
         except Exception as e:
             print(f"Eroare Autovit {brand}: {e}")
 
-        # Pauză mică pentru a evita IP ban-ul
+        # Pauză între site-uri pentru a evita IP ban-ul
         await asyncio.sleep(2)
 
         # 2. Scrape OLX
         try:
             print(f"Scraping OLX pentru {brand}...")
-            olx_results = await scrape_olx(query=brand, limit=MAX_PAGES_PER_BRAND * 40, max_pages=MAX_PAGES_PER_BRAND)
+            olx_results = await scrape_olx(query=brand, limit=max_pages * 40, max_pages=max_pages)
             
             if olx_results:
                 inserted_ids = car_db_optimizer.upsert_ads(olx_results)
