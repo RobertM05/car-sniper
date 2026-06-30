@@ -43,82 +43,100 @@ for tier in BRAND_TIERS.values():
     for brand in tier["brands"]:
         BRAND_PAGES[brand] = tier["pages"]
 
+# Price buckets to bypass ~100 page search caps on both OLX and Autovit
+# €500 steps up to €5k, €1k up to €20k, €5k up to €200k
+PRICE_BUCKETS = (
+    [(i, i + 499) for i in range(0, 5000, 500)] +
+    [(i, i + 999) for i in range(5000, 20000, 1000)] +
+    [(i, i + 4999) for i in range(20000, 200000, 5000)]
+)
+
+async def scrape_with_buckets(scraper_fn, brand, site_name, bucket_pause=1.5):
+    """Scrape a site across all price buckets, deduplicating by ad ID."""
+    all_results = []
+    seen_ids = set()
+    
+    for p_min, p_max in PRICE_BUCKETS:
+        print(f"  {site_name} bucket €{p_min}-€{p_max}...", end=" ")
+        bucket_results = await scraper_fn(p_min, p_max)
+        new_count = 0
+        for ad in bucket_results:
+            ad_id = ad.get('id') or ad.get('link', '')
+            if ad_id not in seen_ids:
+                seen_ids.add(ad_id)
+                all_results.append(ad)
+                new_count += 1
+        print(f"{new_count} new, {len(all_results)} total")
+        await asyncio.sleep(bucket_pause)
+    
+    return all_results
+
+async def scrape_buckets(site_name, scraper_fn):
+    """Scrape across all price buckets, deduplicating by ad ID."""
+    all_results = []
+    seen_ids = set()
+    for p_min, p_max in PRICE_BUCKETS:
+        print(f"  {site_name} €{p_min}-€{p_max}...", end=" ")
+        bucket = await scraper_fn(p_min, p_max)
+        new = 0
+        for ad in bucket:
+            aid = ad.get('id') or ad.get('link', '')
+            if aid not in seen_ids:
+                seen_ids.add(aid)
+                all_results.append(ad)
+                new += 1
+        print(f"{new} new, {len(all_results)} total")
+        await asyncio.sleep(1.5)
+    return all_results
+
+
 async def run_deep_scrape():
     print("==============================================")
     print("🚗 INIȚIERE DEEP SCRAPE (TOATE MĂRCILE) 🚗")
-    print(f"Număr mărci: {len(BRAND_PAGES)}")
-    print(f"Tier 1 (500p): {BRAND_TIERS['tier1']['brands']}")
-    print(f"Tier 2 (250p): {BRAND_TIERS['tier2']['brands']}")
-    print(f"Tier 3 (100p): {BRAND_TIERS['tier3']['brands']}")
-    print(f"Tier 4 (50p):  {BRAND_TIERS['tier4']['brands']}")
+    print(f"Număr mărci: {len(BRAND_PAGES)} | Price buckets: {len(PRICE_BUCKETS)}")
+    print(f"Tier 1: {BRAND_TIERS['tier1']['brands']}")
+    print(f"Tier 2: {BRAND_TIERS['tier2']['brands']}")
+    print(f"Tier 3: {BRAND_TIERS['tier3']['brands']}")
+    print(f"Tier 4: {BRAND_TIERS['tier4']['brands']}")
     print("==============================================\n")
 
     total_ads_inserted = 0
 
-    for brand, max_pages in BRAND_PAGES.items():
-        print(f"\n---> Începem procesarea mărcii: {brand.upper()} (max {max_pages} pagini) <---")
+    for brand in BRAND_PAGES:
+        print(f"\n---> {brand.upper()} <---")
         
-        # 1. Scrape Autovit
+        # 1. Autovit — price buckets
         try:
-            print(f"Scraping Autovit pentru {brand}...")
-            autovit_results = await scrape_autovit(make=brand, model="", limit=max_pages * 40, max_pages=max_pages)
-            
-            if autovit_results:
-                inserted_ids = car_db_optimizer.upsert_ads(autovit_results)
-                print(f"✅ Autovit: Găsite {len(autovit_results)} | Inserate/Updatate: {len(inserted_ids)}")
-                total_ads_inserted += len(inserted_ids)
+            av_results = await scrape_buckets("Autovit", lambda lo, hi: 
+                scrape_autovit(make=brand, model="", limit=4000, max_pages=100,
+                               min_price=lo, max_price=hi))
+            if av_results:
+                ids = car_db_optimizer.upsert_ads(av_results)
+                print(f"  ✅ Autovit: {len(av_results)} found | {len(ids)} upserted")
+                total_ads_inserted += len(ids)
             else:
-                print("❌ Autovit: 0 rezultate găsite.")
+                print("  ❌ Autovit: 0")
         except Exception as e:
-            print(f"Eroare Autovit {brand}: {e}")
-
-        # Pauză între site-uri pentru a evita IP ban-ul
+            print(f"  ❌ Autovit error: {e}")
         await asyncio.sleep(2)
 
-        # 2. Scrape OLX — split into price buckets to bypass OLX's ~100 page search cap
+        # 2. OLX — price buckets
         try:
-            # Price buckets: €500 steps up to €5k, €1k up to €20k, €5k up to €200k
-            price_ranges = (
-                [(i, i + 499) for i in range(0, 5000, 500)] +
-                [(i, i + 999) for i in range(5000, 20000, 1000)] +
-                [(i, i + 4999) for i in range(20000, 200000, 5000)]
-            )
-            olx_all_results = []
-            seen_ids = set()
-            
-            for p_min, p_max in price_ranges:
-                print(f"  OLX bucket €{p_min}-€{p_max}...", end=" ")
-                bucket_results = await scrape_olx(
-                    query=brand, limit=4000, max_pages=100,
-                    min_price=p_min, max_price=p_max,
-                    require_photos=False
-                )
-                new_count = 0
-                for ad in bucket_results:
-                    ad_id = ad.get('id') or ad.get('link', '')
-                    if ad_id not in seen_ids:
-                        seen_ids.add(ad_id)
-                        olx_all_results.append(ad)
-                        new_count += 1
-                print(f"{new_count} new, {len(olx_all_results)} total")
-                await asyncio.sleep(1.5)  # gentle on OLX
-            
-            if olx_all_results:
-                inserted_ids = car_db_optimizer.upsert_ads(olx_all_results)
-                print(f"✅ OLX: Găsite {len(olx_all_results)} | Inserate/Updatate: {len(inserted_ids)}")
-                total_ads_inserted += len(inserted_ids)
+            olx_results = await scrape_buckets("OLX", lambda lo, hi:
+                scrape_olx(query=brand, limit=4000, max_pages=100,
+                           min_price=lo, max_price=hi, require_photos=False))
+            if olx_results:
+                ids = car_db_optimizer.upsert_ads(olx_results)
+                print(f"  ✅ OLX: {len(olx_results)} found | {len(ids)} upserted")
+                total_ads_inserted += len(ids)
             else:
-                print("❌ OLX: 0 rezultate găsite.")
+                print("  ❌ OLX: 0")
         except Exception as e:
-            print(f"Eroare OLX {brand}: {e}")
-
-        # Pauză între branduri pentru siguranță
-        print(f"Pauză 5 secunde înainte de următorul brand...")
+            print(f"  ❌ OLX error: {e}")
         await asyncio.sleep(5)
 
     print("\n==============================================")
-    print(f"✅ DEEP SCRAPE FINALIZAT CU SUCCES ✅")
-    print(f"Număr total de ad-uri procesate și salvate în DB: {total_ads_inserted}")
+    print(f"✅ DEEP SCRAPE FINALIZAT — {total_ads_inserted} total")
     print("==============================================")
 
 if __name__ == "__main__":
