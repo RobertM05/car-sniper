@@ -121,12 +121,18 @@ def ttl_cache(func):
         _SEARCH_CACHE[key] = (current_time, result)
         # Evict oldest entries if cache exceeds max size
         if len(_SEARCH_CACHE) > _CACHE_MAX_SIZE:
-            stale_keys = [k for k, (ts, _) in _SEARCH_CACHE.items() if current_time - ts >= _CACHE_TTL]
+            stale_keys = [
+                k
+                for k, (ts, _) in _SEARCH_CACHE.items()
+                if current_time - ts >= _CACHE_TTL
+            ]
             for k in stale_keys:
                 del _SEARCH_CACHE[k]
         if len(_SEARCH_CACHE) > _CACHE_MAX_SIZE:
-            sorted_keys = sorted(_SEARCH_CACHE.keys(), key=lambda k: _SEARCH_CACHE[k][0])
-            for k in sorted_keys[:len(_SEARCH_CACHE) - _CACHE_MAX_SIZE]:
+            sorted_keys = sorted(
+                _SEARCH_CACHE.keys(), key=lambda k: _SEARCH_CACHE[k][0]
+            )
+            for k in sorted_keys[: len(_SEARCH_CACHE) - _CACHE_MAX_SIZE]:
                 del _SEARCH_CACHE[k]
         return result
 
