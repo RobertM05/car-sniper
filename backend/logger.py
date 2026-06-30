@@ -31,10 +31,26 @@ class JSONFormatter(logging.Formatter):
             if attr.startswith("_"):
                 continue
             if attr in {
-                "args", "asctime", "created", "exc_info", "exc_text",
-                "filename", "funcName", "levelname", "levelno", "lineno",
-                "module", "msecs", "msg", "name", "pathname", "process",
-                "processName", "relativeCreated", "stack_info", "thread",
+                "args",
+                "asctime",
+                "created",
+                "exc_info",
+                "exc_text",
+                "filename",
+                "funcName",
+                "levelname",
+                "levelno",
+                "lineno",
+                "module",
+                "msecs",
+                "msg",
+                "name",
+                "pathname",
+                "process",
+                "processName",
+                "relativeCreated",
+                "stack_info",
+                "thread",
                 "threadName",
             }:
                 continue
