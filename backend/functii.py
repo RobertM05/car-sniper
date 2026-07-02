@@ -422,10 +422,6 @@ async def search_cars(
         make_lc = (make_text or "").strip().lower()
         model_lc = (model_text or "").strip().lower()
         if "mercedes" in make_lc:
-            if "amg" in model_lc and "gt" not in model_lc:
-                letter = re.search("([aecs])[\\- ]?\\d", model_lc)
-                if letter:
-                    return f"clasa-{letter.group(1)}"
             # AMG model -> native site slug mapping
             _amg_slugs = {
                 "amg c63": "c-63-amg",
@@ -442,6 +438,10 @@ async def search_cars(
             _amg_key = model_lc.replace("-", " ").replace("  ", " ").strip()
             if _amg_key in _amg_slugs:
                 return _amg_slugs[_amg_key]
+            if "amg" in model_lc and "gt" not in model_lc:
+                letter = re.search("([aecs])[\\- ]?\\d", model_lc)
+                if letter:
+                    return f"clasa-{letter.group(1)}"
             if "class" in model_lc or "clasa" in model_lc:
                 letter = re.search("([a-z])[- ]?clas", model_lc)
                 if not letter:
