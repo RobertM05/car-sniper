@@ -251,6 +251,7 @@ async def scrape_autovit(
                             scrape_stats["dupes"] += 1
                             continue
                         seen_links_total.add(fingerprint)
+                        seen_links.add(link)  # prevent HTML parser from adding duplicate with truncated title
                         if price_raw:
                             try:
                                 final_price = int(float(price_raw))
