@@ -38,17 +38,18 @@ async def scrape_olx(
         empty_pages = 0
         while len(ads) < limit and current_page <= max_pages:
             path = "autoturisme"
-            if make and model_slug:
-                make_formatted = make.lower().replace(" ", "-")
-                url = f"https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/{make_formatted}/{model_slug}/"
-            elif query:
-                url = f"https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/q-{query.lower().replace(' ', '-')}/"
-            else:
-                url = f"https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/"
             params = {
                 "page": str(current_page),
                 "currency": "EUR",
             }
+            if make and model_slug:
+                make_formatted = make.lower().replace(" ", "-")
+                url = f"https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/{make_formatted}/"
+                params["search[filter_enum_model][0]"] = model_slug
+            elif query:
+                url = f"https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/q-{query.lower().replace(' ', '-')}/"
+            else:
+                url = f"https://www.olx.ro/auto-masini-moto-ambarcatiuni/{path}/"
             if require_photos:
                 params["search[photos]"] = "1"
             if sort_order == "price_asc":

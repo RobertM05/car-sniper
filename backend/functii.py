@@ -782,17 +782,9 @@ async def search_cars(
         title_str = str(car.get("title", ""))
         car["title"] = re.sub(r"\b07\d{8}\b", "[REDACTED]", title_str)
 
-        has_native_filter = False
-        link_str = car.get("link", "").lower()
-        if "olx" in link_str:
-            if olx_model_slug is not None:
-                has_native_filter = True
-        elif "autovit" in link_str:
-            if autovit_model_slug is not None:
-                has_native_filter = True
 
-        if has_native_filter:
-            strict_filtered.append(car)
+        # Validate make — at least one make token must appear in title or link
+        if _make_tokens and not any(t in searchable_tokens for t in _make_tokens):
             continue
 
         if model_matches:
