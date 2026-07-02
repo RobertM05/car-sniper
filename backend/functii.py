@@ -719,7 +719,10 @@ async def search_cars(
         _make_tokens = normalize_tokens(make or "")
         model_tokens = normalize_tokens(model or "")
         model_matches = (
-            model_tokens.issubset(searchable_tokens) or model_norm in title_norm or model_norm in link_norm
+            model_tokens.issubset(searchable_tokens)
+            or model_norm in title_norm
+            or model_norm in link_norm
+            or all(t in title_norm or t in link_norm for t in model_tokens)
             if model_tokens else True
         )
         bad_keywords = {"dezmembrari", "dezmembrez", "piese", "piesa"}
