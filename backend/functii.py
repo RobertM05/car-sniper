@@ -725,6 +725,7 @@ async def search_cars(
             or all(t in title_norm or t in link_norm for t in model_tokens)
             if model_tokens else True
         )
+
         bad_keywords = {"dezmembrari", "dezmembrez", "piese", "piesa"}
         if any((bad in title_tokens or bad in link_tokens for bad in bad_keywords)):
             filter_stats["bad_keyword"] += 1

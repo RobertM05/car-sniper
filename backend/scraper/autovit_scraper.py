@@ -457,7 +457,7 @@ async def scrape_autovit(
     current_p = page
     empty_pages = 0
     failed_pages = []
-    _is_bucket_mode = (min_price is not None or max_price is not None) and not model
+    _is_bucket_mode = min_price is not None or max_price is not None
     _empty_page_limit = 10 if _is_bucket_mode else 2
     _shared_enrich = aiohttp.ClientSession(
         connector=aiohttp.TCPConnector(ssl=False, limit=10)

@@ -284,10 +284,12 @@ async def api_search(
         order=order,
     )
 
+    print(f"DEBUG: DB returned {len(results)} results, ALLOW_LIVE={ALLOW_LIVE_SCRAPING}")
     if not results and ALLOW_LIVE_SCRAPING:
         # DB has no active results — scrape on the fly (disabled on Vercel by default)
         from functii import search_cars
 
+        print("DEBUG: Entering live scraping...")
         live_max = max_price if max_price and max_price < 99999 else 999999
         live_results = await search_cars(
             make=make,
@@ -302,6 +304,7 @@ async def api_search(
             limit=20000,
             max_pages=1000,
         )
+        print(f"DEBUG: Live scrape returned {len(live_results) if live_results else 0} ads")
         if live_results:
             car_db_optimizer.upsert_ads(live_results)
             # Re-query DB so results are correctly formatted and sorted
