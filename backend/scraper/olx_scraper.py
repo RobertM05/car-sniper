@@ -36,6 +36,7 @@ async def scrape_olx(
         headers={"User-Agent": "Mozilla/5.0"}, connector=aiohttp.TCPConnector(ssl=False)
     ) as session:
         empty_pages = 0
+        stale_pages = 0
         while len(ads) < limit and current_page <= max_pages:
             path = "autoturisme"
             params = {
@@ -68,7 +69,7 @@ async def scrape_olx(
                 params["search[filter_float_year:to]"] = str(max_year)
             try:
                 log.debug("OLX request", extra={"url": url, "params": dict(params)})
-                async with session.get(url, params=params, timeout=10) as response:
+                async with session.get(url, params=params, timeout=20) as response:
                     log.debug("OLX response", extra={"status": response.status})
                     if response.status != 200:
                         page_errors += 1
@@ -237,7 +238,15 @@ async def scrape_olx(
                             page_ads[i]["image"] = res_img
                         if res_price:
                             page_ads[i]["price"] = res_price
+                ads_before = len(ads)
                 ads.extend(page_ads)
+                if len(ads) == ads_before:
+                    stale_pages += 1
+                    if stale_pages >= 2:
+                        log.warning("OLX stopping: no new unique ads for 2 pages")
+                        break
+                else:
+                    stale_pages = 0
                 if len(page_ads) == 0:
                     break
                 current_page += 1
