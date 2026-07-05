@@ -718,11 +718,14 @@ async def search_cars(
         searchable_tokens = title_tokens | link_tokens
         _make_tokens = normalize_tokens(make or "")
         model_tokens = normalize_tokens(model or "")
+        # For AMG models, the 'amg' badge is often omitted from titles
+        # (e.g., 'C63s saloon' is an AMG C63). Don't require 'amg' token.
+        _check_tokens = model_tokens - {"amg"} if "amg" in model_tokens else model_tokens
         model_matches = (
             model_tokens.issubset(searchable_tokens)
             or model_norm in title_norm
             or model_norm in link_norm
-            or all(t in title_norm or t in link_norm for t in model_tokens)
+            or all(t in title_norm or t in link_norm for t in _check_tokens)
             if model_tokens else True
         )
 
