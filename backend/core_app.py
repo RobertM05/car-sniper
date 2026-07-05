@@ -307,22 +307,9 @@ async def api_search(
         print(f"DEBUG: Live scrape returned {len(live_results) if live_results else 0} ads")
         if live_results:
             car_db_optimizer.upsert_ads(live_results)
-            # Re-query DB so results are correctly formatted and sorted
-            results = car_db_optimizer.search_ads_db(
-                make=make,
-                model=norm_model,
-                min_price=min_price,
-                max_price=max_price,
-                min_year=min_year,
-                max_year=max_year,
-                min_km=min_km,
-                max_km=max_km,
-                fuel=fuel,
-                transmission=transmission,
-                limit=20000,
-                sort_by=sort_by,
-                order=order,
-            )
+            # Use in-memory results directly — DB model matching is too strict
+            # for cases like 'amg c63' vs 'c-63-amg' vs 'C 63 AMG'
+            results = live_results
 
     # Calculate deal scores if we have stats for this make/model
     if make and model:
