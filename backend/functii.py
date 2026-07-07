@@ -688,8 +688,8 @@ async def search_cars(
     for car in cars:
         try:
             raw_price = str(car.get("price", ""))
-            price_str = raw_price.split(",")[0]
-            price_val = int(re.sub("\\D", "", price_str)) if price_str else 0
+            price_str = re.sub(r"[^\d]", "", raw_price)
+            price_val = int(price_str) if price_str else 0
             if "ron" in raw_price.lower() or "lei" in raw_price.lower():
                 price_val = int(price_val / 5)
                 car["price"] = (
@@ -945,7 +945,7 @@ async def search_cars(
             try:
                 async with session.get(ad.get("link"), timeout=5) as r:
                     if r.status == 404 or len(str(r.url)) < 30:
-                        return model.lower().replace(" ", "-")
+                        return None
                     if r.status == 200:
                         html = await r.text()
                         soup = BeautifulSoup(html, "html.parser")
@@ -1004,7 +1004,7 @@ async def search_cars(
 
     if final_results:
         async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(ssl=False, limit=10),
+            connector=aiohttp.TCPConnector(limit=10),
             headers={
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             },

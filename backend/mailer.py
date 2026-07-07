@@ -167,3 +167,45 @@ def send_new_cars_email(user_email: str, make: str, model: str, cars: list):
     except Exception as e:
         print(f"Failed to send cron alert email: {str(e)}")
         return False
+
+# Note: Add unsubscribe link to alert emails for GDPR compliance.
+# Use a URL like: https://carsniper.ro/unsubscribe?email={email}&token={token}
+
+
+def send_dealer_welcome_email(email, company_name):
+    try:
+        import resend
+        resend.Emails.send({
+            "from": "CarSniper <onboarding@resend.dev>",
+            "to": email,
+            "subject": "Welcome to CarSniper Partner Network",
+            "html": f"<h2>Welcome, {company_name}!</h2><p>Your dealer application has been received. We will review it shortly.</p>",
+        })
+    except Exception as e:
+        print(f"Failed to send welcome email to {email}: {e}")
+
+def send_verification_email(email, token):
+    try:
+        import resend
+        link = f"https://carsniper.ro/api/verify-email?token={token}"
+        resend.Emails.send({
+            "from": "CarSniper <onboarding@resend.dev>",
+            "to": email,
+            "subject": "Verify your email address",
+            "html": f"<p>Click to verify: <a href='{link}'>{link}</a></p>",
+        })
+    except Exception as e:
+        print(f"Failed to send verification to {email}: {e}")
+
+def send_password_reset_email(email, token):
+    try:
+        import resend
+        link = f"https://carsniper.ro/reset-password?token={token}"
+        resend.Emails.send({
+            "from": "CarSniper <onboarding@resend.dev>",
+            "to": email,
+            "subject": "Reset your password",
+            "html": f"<p>Reset link: <a href='{link}'>{link}</a></p><p>Expires in 1 hour.</p>",
+        })
+    except Exception as e:
+        print(f"Failed to send reset to {email}: {e}")

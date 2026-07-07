@@ -23,9 +23,7 @@ const SearchForm = ({
         newData.model = "";
         newData.generation = "";
       }
-      if (name === "model") {
-        newData.generation = "";
-      }
+
       return newData;
     });
   };
@@ -138,22 +136,22 @@ const SearchForm = ({
             </div>
 
             <div className="form-group">
-              <label>Combustibil</label>
+              <label>{t('filters', 'fuel')}</label>
               <select name="fuel" value={formData.fuel || ""} onChange={handleChange} className="form-control">
-                <option value="">Oricare</option>
-                <option value="Petrol">Benzină</option>
-                <option value="Diesel">Diesel</option>
-                <option value="Hybrid">Hibrid</option>
-                <option value="Electric">Electric</option>
+                <option value="">{t('filters', 'any')}</option>
+                <option value="Petrol">{t('filters', 'petrol')}</option>
+                <option value="Diesel">{t('filters', 'diesel')}</option>
+                <option value="Hybrid">{t('filters', 'hybrid')}</option>
+                <option value="Electric">{t('filters', 'electric')}</option>
               </select>
             </div>
 
             <div className="form-group">
-              <label>Cutie de viteze</label>
+              <label>{t('filters', 'transmission')}</label>
               <select name="transmission" value={formData.transmission || ""} onChange={handleChange} className="form-control">
-                <option value="">Oricare</option>
-                <option value="Automatic">Automată</option>
-                <option value="Manual">Manuală</option>
+                <option value="">{t('filters', 'any')}</option>
+                <option value="Automatic">{t('filters', 'automatic')}</option>
+                <option value="Manual">{t('filters', 'manual')}</option>
               </select>
             </div>
 
@@ -180,8 +178,7 @@ const SearchForm = ({
             type="button"
             onClick={onAlertClick}
             disabled={!formData.make || !formData.model}
-            className="submit-btn"
-            style={{ background: 'transparent', border: '1px solid var(--border-shell)', color: 'var(--text-secondary)', paddingRight: '1.5rem' }}
+            className="secondary-btn"
           >
             {t('search', 'setAlert')}
           </button>
@@ -200,8 +197,7 @@ const SearchForm = ({
           <button
             type="button"
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="submit-btn"
-            style={{ background: 'transparent', border: '1px solid var(--border-shell)', color: 'var(--text-secondary)', paddingRight: '1.5rem' }}
+            className="secondary-btn"
           >
             {t('search', 'advanced')}
           </button>

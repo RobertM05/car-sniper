@@ -20,16 +20,13 @@ const LegalPage = ({ type }) => {
             
             <h1 style={{ marginBottom: '2rem', color: 'var(--primary-color)' }}>{title}</h1>
             
+            {/* Content sourced from hardcoded translations — trusted source */}
             <div 
                 className="legal-content" 
                 style={{ lineHeight: '1.8', color: 'var(--text-primary)' }}
                 dangerouslySetInnerHTML={{ __html: content }} 
             />
             
-            <style>{`
-                .legal-content h2 { margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--text-primary); font-size: 1.25rem; }
-                .legal-content p { margin-bottom: 1rem; color: var(--text-secondary); }
-            `}</style>
         </div>
     );
 };

@@ -3,7 +3,7 @@
   background-color: var(--bg-primary);
   color: var(--text-primary);
   padding: 3rem 2rem;
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   transition: var(--transition-slow);
 }
 
@@ -78,7 +78,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--shadow-inset-top);
+  border-top: 1px solid var(--border-shell);
 }
 
 .stat-card:hover {
@@ -106,7 +106,7 @@
 .stat-icon-wrapper {
   padding: 10px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-secondary);
   border: 1px solid var(--border-shell);
 }
 
@@ -236,5 +236,73 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 1.5rem;
+  }
+}
+
+.inventory-section {
+  margin-top: 2rem;
+}
+
+.inventory-table-wrap {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.inventory-table th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-shell);
+}
+
+.inventory-table td {
+  padding: 0.75rem 1rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-core);
+}
+
+.inventory-delete-btn {
+  background: none;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inventory-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.inventory-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.inventory-form-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.inventory-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    height: 220px;
   }
 }

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
+    const { t } = useLanguage();
     const pageNumbers = [];
     const totalPages = Math.ceil(totalCars / carsPerPage);
 
@@ -29,7 +31,7 @@ const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
             >
-                ←
+                {t('pagination', 'prev')}
             </button>
 
             {startPage > 1 && (
@@ -61,7 +63,7 @@ const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
             >
-                →
+                {t('pagination', 'next')}
             </button>
         </div>
     );

@@ -56,7 +56,7 @@
 |                                                              |
 |  core_app.py --- API Endpoints (/api/search, /api/brands...) |
 |  functii.py ---- Search Engine + Slug Translations           |
-|  car_database.py - SQLite ORM + Statistics Engine            |
+|  car_database.py - PostgreSQL (Supabase) ORM + Statistics Engine            |
 |  mailer.py ----- Email Notifications (Resend API)            |
 |  crawler.py ---- Autonomous Background Scraper               |
 |                                                              |
@@ -70,7 +70,7 @@
                             |
                             v
 +--------------------------------------------------------------+
-|                     DATABASE (SQLite)                         |
+|                     DATABASE (PostgreSQL (Supabase))                         |
 |                                                              |
 |  Ads Storage - User Auth - Alerts - Search Stats             |
 |  Stale Ad Cleanup - Model Generation Mapping                 |
@@ -86,7 +86,7 @@ car-sniper/
 ├── backend/
 │   ├── core_app.py              # FastAPI app + toate rutele API
 │   ├── functii.py               # Motor de cautare, slug mappings, filtre
-│   ├── car_database.py          # SQLite ORM, statistici, user management
+│   ├── car_database.py          # PostgreSQL (Supabase) ORM, statistici, user management
 │   ├── mailer.py                # Notificari email via Resend
 │   ├── crawler.py               # Background crawler autonom
 │   ├── autovit_catalog.json     # Catalog complet marci/modele
@@ -112,7 +112,7 @@ car-sniper/
 │               ├── ContactModal.jsx  # Devino Partener (B2B)
 │               └── SkeletonCard.jsx  # Loading placeholder
 ├── database/
-│   └── db.sqlite                # SQLite database (gitignored)
+│   └── db.sqlite                # PostgreSQL (Supabase) database (gitignored)
 ├── api/                         # Vercel serverless functions
 ├── vercel.json                  # Vercel deployment config
 ├── requirements.txt             # Python dependencies
@@ -306,7 +306,7 @@ Backend-ul poate fi hosted pe **Railway**, **Render**, sau orice platforma care 
 | **Frontend** | React 18 - Vite - Vanilla CSS (Glassmorphism) |
 | **Backend** | FastAPI - Python 3.10+ - Uvicorn |
 | **Scraping** | aiohttp - BeautifulSoup4 - Playwright |
-| **Database** | SQLite (embedded) |
+| **Database** | PostgreSQL (Supabase) (embedded) |
 | **Email** | Resend API |
 | **Deployment** | Vercel (Serverless Functions + Static Build) |
 

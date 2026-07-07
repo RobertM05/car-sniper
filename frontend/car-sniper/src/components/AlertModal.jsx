@@ -12,7 +12,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!consent) {
-            alert("You must agree to the Privacy Policy to proceed.");
+            alert(t('alert', 'consentRequired'));
             return;
         }
         setLoading(true);
@@ -35,7 +35,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
             zIndex: 1000,
             backdropFilter: 'blur(5px)'
         }}>
-            <div className="glass-panel" style={{
+            <div className="glass-panel" role="dialog" aria-modal="true" style={{
                 padding: '2rem',
                 maxWidth: '400px',
                 width: '90%',
@@ -66,7 +66,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="nume@exemplu.com"
+                            placeholder={t('alert', 'emailPlaceholder')}
                             className="form-control"
                             autoFocus
                         />
@@ -81,9 +81,7 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
                             required 
                             style={{ marginTop: '0.2rem' }}
                         />
-                        <label htmlFor="gdpr-consent" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                            I agree to the <a href="/confidentialitate" target="_blank" style={{ color: 'var(--primary-color)' }}>Privacy Policy</a> and consent to the processing of my data for email alerts.
-                        </label>
+                        <label htmlFor="gdpr-consent" style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }} dangerouslySetInnerHTML={{ __html: t('alert', 'consentText') }} />
                     </div>
 
                     <div style={{ display: 'flex', gap: '1rem' }}>

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
 const ContactModal = ({ isOpen, onClose }) => {
+    const { t } = useLanguage();
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -21,7 +23,7 @@ const ContactModal = ({ isOpen, onClose }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setStatus('Se trimite...');
+        setStatus('');
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/contact`, {
@@ -37,9 +39,9 @@ const ContactModal = ({ isOpen, onClose }) => {
                 })
             });
 
-            if (!response.ok) throw new Error("Eroare trimitere.");
+            if (!response.ok) throw new Error(t('contact', 'error'));
 
-            setStatus('Trimis cu succes! Te vom contacta curând.');
+            setStatus(t('contact', 'success'));
             setTimeout(() => {
                 onClose();
                 setStatus('');
@@ -48,7 +50,7 @@ const ContactModal = ({ isOpen, onClose }) => {
 
         } catch (err) {
             console.error(err);
-            setStatus('Eroare la trimitere. Încearcă din nou.');
+            setStatus(t('contact', 'error'));
         }
     };
 
@@ -61,7 +63,7 @@ const ContactModal = ({ isOpen, onClose }) => {
             <div style={{
                 background: 'var(--bg-card)', padding: '2.5rem', borderRadius: '12px',
                 width: '90%', maxWidth: '450px', border: '1px solid var(--primary-color)',
-                boxShadow: '0 0 30px rgba(0, 243, 255, 0.1)', position: 'relative'
+                boxShadow: '0 0 30px var(--accent-glow)', position: 'relative'
             }}>
 
                 <button onClick={onClose} style={{
@@ -70,36 +72,36 @@ const ContactModal = ({ isOpen, onClose }) => {
                 }}>×</button>
 
                 <h2 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', textAlign: 'center', fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    Devino Partener
+                    {t('contact', 'title')}
                 </h2>
 
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>
-                    Lasă-ne datele tale și vom deschide un cont de dealer pentru tine.
+                    {t('contact', 'subtitle')}
                 </p>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Numele Tău</label>
-                        <input type="text" name="name" value={formData.name} onChange={handleChange} required className="form-control" placeholder="Ion Popescu" />
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('contact', 'nameLabel')}</label>
+                        <input type="text" name="name" value={formData.name} onChange={handleChange} required className="form-control" placeholder={t('contact', 'namePlaceholder')} />
                     </div>
 
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Număr de Telefon</label>
-                        <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="form-control" placeholder="07xx xxx xxx" />
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('contact', 'phoneLabel')}</label>
+                        <input type="tel" name="phone" value={formData.phone} onChange={handleChange} required className="form-control" placeholder={t('contact', 'phonePlaceholder')} />
                     </div>
 
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Email Firmă</label>
-                        <input type="email" name="companyEmail" value={formData.companyEmail} onChange={handleChange} required className="form-control" placeholder="contact@firma.ro" />
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('contact', 'emailLabel')}</label>
+                        <input type="email" name="companyEmail" value={formData.companyEmail} onChange={handleChange} required className="form-control" placeholder={t('contact', 'emailPlaceholder')} />
                     </div>
 
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Nume Firmă / Dealer</label>
-                        <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} required className="form-control" placeholder="Car Sniper SRL" />
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('contact', 'companyLabel')}</label>
+                        <input type="text" name="companyName" value={formData.companyName} onChange={handleChange} required className="form-control" placeholder={t('contact', 'companyPlaceholder')} />
                     </div>
 
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Ai deja un website?</label>
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('contact', 'hasWebsite')}</label>
                         <select name="hasWebsite" value={formData.hasWebsite} onChange={handleChange} className="form-control">
                             <option value="Da">Da</option>
                             <option value="Nu">Nu</option>
@@ -108,19 +110,19 @@ const ContactModal = ({ isOpen, onClose }) => {
 
                     {formData.hasWebsite === 'Da' && (
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Website IP</label>
-                            <input type="text" name="websiteIp" value={formData.websiteIp} onChange={handleChange} required className="form-control" placeholder="192.168.1.1" />
+                            <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('contact', 'websiteLabel')}</label>
+                            <input type="text" name="websiteIp" value={formData.websiteIp} onChange={handleChange} required className="form-control" placeholder={t('contact', 'websitePlaceholder')} />
                         </div>
                     )}
 
                     {status && (
-                        <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '14px', color: status.includes('Eroare') ? '#ef4444' : 'var(--primary-color)' }}>
+                        <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '14px', color: status === t('contact', 'success') ? 'var(--primary-color)' : '#ef4444' }}>
                             {status}
                         </div>
                     )}
 
                     <button type="submit" className="submit-btn" style={{ marginTop: '1rem', width: '100%' }}>
-                        Trimite Cererea
+                        {t('contact', 'submit')}
                     </button>
                 </form>
             </div>

@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
+import { toggleCompareCar, isCarCompared } from '../utils/carComparison';
 
 const CarCard = ({ car, index = 0 }) => {
     const { t } = useLanguage();
     const [tooltipOpen, setTooltipOpen] = useState(false);
+    const [compared, setCompared] = useState(isCarCompared(car));
 
     let displayPrice = "";
     const rawPrice = parseInt(String(car.price).replace(/\D/g, '')) || 0;
     const rawOriginalPrice = parseInt(String(car.original_price).replace(/\D/g, '')) || rawPrice;
 
-    const priceDrop = (rawOriginalPrice > rawPrice && rawPrice > 0) 
-        ? Math.round(((rawOriginalPrice - rawPrice) / rawOriginalPrice) * 100) 
+    const priceDrop = (rawOriginalPrice > rawPrice && rawPrice > 0)
+        ? Math.round(((rawOriginalPrice - rawPrice) / rawOriginalPrice) * 100)
         : 0;
 
     if (rawPrice === 0) {
@@ -26,7 +28,7 @@ const CarCard = ({ car, index = 0 }) => {
     const isOlx = (car.link || car.url || "").includes('olx');
     const siteName = car.subsource || car.source || (isOlx ? 'OLX' : 'Autovit');
     const badgeClass = isOlx ? 'badge-olx' : 'badge-autovit';
-    
+
     // Deal Score Logic
     let dealClass = "";
     let dealTextKey = "";
@@ -38,39 +40,44 @@ const CarCard = ({ car, index = 0 }) => {
     }
 
     return (
-        <div 
+        <div
             className="car-card-shell group"
-            style={{ 
-                animation: 'fadeUp 0.6s ease forwards', 
+            style={{
+                animation: 'fadeUp 0.6s var(--spring-easing) forwards',
                 opacity: 0,
-                animationDelay: `${index * 0.05}s` 
+                animationDelay: `${index * 0.05}s`
             }}
         >
             <div className="car-card-core">
+                <button className="compare-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); const cars = toggleCompareCar(car); setCompared(cars.some(c => c.id === car.id || c.link === (car.link || car.url))); }} title={compared ? "Remove from compare" : "Add to compare"}>{compared ? "★" : "☆"}</button>
                 <div className={`site-badge ${badgeClass}`}>
                     {siteName}
                 </div>
-                
+                {car.is_verified_partner && (
+                    <div className="verified-badge">
+                        Partener Verificat
+                    </div>
+                )}
+
                 {car.deal_score != null && (
-                    <div 
-                        className={`deal-badge ${dealClass} group/tooltip relative ${tooltipOpen ? 'is-open' : ''}`}
-                        onClick={(e) => {
-                            e.preventDefault();
+                    <div
+                        className={`deal-ring ${dealClass} group/tooltip relative ${tooltipOpen ? 'is-open' : ''}`}
+                        onClick={() => {
                             setTooltipOpen(!tooltipOpen);
                         }}
                     >
                         <div className="deal-score">{car.deal_score}</div>
                         <div className="deal-label">{t('deal', dealTextKey)}</div>
-                        
+
                         {/* Tooltip Explanation */}
                         {car.peer_avg_price > 0 && (
                             <div className="deal-tooltip">
                                 <div className="deal-tooltip-title">
-                                    AI Deal Analysis
+                                    {t('deal', 'analysisTitle')}
                                 </div>
                                 <p className="deal-tooltip-text">
                                     This car is <strong style={{ color: car.price_diff > 0 ? '#4ade80' : '#f87171' }}>
-                                        €{Math.abs(car.price_diff).toLocaleString()} {car.price_diff > 0 ? "cheaper" : "more expensive"}
+                                        €{car.price_diff != null ? Math.abs(car.price_diff).toLocaleString() : '0'} {car.price_diff > 0 ? t('deal', 'cheaper') : t('deal', 'moreExpensive')}
                                     </strong> than the market average of €{car.peer_avg_price.toLocaleString()} for similar models.
                                 </p>
                             </div>
@@ -81,7 +88,7 @@ const CarCard = ({ car, index = 0 }) => {
                 <div className="car-image-container">
                     {priceDrop > 0 && (
                         <div className="price-drop-badge">
-                            ↓ {priceDrop}% REDUCERE
+                            ↓ {t('card', 'priceDrop', { percent: priceDrop })}
                         </div>
                     )}
                     <img
@@ -101,7 +108,7 @@ const CarCard = ({ car, index = 0 }) => {
 
                     <div className="car-specs">
                         {car.year && <span className="spec-chip">{car.year}</span>}
-                        {car.km && <span className="spec-chip">{car.km} km</span>}
+                        {car.km != null && car.km !== '' && <span className="spec-chip">{car.km} km</span>}
                         {car.fuel && <span className="spec-chip">{car.fuel}</span>}
                     </div>
 
@@ -110,7 +117,7 @@ const CarCard = ({ car, index = 0 }) => {
                             {displayPrice}
                         </div>
                         <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: 600 }}>
-                            Detalii &rarr;
+                            {t('card', 'viewDetails')} &rarr;
                         </div>
                     </div>
                 </div>
@@ -120,8 +127,7 @@ const CarCard = ({ car, index = 0 }) => {
                     target="_blank"
                     rel="noreferrer"
                     className="car-link-overlay"
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 10, opacity: 0 }}
-                    aria-label={`Vezi anunț: ${car.title}`}
+                    aria-label={`${t('deal', 'viewDealAriaLabel', { title: car.title })}`}
                 ></a>
             </div>
         </div>

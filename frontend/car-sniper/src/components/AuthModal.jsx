@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../LanguageContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
 
 const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
+    const { t } = useLanguage();
     const [isLoginMode, setIsLoginMode] = useState(true);
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [status, setStatus] = useState('');
@@ -17,7 +19,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        setStatus('Se procesează...');
+        setStatus('');
 
         const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
 
@@ -31,7 +33,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data.detail || "Eroare de autentificare.");
+                throw new Error(data.detail || t('auth', 'errorDefault'));
             }
 
             if (data.token) {
@@ -41,7 +43,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 localStorage.setItem('user_role', role);
             }
 
-            setStatus('Succes!');
+            setStatus(t('auth', isLoginMode ? 'loginSuccess' : 'registerSuccess'));
             setTimeout(() => {
                 const role = data.role || 'user';
                 onLoginSuccess(data.email, data.token, role);
@@ -67,7 +69,7 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
             <div style={{
                 background: 'var(--bg-card)', padding: '2.5rem', borderRadius: '12px',
                 width: '90%', maxWidth: '400px', border: '1px solid var(--primary-color)',
-                boxShadow: '0 0 30px rgba(0, 243, 255, 0.1)', position: 'relative'
+                boxShadow: '0 0 30px var(--accent-glow)', position: 'relative'
             }}>
 
                 <button onClick={onClose} style={{
@@ -76,43 +78,43 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
                 }}>×</button>
 
                 <h2 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem', textAlign: 'center', fontSize: '1.5rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    {isLoginMode ? 'Autentificare' : 'Creează Cont'}
+                    {isLoginMode ? t('auth', 'titleLogin') : t('auth', 'titleRegister')}
                 </h2>
 
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', textAlign: 'center', fontSize: '0.9rem' }}>
-                    {isLoginMode ? 'Introdu detaliile pentru a accesa contul.' : 'Înregistrează-te pentru a salva alerte.'}
+                    {t('auth', 'subtitle')}
                 </p>
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form onSubmit={handleSubmit} className="modal-form">
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Email</label>
-                        <input type="email" name="email" value={formData.email} onChange={handleChange} required className="form-control" placeholder="nume@email.com" />
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('auth', 'emailLabel')}</label>
+                        <input type="email" name="email" value={formData.email} onChange={handleChange} required className="form-control" placeholder={t('auth', 'emailPlaceholder')} />
                     </div>
 
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Parolă</label>
-                        <input type="password" name="password" value={formData.password} onChange={handleChange} required className="form-control" placeholder="••••••••" />
+                        <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{t('auth', 'passwordLabel')}</label>
+                        <input type="password" name="password" value={formData.password} onChange={handleChange} required className="form-control" placeholder={t('auth', 'passwordPlaceholder')} />
                     </div>
 
                     {status && (
-                        <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '14px', color: status === 'Succes!' ? 'var(--primary-color)' : '#ef4444' }}>
+                        <div style={{ marginTop: '0.5rem', textAlign: 'center', fontSize: '14px', color: status === t('auth', 'loginSuccess') || status === t('auth', 'registerSuccess') ? 'var(--primary-color)' : '#ef4444' }}>
                             {status}
                         </div>
                     )}
 
                     <button type="submit" disabled={loading} className="submit-btn" style={{ marginTop: '1rem', width: '100%' }}>
-                        {loading ? 'Se procesează...' : (isLoginMode ? 'Intră în cont' : 'Înregistrare')}
+                        {isLoginMode ? t('auth', 'submitLogin') : t('auth', 'submitRegister')}
                     </button>
                 </form>
 
                 <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-                    {isLoginMode ? 'Nu ai cont? ' : 'Ai deja cont? '}
+                    {isLoginMode ? t('auth', 'toggleToRegister') : t('auth', 'toggleToLogin')}
                     <button
                         type="button"
                         onClick={() => { setIsLoginMode(!isLoginMode); setStatus(''); }}
-                        style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 'bold', textDecoration: 'underline' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', fontWeight: 'bold', textDecoration: 'underline', marginLeft: '0.25rem' }}
                     >
-                        {isLoginMode ? 'Creează unul' : 'Autentifică-te'}
+                        {isLoginMode ? t('auth', 'titleRegister') : t('auth', 'titleLogin')}
                     </button>
                 </div>
 

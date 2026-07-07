@@ -47,10 +47,6 @@ async def scrape_and_classify(make, possible_models):
         "Starting brand scrape",
         extra={"make": make, "models_count": len(possible_models)},
     )
-    log.info(
-        "Starting brand scrape",
-        extra={"make": make, "models_count": len(possible_models)},
-    )
     try:
         is_github_actions = os.environ.get("GITHUB_ACTIONS") == "true"
 
@@ -190,8 +186,6 @@ async def scrape_and_classify(make, possible_models):
 
 
 async def main():
-    log.info("Car Sniper global crawler initiated")
-    log.info("Car Sniper global crawler initiated")
     log.info("Car Sniper global crawler initiated")
 
     resume_make = None

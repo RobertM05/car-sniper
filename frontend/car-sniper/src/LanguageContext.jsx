@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useCallback } from 'react';
 
 const translations = {
     ro: {
@@ -7,6 +7,8 @@ const translations = {
             partnerNetwork: 'Dealeri Parteneri',
             partner: 'Devino Partener',
             account: 'Cont',
+            greeting: 'Salut, {email}',
+            logout: 'Deconectare',
         },
         hero: {
             title: 'Mașini Premium. Performanță Excepțională.',
@@ -25,7 +27,7 @@ const translations = {
             limit: 'Limită Anunțuri',
             searchBtn: 'CAUTĂ',
             searching: 'Se caută...',
-            advanced: 'Filtre Avansate ▾',
+            advanced: 'Filtre Avansate',
             fast: 'Rapid (50)',
             normal: 'Normal (100)',
             extended: 'Extins (300)',
@@ -48,12 +50,53 @@ const translations = {
             noTitle: 'Anunț fără titlu',
             priceOnRequest: 'Preț la cerere',
             viewAd: 'Vezi Anunț',
+            priceDrop: '{percent}% REDUCERE',
+            viewDetails: 'Detalii',
         },
         deal: {
             excellent: 'Excelent',
             good: 'Bun',
             fair: 'Corect',
             overpriced: 'Scump',
+            analysisTitle: 'AI Deal Analysis',
+            cheaper: 'mai ieftin',
+            moreExpensive: 'mai scump',
+            savingsMessage: 'Economisesti ~{amount} fata de pretul mediu',
+            viewDealAriaLabel: 'Vezi oferta: {title}',
+        },
+        auth: {
+            titleLogin: 'Conectare',
+            titleRegister: 'Inregistrare',
+            subtitle: 'Intra in contul tau pentru a salva alerte si cautari.',
+            emailLabel: 'Email',
+            emailPlaceholder: 'nume@email.com',
+            passwordLabel: 'Parola',
+            passwordPlaceholder: 'Introdu parola',
+            submitLogin: 'Conecteaza-te',
+            submitRegister: 'Creeaza Cont',
+            toggleToRegister: 'Nu ai cont? Inregistreaza-te',
+            toggleToLogin: 'Ai deja cont? Conecteaza-te',
+            loginSuccess: 'Conectare reusita!',
+            registerSuccess: 'Cont creat cu succes!',
+            errorDefault: 'A aparut o eroare. Incearca din nou.',
+        },
+        contact: {
+            title: 'Devino Partener',
+            subtitle: 'Completeaza formularul si te vom contacta in cel mai scurt timp.',
+            nameLabel: 'Nume',
+            namePlaceholder: 'Nume Prenume',
+            phoneLabel: 'Telefon',
+            phonePlaceholder: '07xx xxx xxx',
+            emailLabel: 'Email',
+            emailPlaceholder: 'nume@exemplu.com',
+            companyLabel: 'Companie',
+            companyPlaceholder: 'SC Exemplu SRL',
+            websiteLabel: 'Website URL',
+            websitePlaceholder: 'https://www.dealerulmeu.ro',
+            hasWebsite: 'Am deja un website auto',
+            submit: 'Trimite Cererea',
+            success: 'Cererea a fost trimisa cu succes! Te vom contacta in curand.',
+            error: 'A aparut o eroare. Incearca din nou.',
         },
         alert: {
             title: 'Setează Alertă de Preț',
@@ -62,6 +105,11 @@ const translations = {
             maxPrice: 'Preț Maxim (€)',
             cancel: 'Anulează',
             save: 'Salvează Alerta',
+            under: 'sub',
+            saving: 'economisind',
+            consentRequired: 'Trebuie să fii de acord cu Politica de Confidențialitate pentru a continua.',
+            emailPlaceholder: 'nume@exemplu.com',
+            consentText: 'Sunt de acord cu <a href="/confidentialitate" target="_blank" style="color: var(--primary-color)">Politica de Confidențialitate</a> și sunt de acord cu prelucrarea datelor mele pentru alertele prin email.',
         },
         stats: {
             title: 'Analiză Piață',
@@ -80,6 +128,23 @@ const translations = {
             title: 'Ofertele Zilei',
             subtitle: 'Cele mai bune raporturi calitate-preț din ultimele 48 de ore',
             loading: 'Se încarcă cele mai bune oferte...',
+        },
+        brands: {
+            popularBrands: 'Marci populare',
+        },
+        alerts: {
+            title: 'Alertele Mele',
+            noAlerts: 'Nicio alerta',
+            noAlertsDesc: 'Creeaza o alerta de pret din pagina de cautare.',
+            delete: 'Sterge',
+            created: 'Creata',
+            myAlerts: 'Alertele mele',
+        },
+        trustStats: {
+            carsMonitored: 'Masini monitorizate',
+            avgSavings: 'Economie medie',
+            listingsToday: 'Anunturi actualizate azi',
+            refreshRate: 'Rata de actualizare',
         },
         footer: '© {year} CarSniper. Toate drepturile rezervate.',
         legal: {
@@ -101,7 +166,49 @@ const translations = {
                 <h2>3. Drepturile Tale</h2>
                 <p>Ai dreptul la acces, rectificare și "Dreptul de a fi uitat" (ștergerea completă a contului și a alertelor). Pentru a exercita aceste drepturi, ne poți contacta oricând.</p>
             `
-        }
+        },
+        filters: {
+            any: 'Oricare',
+            petrol: 'Benzina',
+            diesel: 'Diesel',
+            hybrid: 'Hibrid',
+            electric: 'Electrica',
+            automatic: 'Automata',
+            manual: 'Manuala',
+            price: 'Pret (EUR)',
+            min: 'Min',
+            max: 'Max',
+            year: 'An fabricatie',
+            from: 'Din',
+            to: 'Pana',
+            maxKm: 'Kilometraj maxim',
+            fuel: 'Combustibil',
+            transmission: 'Transmisie',
+            source: 'Sursa',
+            apply: 'Aplica filtre',
+            clearAll: 'Reseteaza filtrele',
+            verifiedPartner: 'Partener Verificat',
+            filterButton: 'Filtre',
+        },
+        dashboard: {
+            title: 'Dealer Intelligence',
+            welcome: 'Bine ai revenit, Partener Verificat.',
+            logout: 'Deconectare',
+            totalUsers: 'Utilizatori Inregistrati',
+            totalUsersDesc: 'Total utilizatori',
+            activeAlerts: 'Alerte Active',
+            activeAlertsDesc: 'Urmarire cereri utilizatori',
+            marketScans: 'Anunturi Scanate',
+            marketScansDesc: 'Masini indexate acum',
+            demandChart: 'Cele mai cautate modele (Dupa cautari)',
+            trendChart: 'Tendinta utilizatori activi',
+            searchQueries: 'Cautari',
+            activeBuyers: 'Utilizatori activi',
+            actionTitle: 'Ai inventar compatibil?',
+            actionDesc: 'Incarca masinile direct in baza noastra de date si sari peste scraper. Listarile tale vor aparea ca "Partener Verificat" in partea de sus a rezultatelor cautarii, ajungand direct la mii de cumparatori activi.',
+            addInventory: 'Adauga Inventar',
+            comingSoon: 'Functionalitatea de gestionare a inventarului va fi disponibila in curand.',
+        },
     },
     en: {
         nav: {
@@ -109,9 +216,11 @@ const translations = {
             partnerNetwork: 'Partner Network',
             partner: 'Become a Partner',
             account: 'Account',
+            greeting: 'Hi, {email}',
+            logout: 'Logout',
         },
         hero: {
-            title: 'Luxury Cars. Curated for Performance.',
+            title: 'Find your car at the right price.',
             subtitle: 'Explore the finest high-end vehicles globally via OLX and Autovit aggregations.',
         },
         search: {
@@ -127,7 +236,8 @@ const translations = {
             limit: 'Results Limit',
             searchBtn: 'SEARCH',
             searching: 'Searching...',
-            advanced: 'Advanced Filters ▾',
+            progressMessage: 'Searching OLX and Autovit... this may take up to 30 seconds.',
+            advanced: 'Advanced Filters',
             fast: 'Fast (50)',
             normal: 'Normal (100)',
             extended: 'Extended (300)',
@@ -150,12 +260,53 @@ const translations = {
             noTitle: 'Untitled Ad',
             priceOnRequest: 'Price on request',
             viewAd: 'View Ad',
+            priceDrop: '{percent}% PRICE DROP',
+            viewDetails: 'Details',
         },
         deal: {
             excellent: 'Excellent',
             good: 'Good',
             fair: 'Fair',
             overpriced: 'Overpriced',
+            analysisTitle: 'AI Deal Analysis',
+            cheaper: 'cheaper',
+            moreExpensive: 'more expensive',
+            savingsMessage: 'You save ~{amount} vs market average',
+            viewDealAriaLabel: 'View deal: {title}',
+        },
+        auth: {
+            titleLogin: 'Sign In',
+            titleRegister: 'Register',
+            subtitle: 'Sign in to save alerts and searches.',
+            emailLabel: 'Email',
+            emailPlaceholder: 'name@email.com',
+            passwordLabel: 'Password',
+            passwordPlaceholder: 'Enter password',
+            submitLogin: 'Sign In',
+            submitRegister: 'Create Account',
+            toggleToRegister: 'No account? Register',
+            toggleToLogin: 'Already have an account? Sign In',
+            loginSuccess: 'Login successful!',
+            registerSuccess: 'Account created successfully!',
+            errorDefault: 'An error occurred. Please try again.',
+        },
+        contact: {
+            title: 'Become a Partner',
+            subtitle: 'Fill out the form and we will contact you shortly.',
+            nameLabel: 'Name',
+            namePlaceholder: 'Full Name',
+            phoneLabel: 'Phone',
+            phonePlaceholder: '+40 7xx xxx xxx',
+            emailLabel: 'Email',
+            emailPlaceholder: 'name@example.com',
+            companyLabel: 'Company',
+            companyPlaceholder: 'Example SRL',
+            websiteLabel: 'Website URL',
+            websitePlaceholder: 'https://www.yourdealership.com',
+            hasWebsite: 'I already have a car website',
+            submit: 'Submit Request',
+            success: 'Request submitted successfully! We will contact you soon.',
+            error: 'An error occurred. Please try again.',
         },
         alert: {
             title: 'Set Price Alert',
@@ -164,6 +315,11 @@ const translations = {
             maxPrice: 'Max Price (€)',
             cancel: 'Cancel',
             save: 'Save Alert',
+            under: 'under',
+            saving: 'Saving',
+            consentRequired: 'You must agree to the Privacy Policy to proceed.',
+            emailPlaceholder: 'name@example.com',
+            consentText: 'I agree to the <a href="/confidentialitate" target="_blank" style="color: var(--primary-color)">Privacy Policy</a> and consent to the processing of my data for email alerts.',
         },
         stats: {
             title: 'Market Analysis',
@@ -182,6 +338,23 @@ const translations = {
             title: 'Deals of the Day',
             subtitle: 'The best value-for-money listings from the last 48 hours',
             loading: 'Loading top deals...',
+        },
+        brands: {
+            popularBrands: 'Popular brands',
+        },
+        alerts: {
+            title: 'My Alerts',
+            noAlerts: 'No alerts yet',
+            noAlertsDesc: 'Create a price alert from the search page.',
+            delete: 'Delete',
+            created: 'Created',
+            myAlerts: 'My Alerts',
+        },
+        trustStats: {
+            carsMonitored: 'Cars monitored',
+            avgSavings: 'Average savings',
+            listingsToday: 'Listings updated today',
+            refreshRate: 'Refresh rate',
         },
         footer: '© {year} CarSniper. All rights reserved.',
         legal: {
@@ -203,7 +376,30 @@ const translations = {
                 <h2>3. Your Rights</h2>
                 <p>You have the right to access, rectify, and the "Right to be Forgotten" (complete account deletion). To exercise these rights, you may contact us at any time.</p>
             `
-        }
+        },
+        filters: {
+            any: 'Any',
+            petrol: 'Petrol',
+            diesel: 'Diesel',
+            hybrid: 'Hybrid',
+            electric: 'Electric',
+            automatic: 'Automatic',
+            manual: 'Manual',
+            price: 'Price (EUR)',
+            min: 'Min',
+            max: 'Max',
+            year: 'Year',
+            from: 'From',
+            to: 'To',
+            maxKm: 'Max mileage',
+            fuel: 'Fuel',
+            transmission: 'Transmission',
+            source: 'Source',
+            apply: 'Apply filters',
+            clearAll: 'Clear all filters',
+            verifiedPartner: 'Verified Partner',
+            filterButton: 'Filters',
+        },
     }
 };
 
@@ -212,11 +408,11 @@ const LanguageContext = createContext();
 export const LanguageProvider = ({ children }) => {
     const [lang, setLang] = useState('ro');
 
-    const t = (section, key, params = {}) => {
+    const t = useCallback((section, key, params = {}) => {
         let text = translations[lang]?.[section]?.[key];
         if (!text) {
             const fallback = translations[lang]?.[section];
-            text = typeof fallback === 'string' ? fallback : `${section}.${key}`;
+            text = typeof fallback === 'string' ? fallback : `${section}.${key || 'unknown'}`;
         }
 
         if (typeof text === 'string') {
@@ -226,7 +422,7 @@ export const LanguageProvider = ({ children }) => {
         }
 
         return text;
-    };
+    }, [lang]);
 
     return (
         <LanguageContext.Provider value={{ lang, setLang, t }}>
