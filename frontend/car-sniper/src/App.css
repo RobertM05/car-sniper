@@ -413,25 +413,25 @@ html, body {
 }
 
 .deal-excellent {
-  background: rgba(16,185,129,0.15);
+  background: rgba(16,185,129,0.25);
   color: #10b981;
   border: 3px solid #10b981;
 }
 
 .deal-good {
-  background: rgba(16,185,129,0.12);
+  background: rgba(16,185,129,0.2);
   color: #10b981;
-  border: 3px solid rgba(16,185,129,0.6);
+  border: 3px solid rgba(16,185,129,0.8);
 }
 
 .deal-fair {
-  background: rgba(245,158,11,0.15);
+  background: rgba(245,158,11,0.25);
   color: #f59e0b;
   border: 3px solid #f59e0b;
 }
 
 .deal-overpriced {
-  background: rgba(239,68,68,0.15);
+  background: rgba(239,68,68,0.25);
   color: #ef4444;
   border: 3px solid #ef4444;
 }
