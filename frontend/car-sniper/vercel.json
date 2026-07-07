@@ -1,5 +1,6 @@
 {
-    "buildCommand": "npm run build && npm run build:ssr",
-    "outputDirectory": "dist/client",
-    "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/client",
+  "routes": [{ "src": "/(.*)", "dest": "/" }],
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
 }
