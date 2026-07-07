@@ -1,6 +1,9 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import { useLanguage } from '../LanguageContext';
 
 const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
+    const { t } = useLanguage();
     const pageNumbers = [];
     const totalPages = Math.ceil(totalCars / carsPerPage);
 
@@ -29,7 +32,7 @@ const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
                 onClick={() => paginate(currentPage - 1)}
                 disabled={currentPage === 1}
             >
-                ←
+                {t('pagination', 'prev')}
             </button>
 
             {startPage > 1 && (
@@ -61,10 +64,17 @@ const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
             >
-                →
+                {t('pagination', 'next')}
             </button>
         </div>
     );
+};
+
+Pagination.propTypes = {
+    carsPerPage: PropTypes.number.isRequired,
+    totalCars: PropTypes.number.isRequired,
+    paginate: PropTypes.func.isRequired,
+    currentPage: PropTypes.number.isRequired,
 };
 
 export default Pagination;

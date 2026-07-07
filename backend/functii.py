@@ -422,10 +422,6 @@ async def search_cars(
         make_lc = (make_text or "").strip().lower()
         model_lc = (model_text or "").strip().lower()
         if "mercedes" in make_lc:
-            if "amg" in model_lc and "gt" not in model_lc:
-                letter = re.search("([aecs])[\\- ]?\\d", model_lc)
-                if letter:
-                    return f"clasa-{letter.group(1)}"
             # AMG model -> native site slug mapping
             _amg_slugs = {
                 "amg c63": "c-63-amg",
@@ -442,6 +438,10 @@ async def search_cars(
             _amg_key = model_lc.replace("-", " ").replace("  ", " ").strip()
             if _amg_key in _amg_slugs:
                 return _amg_slugs[_amg_key]
+            if "amg" in model_lc and "gt" not in model_lc:
+                letter = re.search("([aecs])[\\- ]?\\d", model_lc)
+                if letter:
+                    return f"clasa-{letter.group(1)}"
             if "class" in model_lc or "clasa" in model_lc:
                 letter = re.search("([a-z])[- ]?clas", model_lc)
                 if not letter:
@@ -688,8 +688,8 @@ async def search_cars(
     for car in cars:
         try:
             raw_price = str(car.get("price", ""))
-            price_str = raw_price.split(",")[0]
-            price_val = int(re.sub("\\D", "", price_str)) if price_str else 0
+            price_str = re.sub(r"[^\d]", "", raw_price)
+            price_val = int(price_str) if price_str else 0
             if "ron" in raw_price.lower() or "lei" in raw_price.lower():
                 price_val = int(price_val / 5)
                 car["price"] = (
@@ -718,9 +718,17 @@ async def search_cars(
         searchable_tokens = title_tokens | link_tokens
         _make_tokens = normalize_tokens(make or "")
         model_tokens = normalize_tokens(model or "")
+        # For AMG models, the 'amg' badge is often omitted from titles
+        # (e.g., 'C63s saloon' is an AMG C63). Don't require 'amg' token.
+        _check_tokens = model_tokens - {"amg"} if "amg" in model_tokens else model_tokens
         model_matches = (
-            model_tokens.issubset(searchable_tokens) if model_tokens else True
+            model_tokens.issubset(searchable_tokens)
+            or model_norm in title_norm
+            or model_norm in link_norm
+            or all(t in title_norm or t in link_norm for t in _check_tokens)
+            if model_tokens else True
         )
+
         bad_keywords = {"dezmembrari", "dezmembrez", "piese", "piesa"}
         if any((bad in title_tokens or bad in link_tokens for bad in bad_keywords)):
             filter_stats["bad_keyword"] += 1
@@ -782,17 +790,9 @@ async def search_cars(
         title_str = str(car.get("title", ""))
         car["title"] = re.sub(r"\b07\d{8}\b", "[REDACTED]", title_str)
 
-        has_native_filter = False
-        link_str = car.get("link", "").lower()
-        if "olx" in link_str:
-            if olx_model_slug is not None:
-                has_native_filter = True
-        elif "autovit" in link_str:
-            if autovit_model_slug is not None:
-                has_native_filter = True
 
-        if has_native_filter:
-            strict_filtered.append(car)
+        # Validate make — at least one make token must appear in title or link
+        if _make_tokens and not any(t in searchable_tokens for t in _make_tokens):
             continue
 
         if model_matches:
@@ -945,7 +945,7 @@ async def search_cars(
             try:
                 async with session.get(ad.get("link"), timeout=5) as r:
                     if r.status == 404 or len(str(r.url)) < 30:
-                        return model.lower().replace(" ", "-")
+                        return None
                     if r.status == 200:
                         html = await r.text()
                         soup = BeautifulSoup(html, "html.parser")
@@ -1004,7 +1004,7 @@ async def search_cars(
 
     if final_results:
         async with aiohttp.ClientSession(
-            connector=aiohttp.TCPConnector(ssl=False, limit=10),
+            connector=aiohttp.TCPConnector(limit=10),
             headers={
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
             },

@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import random
+import time
 import dotenv
 
 dotenv.load_dotenv()
@@ -77,7 +78,7 @@ async def crawl_target(target):
                         import json as _json_fix
 
                         async with aiohttp.ClientSession(
-                            connector=aiohttp.TCPConnector(ssl=False)
+                            connector=aiohttp.TCPConnector()
                         ) as sess:
                             async with sess.get(ad.get("link"), timeout=10) as r:
                                 if r.status == 404 or len(str(r.url)) < 30:

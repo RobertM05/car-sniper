@@ -5,11 +5,14 @@ import {
 } from 'recharts';
 import { TrendingUp, Users, CarFront, BellRing, LogOut, Loader2, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+import { useLanguage } from '../LanguageContext';
 import './PartnerDashboard.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
 
 const PartnerDashboard = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -18,6 +21,12 @@ const PartnerDashboard = () => {
     marketScans: 0,
     demandData: [],
     trendData: []
+  });
+  const [listings, setListings] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newListing, setNewListing] = useState({
+    title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: ''
   });
 
   useEffect(() => {
@@ -53,7 +62,70 @@ const PartnerDashboard = () => {
     };
 
     fetchStats();
+    fetchDealerListings();
+    fetchAnalytics();
   }, [navigate]);
+
+  const fetchAnalytics = async () => {
+    const email = localStorage.getItem('user_email');
+    if (!email) return;
+    try {
+      const res = await fetch(API_BASE_URL + '/api/dealer/analytics?email=' + encodeURIComponent(email));
+      if (res.ok) {
+        const data = await res.json();
+        setAnalytics(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+    }
+  };
+
+  const fetchDealerListings = async () => {
+    const email = localStorage.getItem('user_email');
+    if (!email) return;
+    try {
+      const res = await fetch(API_BASE_URL + '/api/dealer/listings?email=' + encodeURIComponent(email));
+      if (res.ok) {
+        const data = await res.json();
+        setListings(data.listings || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch listings:', err);
+    }
+  };
+
+  const handleCreateListing = async (e) => {
+    e.preventDefault();
+    const email = localStorage.getItem('user_email');
+    if (!email) return;
+    try {
+      const res = await fetch(API_BASE_URL + '/api/dealer/listings?email=' + encodeURIComponent(email), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newListing),
+      });
+      if (res.ok) {
+        setShowAddForm(false);
+        setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' });
+        fetchDealerListings();
+      }
+    } catch (err) {
+      console.error('Failed to create listing:', err);
+    }
+  };
+
+  const handleDeleteListing = async (listingId) => {
+    const email = localStorage.getItem('user_email');
+    if (!email) return;
+    try {
+      await fetch(API_BASE_URL + '/api/dealer/listings/' + listingId + '?email=' + encodeURIComponent(email), {
+        method: 'DELETE',
+      });
+      fetchDealerListings();
+    } catch (err) {
+      console.error('Failed to delete listing:', err);
+    }
+  };
 
   if (loading) {
     return (
@@ -65,12 +137,16 @@ const PartnerDashboard = () => {
 
   return (
     <div className="dashboard-container">
+      <Helmet>
+        <title>{t('dashboard', 'title')} | CarSniper</title>
+        <meta name="description" content="Dealer partner dashboard — manage your inventory and track performance." />
+      </Helmet>
       
       {/* Header */}
       <header className="dashboard-header">
         <div>
-          <h1>Dealer Intelligence</h1>
-          <p>Welcome back, Verified Partner.</p>
+          <h1>{t('dashboard', 'title')}</h1>
+          <p>{t('dashboard', 'welcome')}</p>
         </div>
         <button 
           onClick={() => { 
@@ -81,7 +157,7 @@ const PartnerDashboard = () => {
           }}
           className="logout-btn"
         >
-          <LogOut size={18} /> Logout
+          <LogOut size={18} />{t('dashboard', 'logout')}
         </button>
       </header>
 
@@ -90,33 +166,33 @@ const PartnerDashboard = () => {
         
         <div className="stat-card">
           <div className="stat-header">
-            <h3 className="stat-title">Total Users (Active Buyers)</h3>
+            <h3 className="stat-title">{t('dashboard', 'totalUsers')}</h3>
             <div className="stat-icon-wrapper">
               <Users size={20} color="var(--primary-color)" />
             </div>
           </div>
           <div className="stat-value">{stats.activeBuyers.toLocaleString()}</div>
           <div className="stat-change positive">
-            <TrendingUp size={14} /> +{(stats.activeBuyers * 0.12).toFixed(0)} from yesterday
+            <TrendingUp size={14} />{t('dashboard', 'totalUsersDesc')}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
-            <h3 className="stat-title">Active Price Alerts</h3>
+            <h3 className="stat-title">{t('dashboard', 'activeAlerts')}</h3>
             <div className="stat-icon-wrapper">
               <BellRing size={20} color="#f59e0b" />
             </div>
           </div>
           <div className="stat-value">{stats.activePriceAlerts.toLocaleString()}</div>
           <div className="stat-change positive">
-            <TrendingUp size={14} /> Tracking user demands
+            <TrendingUp size={14} />{t('dashboard', 'activeAlertsDesc')}
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-header">
-            <h3 className="stat-title">Market Scans (Ads)</h3>
+            <h3 className="stat-title">{t('dashboard', 'marketScans')}</h3>
             <div className="stat-icon-wrapper">
               <CarFront size={20} color="#8b5cf6" />
             </div>
@@ -129,12 +205,38 @@ const PartnerDashboard = () => {
 
       </div>
 
+      {analytics && analytics.listings && analytics.listings.length > 0 && (
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-header">
+              <h3 className="stat-title">Total Listing Views</h3>
+            </div>
+            <div className="stat-value">{analytics.total_views.toLocaleString()}</div>
+          </div>
+        </div>
+      )}
+      {analytics && analytics.listings && analytics.listings.length > 0 && (
+        <div className="chart-card">
+          <h3 className="chart-title">Views Per Listing</h3>
+          <div className="inventory-table-wrap">
+            <table className="inventory-table">
+              <thead><tr><th>Listing</th><th>Views</th></tr></thead>
+              <tbody>
+                {analytics.listings.map(l => (
+                  <tr key={l.id}><td>{l.title}</td><td>{l.views}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Charts Area */}
       <div className="charts-area">
         
         {/* Bar Chart: High Demand Vehicles */}
         <div className="chart-card">
-          <h3 className="chart-title">Highest Demand Models (By Search)</h3>
+          <h3 className="chart-title">{t('dashboard', 'demandChart')}</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.demandData}>
@@ -146,7 +248,7 @@ const PartnerDashboard = () => {
                   itemStyle={{ color: 'var(--text-primary)' }}
                   cursor={{fill: 'rgba(150,150,150,0.05)'}}
                 />
-                <Bar dataKey="searches" fill="var(--primary-color)" radius={[6, 6, 0, 0]} name="Search Queries" />
+                <Bar dataKey="searches" fill="var(--primary-color)" radius={[6, 6, 0, 0]} name={t('dashboard', 'searchQueries')} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -154,7 +256,7 @@ const PartnerDashboard = () => {
 
         {/* Line Chart: Active Buyers Trend */}
         <div className="chart-card">
-          <h3 className="chart-title">Active Buyers Trend</h3>
+          <h3 className="chart-title">{t('dashboard', 'trendChart')}</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={stats.trendData}>
@@ -165,7 +267,7 @@ const PartnerDashboard = () => {
                   contentStyle={{ backgroundColor: 'var(--bg-core)', border: '1px solid var(--border-shell)', borderRadius: '12px', color: 'var(--text-primary)', backdropFilter: 'blur(10px)' }}
                   itemStyle={{ color: 'var(--text-primary)' }}
                 />
-                <Line type="monotone" dataKey="activeBuyers" stroke="#10b981" strokeWidth={4} dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }} activeDot={{ r: 8, strokeWidth: 0 }} name="Active Buyers" />
+                <Line type="monotone" dataKey="activeBuyers" stroke="#10b981" strokeWidth={4} dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }} activeDot={{ r: 8, strokeWidth: 0 }} name={t('dashboard', 'activeBuyers')} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -176,12 +278,82 @@ const PartnerDashboard = () => {
       {/* Action Area */}
       <div className="action-area">
         <div className="action-text">
-          <h3>Have matching inventory?</h3>
-          <p>Upload your cars directly to our database and skip the scraper. Your listings will appear as "Verified Partner" at the top of search results, directly reaching thousands of active buyers.</p>
+          <h3>{t('dashboard', 'actionTitle')}</h3>
+          <p>{t('dashboard', 'actionDesc')}</p>
         </div>
-        <button className="action-btn">
-          Add Inventory <ArrowUpRight size={18} />
+        <button className="action-btn" onClick={() => alert(t('dashboard', 'comingSoon'))}>
+          {t('dashboard', 'addInventory')} <ArrowUpRight size={18} />
         </button>
+      </div>
+
+      {listings.length > 0 && (
+        <div className="inventory-section">
+          <h3 className="chart-title">Your Inventory</h3>
+          <div className="inventory-table-wrap">
+            <table className="inventory-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Price</th>
+                  <th>Year</th>
+                  <th>Km</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {listings.map((l) => (
+                  <tr key={l.id}>
+                    <td>{l.title}</td>
+                    <td>{l.price ? l.price.toLocaleString() + ' EUR' : '-'}</td>
+                    <td>{l.year || '-'}</td>
+                    <td>{l.km ? l.km.toLocaleString() : '-'}</td>
+                    <td>
+                      <button className="inventory-delete-btn" onClick={() => handleDeleteListing(l.id)}>
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="inventory-section">
+        <h3 className="chart-title">Add New Listing</h3>
+        {showAddForm ? (
+          <form onSubmit={handleCreateListing} className="inventory-form">
+            <input className="form-control" placeholder="Title" value={newListing.title} onChange={e => setNewListing({...newListing, title: e.target.value})} required />
+            <div className="inventory-form-row">
+              <input className="form-control" type="number" placeholder="Price (EUR)" value={newListing.price} onChange={e => setNewListing({...newListing, price: e.target.value})} />
+              <input className="form-control" type="number" placeholder="Year" value={newListing.year} onChange={e => setNewListing({...newListing, year: e.target.value})} />
+              <input className="form-control" type="number" placeholder="Km" value={newListing.km} onChange={e => setNewListing({...newListing, km: e.target.value})} />
+            </div>
+            <div className="inventory-form-row">
+              <select className="form-control" value={newListing.fuel} onChange={e => setNewListing({...newListing, fuel: e.target.value})}>
+                <option value="">Any fuel</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Electric">Electric</option>
+              </select>
+              <select className="form-control" value={newListing.transmission} onChange={e => setNewListing({...newListing, transmission: e.target.value})}>
+                <option value="">Any transmission</option>
+                <option value="Automatic">Automatic</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+            <div className="inventory-form-actions">
+              <button type="submit" className="action-btn">Save Listing</button>
+              <button type="button" className="filter-clear-btn" onClick={() => setShowAddForm(false)}>Cancel</button>
+            </div>
+          </form>
+        ) : (
+          <button className="action-btn" onClick={() => setShowAddForm(true)}>
+            Add Inventory <ArrowUpRight size={18} />
+          </button>
+        )}
       </div>
 
     </div>

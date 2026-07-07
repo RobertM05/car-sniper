@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Routes, Route, useNavigate, useParams, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import SearchForm from "./components/SearchForm";
@@ -10,12 +10,20 @@ import PriceStats from "./components/PriceStats";
 import Pagination from "./components/Pagination";
 import SkeletonCard from "./components/SkeletonCard";
 import DealOfTheDay from "./components/DealOfTheDay";
+import TrustStats from "./components/TrustStats";
+import BrandGrid from "./components/BrandGrid";
+import FilterSidebar from "./components/FilterSidebar";
 import LegalPage from "./components/LegalPage";
 import PartnerDashboard from "./components/PartnerDashboard";
-import emptyStateImg from "./assets/empty-state.png";
+import DealerProfile from "./components/DealerProfile";
+import PricingPage from "./components/PricingPage";
+import AlertManager from "./components/AlertManager";
+import Breadcrumbs from "./components/Breadcrumbs";
 import { useLanguage } from "./LanguageContext";
 import { initGA, logPageView, logEvent } from "./utils/analytics";
-import { Sun, Moon } from "lucide-react";
+import { getSearchHistory, addSearchHistory, clearSearchHistory } from "./utils/searchHistory";
+import { getComparedCars, clearComparedCars, toggleCompareCar } from "./utils/carComparison";
+import { Sun, Moon, SlidersHorizontal } from "lucide-react";
 import "./App.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
@@ -62,14 +70,14 @@ const AppContent = () => {
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
-    document.documentElement.setAttribute('data-theme', savedTheme);
+    if (savedTheme === 'dark') document.documentElement.classList.add('dark');
   }, []);
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
   };
 
   const fetchBrands = async () => {
@@ -116,6 +124,32 @@ const AppContent = () => {
   }, []);
 
   useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const qMake = queryParams.get('make');
+    const qModel = queryParams.get('model');
+    if (qMake && !urlMake) {
+      const restored = {
+        make: qMake,
+        model: qModel || '',
+        maxPrice: queryParams.get('max_price') || '15000',
+        minYear: queryParams.get('min_year') || '',
+        maxYear: queryParams.get('max_year') || '',
+        maxKm: queryParams.get('max_km') || '',
+        minPrice: '',
+        site: 'both',
+        minCc: '',
+        minHp: '',
+        limit: '25000',
+        maxPages: '15',
+      };
+      setFormData(restored);
+      if (qMake && qModel) {
+        handleSearch(null, restored);
+      }
+    }
+  }, [location.search]);
+
+  useEffect(() => {
     if (formData.make) {
       fetchModels(formData.make);
     } else {
@@ -123,9 +157,24 @@ const AppContent = () => {
     }
   }, [formData.make]);
 
+  // Sync sidebar filters from formData — intentional two-way binding
+  useEffect(() => {
+    setSidebarFilters({
+      minPrice: formData.minPrice || '',
+      maxPrice: formData.maxPrice || '',
+      minYear: formData.minYear || '',
+      maxYear: formData.maxYear || '',
+      maxKm: formData.maxKm || '',
+      fuel: formData.fuel ? formData.fuel.split(',').filter(Boolean) : [],
+      transmission: formData.transmission ? formData.transmission.split(',').filter(Boolean) : [],
+      source: formData.site && formData.site !== 'both' ? formData.site.split(',').filter(Boolean) : [],
+    });
+  }, [formData.minPrice, formData.maxPrice, formData.minYear, formData.maxYear, formData.maxKm, formData.fuel, formData.transmission, formData.site]);
+
   useEffect(() => {
     initGA();
-  }, []);
+    setComparedCars(getComparedCars());
+  }, []); // Init once on mount
 
   useEffect(() => {
     logPageView(location.pathname + location.search);
@@ -135,7 +184,7 @@ const AppContent = () => {
     if (urlMake && urlModel) {
       const make = decodeURIComponent(urlMake);
       const model = decodeURIComponent(urlModel);
-      
+
       setFormData(prev => ({ ...prev, make, model }));
       fetchModels(make);
       handleSearch(null, { ...formData, make, model });
@@ -179,6 +228,23 @@ const AppContent = () => {
       const data = await res.json();
       setResults(Array.isArray(data.results) ? data.results : []);
 
+      if (searchData.make || searchData.model) {
+        const urlParams = new URLSearchParams();
+        if (searchData.make) urlParams.set('make', searchData.make);
+        if (searchData.model) urlParams.set('model', searchData.model);
+        if (searchData.maxPrice) urlParams.set('max_price', searchData.maxPrice);
+        if (searchData.minYear) urlParams.set('min_year', searchData.minYear);
+        if (searchData.maxYear) urlParams.set('max_year', searchData.maxYear);
+        if (searchData.maxKm) urlParams.set('max_km', searchData.maxKm);
+        const qs = urlParams.toString();
+        const newPath = searchData.make && searchData.model
+          ? `/masini/${encodeURIComponent(searchData.make)}/${encodeURIComponent(searchData.model)}${qs ? '?' + qs : ''}`
+          : `/${qs ? '?' + qs : ''}`;
+        navigate(newPath, { replace: true });
+      }
+
+      if (searchData.make || searchData.model) { addSearchHistory({ make: searchData.make || "", model: searchData.model || "" }); setSearchHistory(getSearchHistory()); }
+
       logEvent("Search", "Performed Search", `${searchData.make || 'Any'} ${searchData.model || ''}`, Array.isArray(data.results) ? data.results.length : 0);
 
       if (searchData.make && searchData.model) {
@@ -201,7 +267,7 @@ const AppContent = () => {
       }
     } catch (err) {
       console.error("Catch Error:", err);
-      setError(err.message || t('search', 'searching'));
+      setError(err.message || 'A aparut o eroare. Incearca din nou.');
     } finally {
       setLoading(false);
     }
@@ -225,10 +291,45 @@ const AppContent = () => {
     }
   };
 
+  const handleBrandSelect = (brand) => {
+    const updated = { ...formData, make: brand, model: '' };
+    setFormData(updated);
+    handleSearch(null, updated);
+  };
+
+  const handleFilterApply = () => {
+    const updated = {
+      ...formData,
+      minPrice: sidebarFilters.minPrice,
+      maxPrice: sidebarFilters.maxPrice,
+      minYear: sidebarFilters.minYear,
+      maxYear: sidebarFilters.maxYear,
+      maxKm: sidebarFilters.maxKm,
+      fuel: sidebarFilters.fuel.join(','),
+      transmission: sidebarFilters.transmission.join(','),
+      site: sidebarFilters.source.length > 0 ? sidebarFilters.source.join(',') : 'both',
+    };
+    setFormData(updated);
+    handleSearch(null, updated);
+  };
 
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [searchHistory, setSearchHistory] = useState(getSearchHistory());
+  const [comparedCars, setComparedCars] = useState(getComparedCars());
+  const [showCompare, setShowCompare] = useState(false);
+  const [sidebarFilters, setSidebarFilters] = useState({
+    minPrice: '',
+    maxPrice: '',
+    minYear: '',
+    maxYear: '',
+    maxKm: '',
+    fuel: [],
+    transmission: [],
+    source: [],
+  });
   const [currentUser, setCurrentUser] = useState(null);
 
   const handleCreateAlert = async (email) => {
@@ -243,7 +344,7 @@ const AppContent = () => {
 
       const response = await fetch(`${API_BASE_URL}/api/alert`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
@@ -278,6 +379,7 @@ const AppContent = () => {
     }
   };
 
+  // Shared logout — also used in PartnerDashboard
   const handleLogout = () => {
     localStorage.removeItem('jwt_token');
     localStorage.removeItem('user_email');
@@ -291,7 +393,7 @@ const AppContent = () => {
       if (typeof p === 'string') return Number(p.replace(/[^0-9.-]+/g, ""));
       return 0;
     };
-    
+
     const sorted = [...results];
     switch (sortBy) {
       case "price-asc":
@@ -310,7 +412,7 @@ const AppContent = () => {
   };
 
 
-  const sortedResults = getSortedResults();
+  const sortedResults = useMemo(() => getSortedResults(), [results, sortBy]);
   const indexOfLastCar = currentPage * itemsPerPage;
   const indexOfFirstCar = indexOfLastCar - itemsPerPage;
   const currentCars = sortedResults.slice(indexOfFirstCar, indexOfLastCar);
@@ -326,12 +428,32 @@ const AppContent = () => {
         <Helmet>
           <title>{`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | CarSniper`}</title>
           <meta name="description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare. Prețuri excelente și mașini verificate.`} />
+          <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"SearchResultsPage","name":`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vanzare`,"url":`https://carsniper.ro/masini/${urlMake}/${urlModel}`})}</script>
         </Helmet>
       )}
       {!urlMake && !urlModel && (
         <Helmet>
           <title>CarSniper - Găsește mașina dorită</title>
           <meta name="description" content="Caută și găsește cele mai bune mașini second hand și noi." />
+          <meta property="og:title" content="CarSniper - Găsește mașina dorită" />
+          <meta property="og:description" content="Caută și găsește cele mai bune mașini second hand și noi." />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content="https://carsniper.ro" />
+          <link rel="canonical" href="https://carsniper.ro" />
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "CarSniper",
+              "url": "https://carsniper.ro",
+              "description": "Cauta si gaseste cele mai bune masini second hand si noi.",
+              "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://carsniper.ro/?make={search_term_string}",
+                "query-input": "required name=search_term_string"
+              }
+            })}
+          </script>
         </Helmet>
       )}
       <nav className="top-nav">
@@ -347,13 +469,13 @@ const AppContent = () => {
               {(currentUser.role === 'admin' || currentUser.role === 'dealer') && (
                 <a href="/partner-dashboard" style={{ color: 'var(--primary-color)', fontWeight: 'bold' }}>Dashboard</a>
               )}
-              <span style={{ color: 'var(--text-secondary)' }}>Salut, {currentUser.email}</span>
+              <span style={{ color: 'var(--text-secondary)' }}>{t('nav', 'greeting', { email: currentUser.email })}</span>
               <button onClick={handleLogout} style={{ background: 'none', border: '1px solid var(--border-shell)', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
                 Logout
               </button>
             </div>
           ) : (
-            <button onClick={() => setIsAuthOpen(true)} className="login-btn">Contul meu</button>
+            <button onClick={() => setIsAuthOpen(true)} className="login-btn">{t('nav', 'account')}</button>
           )}
 
           <div className="lang-selector" style={{ display: 'flex', gap: '8px', marginLeft: '1rem', alignItems: 'center' }}>
@@ -362,7 +484,7 @@ const AppContent = () => {
             <button onClick={() => setLang('en')} style={{ background: 'none', border: 'none', color: lang === 'en' ? 'var(--primary-color)' : 'var(--text-secondary)', cursor: 'pointer', fontWeight: lang === 'en' ? 'bold' : 'normal' }}>EN</button>
           </div>
 
-          <button onClick={toggleTheme} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '1rem' }} aria-label="Toggle Theme">
+          <button onClick={toggleTheme} className="theme-toggle-btn" style={{ marginLeft: '1rem' }} aria-label="Toggle Theme">
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </div>
@@ -374,22 +496,24 @@ const AppContent = () => {
           <p className="hero-subtitle">
             {t('hero', 'subtitle')}
           </p>
+          <SearchForm
+            formData={formData}
+            setFormData={setFormData}
+            brands={brands}
+            models={models}
+            loadingBrands={loadingBrands}
+            loadingModels={loadingModels}
+            onSubmit={handleSearchSubmit}
+            loading={loading}
+            onAlertClick={() => setIsAlertOpen(true)}
+          />
         </div>
       </div>
 
-      <div className="container" style={{ marginTop: '-80px', position: 'relative', zIndex: 10 }}>
+      <TrustStats />
+      <Breadcrumbs />
 
-        <SearchForm
-          formData={formData}
-          setFormData={setFormData}
-          brands={brands}
-          models={models}
-          loadingBrands={loadingBrands}
-          loadingModels={loadingModels}
-          onSubmit={handleSearchSubmit}
-          loading={loading}
-          onAlertClick={() => setIsAlertOpen(true)}
-        />
+      <div className="container">
 
         <AlertModal
           isOpen={isAlertOpen}
@@ -403,17 +527,20 @@ const AppContent = () => {
           onClose={() => setIsContactOpen(false)}
         />
 
-        <AuthModal 
-          isOpen={isAuthOpen} 
-          onClose={() => setIsAuthOpen(false)} 
+        <AuthModal
+          isOpen={isAuthOpen}
+          onClose={() => setIsAuthOpen(false)}
           onLoginSuccess={(email, token, role) => setCurrentUser({ email, role })}
         />
 
         {!loading && !error && results.length === 0 && !formData.make && (
-          <DealOfTheDay />
+          <>
+            <BrandGrid onBrandSelect={handleBrandSelect} />
+            <DealOfTheDay />
+          </>
         )}
 
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" role="alert">{error}</div>}
 
 
         <div id="results-area">
@@ -424,38 +551,51 @@ const AppContent = () => {
           ) : (
             <>
               {results.length > 0 && (
-                <div className="results-header">
-                  <span className="results-count">
-                    {t('results', 'foundPrefix')} <strong>{results.length}</strong> {t('results', 'foundSuffix')}
-                  </span>
-
-                  <div className="sort-controls">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="sort-select"
-                    >
-                      <option value="price-asc">{t('results', 'sortPriceAsc')}</option>
-                      <option value="price-desc">{t('results', 'sortPriceDesc')}</option>
-                      <option value="year-desc">{t('results', 'sortYearDesc')}</option>
-                      <option value="year-asc">{t('results', 'sortYearAsc')}</option>
-                      <option value="km-asc">{t('results', 'sortKmAsc')}</option>
-                    </select>
+                <div className="results-layout">
+                  <FilterSidebar
+                    filters={sidebarFilters}
+                    onFilterChange={setSidebarFilters}
+                    onApply={handleFilterApply}
+                    isOpen={isFilterOpen}
+                    onClose={() => setIsFilterOpen(false)}
+                  />
+                  <div className="results-main">
+                    <div className="results-header">
+                      <span className="results-count">
+                        {t('results', 'foundPrefix')} <strong>{results.length}</strong> {t('results', 'foundSuffix')}
+                      </span>
+                      <div className="sort-controls">
+                        <button
+                          className="filter-toggle-btn"
+                          onClick={() => setIsFilterOpen(true)}
+                          aria-label="Open filters"
+                        >
+                          <SlidersHorizontal size={18} />
+                          Filtre
+                        </button>
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                          className="sort-select"
+                        >
+                          <option value="price-asc">{t('results', 'sortPriceAsc')}</option>
+                          <option value="price-desc">{t('results', 'sortPriceDesc')}</option>
+                          <option value="year-desc">{t('results', 'sortYearDesc')}</option>
+                          <option value="year-asc">{t('results', 'sortYearAsc')}</option>
+                          <option value="km-asc">{t('results', 'sortKmAsc')}</option>
+                        </select>
+                      </div>
+                    </div>
+                    {stats && <PriceStats stats={stats} currentSearch={formData} />}
+                    <ResultsList results={currentCars} />
+                    <Pagination
+                      carsPerPage={itemsPerPage}
+                      totalCars={results.length}
+                      paginate={paginate}
+                      currentPage={currentPage}
+                    />
                   </div>
                 </div>
-              )}
-
-              {stats && <PriceStats stats={stats} currentSearch={formData} />}
-
-              <ResultsList results={currentCars} />
-
-              {results.length > 0 && (
-                <Pagination
-                  carsPerPage={itemsPerPage}
-                  totalCars={results.length}
-                  paginate={paginate}
-                  currentPage={currentPage}
-                />
               )}
 
               {results.length === 0 && !error && formData.make && (
@@ -468,7 +608,51 @@ const AppContent = () => {
           )}
         </div>
 
-        <footer style={{ textAlign: 'center', marginTop: '4rem', color: 'var(--text-secondary)', padding: '2rem' }}>
+        {showCompare && comparedCars.length >= 2 && (
+        <div className="container" style={{ marginTop: '2rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>Car Comparison</h2>
+          <div className="alerts-table-wrap">
+            <table className="compare-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  {comparedCars.map(c => <th key={c.id || c.link}>{c.title}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Price', 'price'],
+                  ['Year', 'year'],
+                  ['Km', 'km'],
+                  ['Fuel', 'fuel'],
+                  ['Transmission', 'transmission'],
+                  ['Deal Score', 'deal_score'],
+                ].map(([label, key]) => (
+                  <tr key={key}>
+                    <td>{label}</td>
+                    {comparedCars.map(c => (
+                      <td key={(c.id || c.link) + key}>{c[key] != null ? String(c[key]) : '-'}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {comparedCars.length > 0 && (
+        <div className="compare-bar">
+          <span style={{ fontWeight: 600, fontSize: '0.875rem' }}>{comparedCars.length} cars selected</span>
+          <div className="compare-bar-cars">
+            {comparedCars.map(car => (
+              <span key={car.id || car.link} className="compare-bar-car">{car.title}</span>
+            ))}
+          </div>
+          <button className="secondary-btn" onClick={() => setShowCompare(!showCompare)}>{showCompare ? "Hide" : "Compare"}</button>
+          <button className="filter-clear-btn" onClick={() => { clearComparedCars(); setComparedCars([]); setShowCompare(false); }}>Clear</button>
+        </div>
+      )}
+      <footer className="site-footer">
           <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '1rem' }}>
              <a href="/termeni" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{t('legal', 'termsTitle')}</a>
              <a href="/confidentialitate" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{t('legal', 'privacyTitle')}</a>
@@ -488,6 +672,16 @@ const App = () => {
       <Route path="/termeni" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="terms" /></div>} />
       <Route path="/confidentialitate" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="privacy" /></div>} />
       <Route path="/partner-dashboard" element={<PartnerDashboard />} />
+      <Route path="/pricing" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><PricingPage /></div>} />
+          <Route path="/dealer/:email" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><DealerProfile /></div>} />
+      <Route path="/alerts" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><AlertManager /></div>} />
+      <Route path="*" element={
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
+          <h1 style={{ fontSize: '4rem', fontWeight: 800, margin: 0, color: 'var(--primary-color)' }}>404</h1>
+          <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', margin: '1rem 0' }}>Pagina nu a fost gasita</p>
+          <a href="/" style={{ color: 'var(--primary-color)', fontWeight: 600, textDecoration: 'none', marginTop: '1rem' }}>Inapoi acasa</a>
+        </div>
+      } />
     </Routes>
   );
 };

@@ -240,17 +240,120 @@ class CarDatabaseOptimizer:
                 )
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_price ON ads(price)")
                 cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_link ON ads(link)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_year ON ads(year)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_km ON ads(km)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_fuel ON ads(fuel)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_ads_last_seen ON ads(last_seen)")
 
                 # Setup column for Price Drop Tracking
                 cursor.execute(
                     "ALTER TABLE ads ADD COLUMN IF NOT EXISTS original_price INTEGER"
                 )
 
+                # Dealer platform tables
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS dealer_profiles (
+                        id SERIAL PRIMARY KEY,
+                        user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+                        company_name VARCHAR(255) NOT NULL,
+                        cif VARCHAR(50),
+                        address TEXT,
+                        phone VARCHAR(50),
+                        website VARCHAR(255),
+                        verified BOOLEAN DEFAULT FALSE,
+                        approved_at TIMESTAMP,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_dealer_profiles_email ON dealer_profiles(user_email)")
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS dealer_listings (
+                        id SERIAL PRIMARY KEY,
+                        dealer_id INTEGER NOT NULL REFERENCES dealer_profiles(id) ON DELETE CASCADE,
+                        title VARCHAR(500) NOT NULL,
+                        price INTEGER,
+                        year INTEGER,
+                        km INTEGER,
+                        fuel VARCHAR(50),
+                        transmission VARCHAR(50),
+                        description TEXT,
+                        image_url VARCHAR(1000),
+                        active BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT NOW(),
+                        updated_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_dealer_listings_dealer ON dealer_listings(dealer_id)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_dealer_listings_active ON dealer_listings(active)")
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS listing_views (
+                        id SERIAL PRIMARY KEY,
+                        listing_id INTEGER NOT NULL,
+                        dealer_id INTEGER NOT NULL,
+                        viewed_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_listing_views_dealer ON listing_views(dealer_id)")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_listing_views_listing ON listing_views(listing_id)")
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS contact_submissions (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255) NOT NULL,
+                        phone VARCHAR(50),
+                        email VARCHAR(255),
+                        company_name VARCHAR(255),
+                        website VARCHAR(255),
+                        message TEXT,
+                        contacted_back BOOLEAN DEFAULT FALSE,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS dealer_reviews (
+                        id SERIAL PRIMARY KEY,
+                        dealer_id INTEGER NOT NULL REFERENCES dealer_profiles(id) ON DELETE CASCADE,
+                        user_email VARCHAR(255) NOT NULL,
+                        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+                        comment TEXT,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_dealer_reviews_dealer ON dealer_reviews(dealer_id)")
+
+                cursor.execute("ALTER TABLE ads ADD COLUMN IF NOT EXISTS dealer_id INTEGER")
+                cursor.execute("ALTER TABLE ads ADD COLUMN IF NOT EXISTS is_verified_partner BOOLEAN DEFAULT FALSE")
+                # Foreign key constraints (best-effort — skip if tables referenced don't exist yet)
+                try:
+                    cursor.execute("ALTER TABLE alerts ADD CONSTRAINT fk_alerts_user FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE")
+                except Exception:
+                    pass
+                try:
+                    cursor.execute("ALTER TABLE dealer_listings ADD CONSTRAINT fk_dealer_listings_profile FOREIGN KEY (dealer_id) REFERENCES dealer_profiles(id) ON DELETE CASCADE")
+                except Exception:
+                    pass
+
+                cursor.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE")
+
                 conn.commit()
         except Exception as e:
             print(
                 f"Eroare la crearea bazei de date (probabil nu e configurat DATABASE_URL): {e}"
             )
+
+    def health_check(self):
+        """Check database connectivity."""
+        try:
+            with self.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                return True
+        except Exception:
+            return False
 
     def delete_ad(self, ad_id: str):
         with self.get_connection() as conn:
@@ -446,7 +549,8 @@ class CarDatabaseOptimizer:
                 if len(model) <= 2:
                     # STRICT matching for short models (like M3, Q5). Do not fallback to title!
                     query += r" AND model ~* %s"
-                    params.append(rf"(^|\s|-){model}(\s|$|-)")
+                    escaped_model = re.escape(model)
+                    params.append(rf"(^|\s|-){escaped_model}(\s|$|-)")
                 else:
                     query += " AND (model ILIKE %s OR title ILIKE %s)"
                     params.append(f"%{model}%")
@@ -466,6 +570,9 @@ class CarDatabaseOptimizer:
             if max_year:
                 query += " AND year <= %s"
                 params.append(max_year)
+            if min_km:
+                query += " AND km >= %s"
+                params.append(min_km)
             if max_km:
                 query += " AND km <= %s"
                 params.append(max_km)
@@ -553,7 +660,7 @@ class CarDatabaseOptimizer:
                 )
                 groups = cursor.fetchall()
                 cursor.close()
-                return [{"make": r[0], "model": r[1]} for r in groups]
+                return [{"make": r["make"], "model": r[1]} for r in groups]
         except Exception as e:
             print(f"Error getting cron groups: {e}")
             return []
@@ -583,7 +690,7 @@ class CarDatabaseOptimizer:
 
                 return [
                     {
-                        "id": r[0],
+                        "id": r["make"],
                         "user_email": r[1],
                         "min_price": r[2],
                         "max_price": r[3],
@@ -1527,6 +1634,16 @@ class CarDatabaseOptimizer:
                 "active": 1,
             }
 
+    def get_alerts_for_user(self, email):
+        """Get all alerts for a user, most recent first."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM alerts WHERE user_email = %s ORDER BY created_at DESC",
+                (email,)
+            )
+            return [dict(r) for r in cursor.fetchall()]
+
     def deactivate_alert(self, alert_id: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -1594,6 +1711,28 @@ class CarDatabaseOptimizer:
                     "error": "Incorrect password or outdated security hash",
                 }
 
+    def get_user(self, email):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def verify_user_email(self, email):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET email_verified = TRUE WHERE email = %s", (email,))
+            conn.commit()
+
+    def set_email_verified(self, user_email):
+        self.verify_user_email(user_email)
+
+    def update_user_password(self, email, hashed_password):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE users SET hashed_password = %s WHERE email = %s", (hashed_password, email))
+            conn.commit()
+
     def get_all_brands(self) -> List[str]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -1617,6 +1756,243 @@ class CarDatabaseOptimizer:
             ]
             return sorted(list(set(models)))
 
+    def create_dealer_profile(self, user_email, company_name, cif=None, address=None, phone=None, website=None):
+        """Create a new dealer profile and update user role."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO dealer_profiles (user_email, company_name, cif, address, phone, website)
+                   VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
+                (user_email, company_name, cif, address, phone, website),
+            )
+            dealer_id = cursor.fetchone()["id"]
+            cursor.execute("UPDATE users SET role = 'dealer' WHERE email = %s", (user_email,))
+            conn.commit()
+            return dealer_id
+
+    def get_dealer_profile(self, user_email):
+        """Get dealer profile by user email."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM dealer_profiles WHERE user_email = %s", (user_email,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_dealer_profile_by_id(self, dealer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM dealer_profiles WHERE id = %s", (dealer_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+
+    def get_dealer_listings(self, dealer_id):
+        """Get all active listings for a dealer."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT * FROM dealer_listings WHERE dealer_id = %s AND active = TRUE ORDER BY created_at DESC",
+                (dealer_id,),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+
+    def get_dealer_analytics(self, dealer_id):
+        """Get analytics for a dealer (listing views)."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as total FROM listing_views WHERE dealer_id = %s",
+                (dealer_id,),
+            )
+            total_views = cursor.fetchone()["total"]
+            cursor.execute(
+                """SELECT dl.id, dl.title, COUNT(lv.id) as views
+                   FROM dealer_listings dl
+                   LEFT JOIN listing_views lv ON lv.listing_id = dl.id
+                   WHERE dl.dealer_id = %s AND dl.active = TRUE
+                   GROUP BY dl.id, dl.title
+                   ORDER BY views DESC""",
+                (dealer_id,),
+            )
+            listings = [dict(r) for r in cursor.fetchall()]
+            return {"total_views": total_views, "listings": listings}
+
+    def track_listing_view(self, listing_id, dealer_id):
+        """Record a view of a dealer listing."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO listing_views (listing_id, dealer_id) VALUES (%s, %s)",
+                (listing_id, dealer_id),
+            )
+            conn.commit()
+
+    def save_contact_submission(self, name, phone=None, email=None, company_name=None, website=None, message=None):
+        """Save a contact form submission."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO contact_submissions (name, phone, email, company_name, website, message)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
+                (name, phone, email, company_name, website, message),
+            )
+            conn.commit()
+
+    def create_dealer_listing(self, dealer_id, title, price=None, year=None, km=None, fuel=None, transmission=None, description=None, image_url=None):
+        """Create a new dealer listing."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO dealer_listings (dealer_id, title, price, year, km, fuel, transmission, description, image_url)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id""",
+                (dealer_id, title, price, year, km, fuel, transmission, description, image_url),
+            )
+            listing_id = cursor.fetchone()["id"]
+            conn.commit()
+            return listing_id
+
+    def update_dealer_listing(self, listing_id, dealer_id, **kwargs):
+        """Update a dealer listing. Only updates provided fields."""
+        allowed = ["title", "price", "year", "km", "fuel", "transmission", "description", "image_url", "active"]
+        updates = {k: v for k, v in kwargs.items() if k in allowed and v is not None}
+        if not updates:
+            return
+        updates["updated_at"] = "NOW()"
+        set_clause = ", ".join(f"{k} = %s" for k in updates.keys())
+        values = list(updates.values())
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                f"UPDATE dealer_listings SET {set_clause} WHERE id = %s AND dealer_id = %s",
+                values + [listing_id, dealer_id],
+            )
+            conn.commit()
+
+    def delete_dealer_listing(self, listing_id, dealer_id):
+        """Soft-delete a dealer listing (set active=False)."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_listings SET active = FALSE WHERE id = %s AND dealer_id = %s",
+                (listing_id, dealer_id),
+            )
+            conn.commit()
+
+    def add_dealer_review(self, dealer_id, user_email, rating, comment=None):
+        """Add a review for a dealer."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO dealer_reviews (dealer_id, user_email, rating, comment)
+                   VALUES (%s, %s, %s, %s) RETURNING id""",
+                (dealer_id, user_email, rating, comment),
+            )
+            review_id = cursor.fetchone()["id"]
+            conn.commit()
+            return review_id
+
+    def get_dealer_reviews(self, dealer_id):
+        """Get all reviews for a dealer with aggregate stats."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT id, user_email, rating, comment, created_at
+                   FROM dealer_reviews
+                   WHERE dealer_id = %s
+                   ORDER BY created_at DESC""",
+                (dealer_id,),
+            )
+            reviews = [dict(r) for r in cursor.fetchall()]
+            cursor.execute(
+                """SELECT COUNT(*) as total, COALESCE(AVG(rating), 0) as avg_rating
+                   FROM dealer_reviews WHERE dealer_id = %s""",
+                (dealer_id,),
+            )
+            agg = cursor.fetchone()
+            return {
+                "reviews": reviews,
+                "total_reviews": agg["total"],
+                "avg_rating": round(float(agg["avg_rating"]), 1),
+            }
+
+    def get_pending_dealers(self):
+        """Get unverified dealer profiles."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM dealer_profiles WHERE verified = FALSE ORDER BY created_at ASC")
+            return [dict(r) for r in cursor.fetchall()]
+
+    def approve_dealer(self, dealer_id):
+        """Approve a dealer profile."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET verified = TRUE, approved_at = NOW() WHERE id = %s",
+                (dealer_id,),
+            )
+            conn.commit()
+
+    def migrate_subscription_columns(self):
+        """Add subscription columns to dealer_profiles if they don't exist."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            for col, dtype in [
+                ("stripe_customer_id", "VARCHAR(255)"),
+                ("subscription_tier", "VARCHAR(50) DEFAULT 'free'"),
+                ("subscription_status", "VARCHAR(50) DEFAULT 'active'"),
+                ("subscription_id", "VARCHAR(255)"),
+                ("listings_used", "INTEGER DEFAULT 0"),
+            ]:
+                try:
+                    cursor.execute(f"ALTER TABLE dealer_profiles ADD COLUMN IF NOT EXISTS {col} {dtype}")
+                except Exception:
+                    pass
+            conn.commit()
+
+    def get_tier_limit(self, tier):
+        limits = {"free": 5, "premium": 50, "enterprise": 999999}
+        return limits.get(tier, 5)
+
+    def can_add_listing(self, dealer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT subscription_tier, listings_used FROM dealer_profiles WHERE id = %s",
+                (dealer_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                return False
+            tier = row["subscription_tier"] or "free"
+            used = row["listings_used"] or 0
+            return used < self.get_tier_limit(tier)
+
+    def increment_listings_used(self, dealer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET listings_used = listings_used + 1 WHERE id = %s",
+                (dealer_id,)
+            )
+            conn.commit()
+
+    def update_subscription(self, stripe_customer_id, tier, status, subscription_id=None):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET subscription_tier = %s, subscription_status = %s, subscription_id = %s WHERE stripe_customer_id = %s",
+                (tier, status, subscription_id, stripe_customer_id)
+            )
+            conn.commit()
+
+    def set_stripe_customer_id(self, dealer_id, customer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET stripe_customer_id = %s WHERE id = %s",
+                (customer_id, dealer_id)
+            )
+            conn.commit()
+
 
 car_db_optimizer = CarDatabaseOptimizer()
 
@@ -1639,3 +2015,9 @@ def get_optimized_search_params(
         "selected_generation": None,
         "normalized_model": car_db_optimizer.normalize_model_name(make, model),
     }
+
+
+try:
+    car_db_optimizer.migrate_subscription_columns()
+except Exception:
+    pass

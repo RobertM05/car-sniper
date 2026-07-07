@@ -1,120 +1,139 @@
-# Car-Sniper Handoff — 2026-06-30
+# CarSniper — Handoff Document
 
-## Current State
+**Date:** 2026-07-06
+**Branch:** `feature/canva-design-upgrade`
+**Audit:** 114/156 issues resolved (73%) — see `docs/audit-issues.md`
 
-### 🟢 Running: Deep Scrape
-```bash
-caffeinate -i /Users/robert/car-sniper/backend/venv/bin/python /Users/robert/car-sniper/backend/deep_scrape.py
+## Quick Start
+```sh
+cd backend && source venv/bin/activate && uvicorn main:app --reload
+cd frontend/car-sniper && npm run dev
 ```
-- Scraping 43 brands from Autovit + OLX
-- Uses 56 price buckets per site to bypass pagination caps
-- OLX: `require_photos=False` (was filtering ~60% of ads)
-- Autovit: also price-bucketed now
-- Estimated runtime: 3-5 hours per full run
-
-### 🔴 Major Bug Found: Autovit image enrichment silently discarded (QA Agent)
-- **File:** `backend/scraper/autovit_scraper.py`, lines 310-317
-- The `enrich_tasks` results from `asyncio.gather` are iterated but the enriched images are **never applied** to the ads — there's a `pass` where enrichment results should be merged back
-- **Impact:** Any Autovit ad without an image from the listing page stays imageless, even though enrichment fetches the image successfully
-
-### 🟡 Other Bugs Found (BE Reviewer)
-- **PRICE_BUCKETS** missing cars ≥ €200,000 (last bucket is 195000-199999)
-- **Autovit `empty_pages` counter** — stops after 2 consecutive empty pages, but with price buckets, many buckets legitimately have 0 results for luxury brands
-- **OLX enrichment timeout** still at 5s (should be 15s per Bug 4.5 fix that was reverted)
-- **search_ads_db** price column is text with "€ EUR" suffix — comparison `price <= 15000` in SQL may work via implicit cast but is fragile
-
-### 🟡 Data Analyst (aborted — needs re-run)
-- Question: why only 17 BMW Seria 4 ads?
-- Hypothesis: deactivate_stale_ads nuked them during broken period; crawler now includes Seria 4 but needs time to repopulate
+Backend: http://localhost:8000 | Frontend: http://localhost:5173
 
 ---
 
-## What Was Done This Session
+## What Was Done (This Session — July 6, 2026)
 
-### Infrastructure
-- ✅ CI pipeline (lint + type-check + test on PRs)
-- ✅ Rollback workflow (one-click revert in GitHub Actions)
-- ✅ PR template with risk checklist
-- ✅ Bug tracker at `docs/BUG_TRACKER.md` (28 bugs, 11 fixed)
-- ✅ Changelog at `docs/CHANGELOG.md`
-- ✅ Agent memory at `CLINE.md`
+### Design System — Full Canva-Inspired Restyle
+- Light mode as default (white/gray), dark mode via `.dark` class (navy `#0f172a`)
+- DM Sans font, emerald green accent (`#10b981`)
+- Flat cards with shadow hover, clean nav bar, 520px hero with inline search bar
+- Score rings (green/amber/red outline style) on deal cards per Canva spec
+- Trust stats strip, brand grid, DOTD featured hero card, filter sidebar
+- Mobile responsive with hamburger menu and slide-out filter overlay
 
-### Bug Fixes Applied (10 of 28)
-1. Bug 1.3 — `is_suspicious_price` wired to skip luxury cars < €15k
-2. Bug 1.4 — year=0 clamped to valid range
-3. Bug 1.7 — numeric model names preserved during year stripping
-4. Bug 4.2 — log exceptions before silent returns in Autovit
-5. Bug 4.3 — file-based dead-letter queue
-6. Bug 4.4 — graceful per-model failure in crawler
-7. Bug 4.5 — OLX timeout 5s → 15s (**may have been reverted — verify**)
-8. Bug 5.4 — URL query params stripped before MD5 hashing (**reverted — URL stripping was changing ad IDs**)
-9. Bug 6.1 — structured JSON logging
-10. Bug 6.2 — metrics registry + @timed decorators
+### i18n — Complete RO/EN Across All Components
+- All 14 components translated: AuthModal, ContactModal, PartnerDashboard, Pagination, SearchForm, CarCard, DealOfTheDay, FilterSidebar, ResultsList, AlertModal, TrustStats, BrandGrid, PriceStats, LegalPage
+- Number formatting with Intl.NumberFormat, parameterized strings support
 
-### Critical Fixes This Session
-- ✅ Fixed `functii.py` indentation error that took down entire site (500 on all endpoints)
-- ✅ Removed `@metrics.timed` decorators from `search_cars` and `scrape_olx` (caused OLX to return empty)
-- ✅ Reverted ALL sub-agent data changes to `car_database.py`, `functii.py`, `crawler.py`, `deep_scrape.py`, both scrapers — restored to commit `77597a3`
-- ✅ Increased `deactivate_stale_ads` from 24h → 168h (7 days) to prevent crawler from nuking ads for non-targeted models
-- ✅ Expanded crawler TARGETS from 9 → 26 models (now includes BMW Seria 4)
-- ✅ Tiered deep scrape: 500/250/100/50 pages per brand based on market volume
-- ✅ Made OLX `search[photos]` filter optional (`require_photos=False` for deep scrape)
-- ✅ Applied price bucket strategy (56 buckets, €0-€200k) to BOTH Autovit and OLX
+### Backend — Security & Data Integrity
+- JWT auth with random fallback for local dev (set `JWT_SECRET` in production `.env`)
+- SQL regex injection fixed (`re.escape` on model param)
+- Price parsing fixed (strip all non-digits instead of splitting on comma)
+- SSL verification enabled on scrapers
+- Email sending wrapped in try/except (no more silent thread failures)
+- Password minimum length validation (6 chars)
+- Timezone-aware datetime for JWT expiry
+- Pagination metadata in search response (total, limit, page)
+- `min_km` filter wired into SQL WHERE clause
+- `/api/health` endpoint with database connectivity check
+- Fake dashboard trend data replaced with empty array
 
----
+### Dealer Platform Foundation
+- `dealer_profiles`, `dealer_listings`, `contact_submissions` tables
+- Dealer registration: contact form saves to DB, `/api/dealer/register` endpoint
+- Inventory CRUD: `POST/GET/DELETE /api/dealer/listings` + UI in PartnerDashboard
+- Verified partner badge on CarCard (green "Partener Verificat" pill)
+- `create_dealer_profile`, `get_dealer_listings`, `approve_dealer` DB methods
 
-## What Needs Doing Next
-
-### 🔴 P1 — Fix Autovit image enrichment
-File: `backend/scraper/autovit_scraper.py` ~line 310-317
-The enriched images/data from `asyncio.gather` are collected but never applied back to the ads.
-
-### 🔴 P1 — Fix OLX enrichment timeout
-File: `backend/scraper/olx_scraper.py` line ~115
-`timeout=5` should be `timeout=15` (Bug 4.5 fix was reverted)
-
-### 🟡 P2 — Fix PRICE_BUCKETS ceiling
-File: `backend/deep_scrape.py`
-Add `(200000, 999999)` bucket for cars ≥ €200k
-
-### 🟡 P2 — Fix Autovit empty_pages counter for price buckets
-When using price buckets, some buckets legitimately return 0 results. The 2-empty-page stop logic may need to be 5+ for deep scrape mode, or disabled when min_price/max_price are set.
-
-### 🟡 P2 — Verify deep scrape completed
-Check the terminal output — it should show results for all 43 brands across both Autovit and OLX.
-
-### ⏳ P3 — Re-run Data Analyst investigation
-Why only 17 BMW Seria 4 ads? Wait for deep scrape to complete, then re-query.
-
-### ⏳ P3 — Fix remaining 17 bugs from BUG_TRACKER.md
-See `docs/BUG_TRACKER.md` for the full list with priorities.
+### Frontend — Bugs Fixed
+- CarCard NaN crash on undefined `price_diff`
+- Deal ring overlay blocking (pointer-events fix)
+- Deal ring + price-drop badge overlap (moved to opposite corners)
+- Fuel/transmission filter mismatch between SearchForm and FilterSidebar
+- 5 missing CSS classes defined, 2 undefined CSS variables added
+- Light mode invisible elements (hardcoded white tints replaced with CSS vars)
+- Stale closure in URL params useEffect
+- Deal tooltip clipped by overflow hidden
+- Sort chevron invisible in light mode (currentColor instead of white)
+- Empty state, error message, footer all use CSS classes instead of inline styles
+- 404 catch-all route, ErrorBoundary component
+- `prefers-reduced-motion` and `:focus-visible` support
+- Open Graph meta tags + JSON-LD structured data
+- Modal accessibility: `role="dialog"`, `aria-modal`, `aria-label`
+- Form label associations: `htmlFor`/`id` on all SearchForm and FilterSidebar fields
 
 ---
 
-## Commands Reference
+## Design Feedback — Near-Future Improvements
 
-```bash
-# Deep scrape (currently running)
-caffeinate -i /Users/robert/car-sniper/backend/venv/bin/python /Users/robert/car-sniper/backend/deep_scrape.py
+Feedback received: "Design direction 8.5/10, Execution 7.5/10. Strong concept — next step is making results page feel as rich as the homepage."
 
-# Run crawler (26 models, every 10 min)
-/Users/robert/car-sniper/backend/venv/bin/python /Users/robert/car-sniper/backend/crawler.py
+### Applied (This Session)
+1. **Smoother hero headline** — "Gasesti masina la pretul corect" replaces the fragmented "Masini Premium. Performanta. Exceptionala."
+2. **Search form contrast** — Hero form fields now have white/dark backgrounds with visible borders instead of blending into the hero image
+3. **Stats row icons** — TrustStats now shows Lucide icons (Crosshair, TrendingUp, RefreshCw, Clock) next to each number
 
-# Check if running
-ps aux | grep -E "deep_scrape|crawler" | grep -v grep
+### Still To Do (Quick Wins — 1-2 hours)
+4. **Results page filter hierarchy** — Add subtle separators between filter groups (price, year, km, fuel, transmission, source) in FilterSidebar. File: `App.css` → `.filter-section`
+5. **Deal score badges more visible** — Increase score ring size on results cards from 48px to 56px, or add a subtle glow. File: `App.css` → `.deal-ring`
+6. **Price comparison text** — Show "% sub media pietei" more prominently below the price on CarCard. Currently shown only in the tooltip. File: `CarCard.jsx` → add text below the price
+7. **Reduce empty space** — Tighten gap between filter sidebar and results grid from 1.5rem to 1rem. File: `App.css` → `.results-layout`
+8. **Skeleton loading state** — Upgrade from single pulsing block to card-like structure (image rect, title line, spec chips, price). File: `SkeletonCard.jsx`
 
-# Git
-cd /Users/robert/car-sniper && git log --oneline -10
-```
+### Medium Effort (4-8 hours)
+9. **Results page feels complete** — Ensure real data cards render with images, prices, scores immediately after search. The skeleton state is only for loading — once results arrive, the page should feel dense and useful.
+10. **Filter sidebar polish** — Add count badges next to each filter option (e.g., "Diesel (142)"). Requires backend support.
+11. **Brand grid dynamic** — Fetch brands from `/api/brands` instead of hardcoded list. File: `BrandGrid.jsx`
+
+---
+
+## Remaining Audit Items (46, mostly polish)
+
+### Medium (14)
+| ID | Issue | File |
+|---|---|---|
+| M11 | BrandGrid uses static brand list | `BrandGrid.jsx` |
+| M13 | No dealer profile page (`/dealer/:id`) | New route |
+| M15 | No dealer pricing/subscription model | Business |
+| M17 | No dealer approval workflow | `core_app.py` |
+| M18 | No dealer-specific analytics | `PartnerDashboard.jsx` |
+| M23 | No foreign keys on tables | `car_database.py` |
+| M24 | Batch insert for cron ads | `car_database.py` |
+| M26 | Duplicate log messages | `start_crawler.py` |
+| M28-M30 | Inline styles in modals and PriceStats | AuthModal, ContactModal, PriceStats |
+| M43 | Search history / saved searches | New feature |
+| M44 | Alert management page | New feature |
+
+### Low (30)
+| ID | Issue |
+|---|---|
+| L2 | PropTypes or TypeScript migration |
+| L3 | Wrap handleSearch in useCallback |
+| L5 | Grid/list view toggle for results |
+| L7-L8 | Scraper status endpoint, dead letter queue API |
+| L13-L14 | Cursor lifecycle, brand matching edge cases |
+| L25 | Progress indicator during long scrapes |
+| L27-L32 | Dealer features: welcome email, messaging, reviews, bulk upload, white-label |
+| L34-L35 | SEO: canonical URLs, sitemap |
+| L36 | SkeletonCard structure improvement |
+| L37-L48 | Various minor polish |
+
+---
 
 ## Key Files
+
 | File | Purpose |
 |---|---|
-| `backend/deep_scrape.py` | Deep sync — 43 brands, price bucketed |
-| `backend/crawler.py` | Background crawler — 26 models, 10-min loop |
-| `backend/scraper/olx_scraper.py` | OLX scraper — `require_photos` param added |
-| `backend/scraper/autovit_scraper.py` | Autovit scraper — **image enrichment bug here** |
-| `backend/car_database.py` | DB layer — `deactivate_stale_ads` now 168h |
-| `backend/core_app.py` | FastAPI app — `/api/search`, `/api/cron/*` |
-| `docs/BUG_TRACKER.md` | Master bug registry (28 bugs total) |
-| `CLINE.md` | Agent memory file |
+| `frontend/car-sniper/src/App.jsx` | Routes, state, search logic, all component wiring |
+| `frontend/car-sniper/src/App.css` | All component styles (~1400 lines) |
+| `frontend/car-sniper/src/index.css` | Design tokens: CSS variables, fonts, light/dark themes |
+| `frontend/car-sniper/src/LanguageContext.jsx` | RO/EN translations (25+ sections) |
+| `frontend/car-sniper/src/components/` | 17 React components |
+| `backend/core_app.py` | FastAPI: 20+ endpoints, JWT, dealer API, search |
+| `backend/car_database.py` | PostgreSQL: tables, queries, dealer methods (~1750 lines) |
+| `backend/functii.py` | Scraper logic, price parsing, deal scoring |
+| `backend/crawler.py` | Background link verification crawler |
+| `backend/mailer.py` | Resend email (alerts, contact form) |
+| `docs/audit-issues.md` | Full 156-item tracker with status per issue |

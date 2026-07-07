@@ -161,6 +161,12 @@ async def scrape_autovit(
                         async with sess.get(
                             url, params=params, headers=headers_req, timeout=15
                         ) as response:
+                            if response.status in (403, 401):
+                                log.warning(
+                                    "Autovit blocked",
+                                    extra={"status": response.status, "page": page_num},
+                                )
+                                return "BLOCKED"
                             if response.status == 429:
                                 wait_time = 5 * (attempt + 1)
                                 log.warning(
@@ -245,6 +251,7 @@ async def scrape_autovit(
                             scrape_stats["dupes"] += 1
                             continue
                         seen_links_total.add(fingerprint)
+                        seen_links.add(link)  # prevent HTML parser from adding duplicate with truncated title
                         if price_raw:
                             try:
                                 final_price = int(float(price_raw))
@@ -451,7 +458,7 @@ async def scrape_autovit(
     current_p = page
     empty_pages = 0
     failed_pages = []
-    _is_bucket_mode = min_price is not None or max_price is not None
+    _is_bucket_mode = (min_price is not None or max_price is not None) and not model
     _empty_page_limit = 10 if _is_bucket_mode else 2
     _shared_enrich = aiohttp.ClientSession(
         connector=aiohttp.TCPConnector(ssl=False, limit=10)
@@ -460,6 +467,9 @@ async def scrape_autovit(
         if current_p > max_pages:
             break
         ads = await fetch_page(current_p, _shared_enrich)
+        if ads == "BLOCKED":
+            log.warning("Autovit blocked — stopping pagination")
+            break
         if ads is None:
             failed_pages.append(current_p)
             current_p += 1
@@ -525,6 +535,9 @@ async def scrape_autovit(
                 break
             await asyncio.sleep(random.uniform(2.0, 4.0))
             ads = await fetch_page(p_idx, _shared_enrich)
+            if ads == "BLOCKED":
+                log.warning("Autovit blocked during retry — stopping")
+                break
             if ads:
                 for ad in ads:
                     if ad["link"] not in seen_links_total:

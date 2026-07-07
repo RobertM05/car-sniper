@@ -22,7 +22,12 @@ def export_to_csv():
         # Preluăm toate datele
         print("Descărcăm datele de pe Supabase. Te rog așteaptă...")
         cursor.execute("SELECT * FROM ads")
-        rows = cursor.fetchall()
+        rows = []
+        while True:
+            batch = cursor.fetchmany(1000)
+            if not batch:
+                break
+            rows.extend(batch)
 
         if not rows:
             print("Nu s-au găsit date în tabelul ads.")
