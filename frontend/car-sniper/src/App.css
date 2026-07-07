@@ -1814,3 +1814,8 @@ html, body {
   border-bottom: 1px solid var(--border-core);
   font-size: 0.875rem;
 }
+
+.dealer-reviews { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-shell); }
+.review-card { padding: 1rem; border: 1px solid var(--border-shell); border-radius: 0.5rem; margin-bottom: 0.75rem; }
+.review-stars { color: #f59e0b; font-size: 1.25rem; }
+.review-form { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem; max-width: 400px; }

@@ -577,7 +577,7 @@ No monetization for premium positioning.
 Dealers can't embed search on their sites.
 **Domain:** Frontend + Backend
 
-### L31. [~] No dealer review/rating system
+### L31. [x] No dealer review/rating system
 No trust signals for buyers.
 **Domain:** Frontend + Backend
 
@@ -656,5 +656,5 @@ No API documentation for dealer inventory sync.
 | Critical | 24 | 24 | 0 | 0 |
 | High | 36 | 36 | 0 | 0 |
 | Medium | 48 | 15 | 0 | 33 |
-| Low | 48 | 41 | 0 | 7 |
+| Low | 48 | 42 | 0 | 6 |
 | **Total** | **158** | **76** | **0** | **82** |

@@ -630,6 +630,12 @@ class DealerListingRequest(BaseModel):
     image_url: str = None
 
 
+class ReviewRequest(BaseModel):
+    dealer_id: int
+    rating: int
+    comment: str = None
+
+
 @app.get("/api/dealer/listings")
 def api_get_dealer_listings(request: Request, email: str):
     """Get all active listings for a dealer by email."""
@@ -721,6 +727,22 @@ def api_delete_dealer_listing(request: Request, listing_id: int, email: str):
         raise HTTPException(status_code=404, detail="Dealer profile not found")
     car_db_optimizer.delete_dealer_listing(listing_id, profile["id"])
     return {"status": "deleted"}
+
+
+@app.post("/api/dealer/reviews")
+@limiter.limit("10/minute")
+def api_add_review(request: Request, req: ReviewRequest, email: str):
+    """Add a review for a dealer."""
+    if req.rating < 1 or req.rating > 5:
+        raise HTTPException(status_code=400, detail="Rating must be 1-5")
+    review_id = car_db_optimizer.add_dealer_review(req.dealer_id, email, req.rating, req.comment)
+    return {"status": "success", "review_id": review_id}
+
+
+@app.get("/api/dealer/reviews/{dealer_id}")
+def api_get_reviews(dealer_id: int):
+    """Get reviews for a dealer."""
+    return car_db_optimizer.get_dealer_reviews(dealer_id)
 
 
 @app.get("/api/verify-email")
