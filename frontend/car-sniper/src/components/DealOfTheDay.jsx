@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CarCard from './CarCard';
 import SkeletonCard from './SkeletonCard';
 import { useLanguage } from '../LanguageContext';
+import { getCached, setCache } from '../utils/cache';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
 
@@ -14,6 +15,12 @@ const DealOfTheDay = () => {
     useEffect(() => {
         const fetchDeals = async () => {
             try {
+                const cached = getCached('top_deals');
+                if (cached) {
+                    setDeals(cached);
+                    setLoading(false);
+                    return;
+                }
                 setLoading(true);
                 setError(null);
                 const response = await fetch(`${API_BASE_URL}/api/deals/top`);
@@ -25,6 +32,7 @@ const DealOfTheDay = () => {
                     throw new Error(data.error);
                 }
                 setDeals(data.results || []);
+                setCache('top_deals', data.results || []);
             } catch (err) {
                 console.error("Failed to fetch top deals:", err);
                 setError(err.message);

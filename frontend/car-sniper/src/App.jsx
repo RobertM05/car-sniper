@@ -21,6 +21,7 @@ import AlertManager from "./components/AlertManager";
 import Breadcrumbs from "./components/Breadcrumbs";
 import { useLanguage } from "./LanguageContext";
 import { initGA, logPageView, logEvent } from "./utils/analytics";
+import { getCached, setCache } from "./utils/cache";
 import { getSearchHistory, addSearchHistory, clearSearchHistory } from "./utils/searchHistory";
 import { getComparedCars, clearComparedCars, toggleCompareCar } from "./utils/carComparison";
 import { Sun, Moon, SlidersHorizontal } from "lucide-react";
@@ -121,7 +122,9 @@ const AppContent = () => {
       setCurrentUser({ email: storedEmail, role: storedRole || 'user' });
     }
     fetchBrands();
-    fetch(API_BASE_URL + '/api/site/stats').then(r => r.json()).then(d => setSiteStats(d)).catch(() => {});
+    const cachedStats = getCached('site_stats');
+    if (cachedStats) setSiteStats(cachedStats);
+    fetch(API_BASE_URL + '/api/site/stats').then(r => r.json()).then(d => { setSiteStats(d); setCache('site_stats', d); }).catch(() => {});
   }, []);
 
   useEffect(() => {
