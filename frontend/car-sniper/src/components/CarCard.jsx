@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../LanguageContext';
+import PropTypes from 'prop-types';
 import { toggleCompareCar, isCarCompared } from '../utils/carComparison';
 
 const CarCard = ({ car, index = 0 }) => {
@@ -132,6 +133,31 @@ const CarCard = ({ car, index = 0 }) => {
             </div>
         </div>
     );
+};
+
+CarCard.propTypes = {
+    car: PropTypes.shape({
+        id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        title: PropTypes.string,
+        name: PropTypes.string,
+        price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        original_price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        price_diff: PropTypes.number,
+        peer_avg_price: PropTypes.number,
+        deal_score: PropTypes.number,
+        year: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        km: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+        fuel: PropTypes.string,
+        transmission: PropTypes.string,
+        trans: PropTypes.string,
+        link: PropTypes.string,
+        url: PropTypes.string,
+        image: PropTypes.string,
+        source: PropTypes.string,
+        subsource: PropTypes.string,
+        is_verified_partner: PropTypes.bool,
+    }).isRequired,
+    index: PropTypes.number,
 };
 
 export default CarCard;

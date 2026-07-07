@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PropTypes from 'prop-types';
 import { useLanguage } from "../LanguageContext";
 
 const SearchForm = ({
@@ -206,6 +207,18 @@ const SearchForm = ({
       </form>
     </div>
   );
+};
+
+SearchForm.propTypes = {
+    formData: PropTypes.object.isRequired,
+    setFormData: PropTypes.func.isRequired,
+    brands: PropTypes.array.isRequired,
+    models: PropTypes.array.isRequired,
+    loadingBrands: PropTypes.bool,
+    loadingModels: PropTypes.bool,
+    onSubmit: PropTypes.func.isRequired,
+    loading: PropTypes.bool,
+    onAlertClick: PropTypes.func.isRequired,
 };
 
 export default SearchForm;

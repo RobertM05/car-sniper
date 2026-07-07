@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const FilterSidebar = ({ filters, onFilterChange, onApply, isOpen, onClose }) => {
@@ -130,6 +131,14 @@ const FilterSidebar = ({ filters, onFilterChange, onApply, isOpen, onClose }) =>
             </button>
         </aside>
     );
+};
+
+FilterSidebar.propTypes = {
+    filters: PropTypes.object.isRequired,
+    onFilterChange: PropTypes.func.isRequired,
+    onApply: PropTypes.func.isRequired,
+    isOpen: PropTypes.bool,
+    onClose: PropTypes.func,
 };
 
 export default FilterSidebar;

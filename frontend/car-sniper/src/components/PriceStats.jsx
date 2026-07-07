@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const PriceStats = ({ stats, currentSearch }) => {
@@ -51,6 +52,19 @@ const PriceStats = ({ stats, currentSearch }) => {
             </div>
         </div>
     );
+};
+
+PriceStats.propTypes = {
+    stats: PropTypes.shape({
+        avg_price: PropTypes.number,
+        avg_year: PropTypes.number,
+        avg_km: PropTypes.number,
+        search_count: PropTypes.number,
+    }),
+    currentSearch: PropTypes.shape({
+        make: PropTypes.string,
+        model: PropTypes.string,
+    }),
 };
 
 export default PriceStats;

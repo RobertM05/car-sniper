@@ -461,7 +461,7 @@ Missing Car/Product/Organization schema for SEO.
 Component crash = white screen.
 **Domain:** Frontend
 
-### L2. [~] No PropTypes or TypeScript
+### L2. [x] No PropTypes or TypeScript
 Zero prop validation across 14 components.
 **Domain:** Frontend
 
@@ -656,5 +656,5 @@ No API documentation for dealer inventory sync.
 | Critical | 24 | 24 | 0 | 0 |
 | High | 36 | 36 | 0 | 0 |
 | Medium | 48 | 15 | 0 | 33 |
-| Low | 48 | 42 | 0 | 6 |
+| Low | 48 | 43 | 0 | 5 |
 | **Total** | **158** | **76** | **0** | **82** |

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Crosshair, TrendingUp, RefreshCw, Clock } from 'lucide-react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const DEFAULT_STATS = {
@@ -42,6 +43,15 @@ const TrustStats = ({ stats }) => {
             </div>
         </section>
     );
+};
+
+TrustStats.propTypes = {
+    stats: PropTypes.shape({
+        carsMonitored: PropTypes.number,
+        avgSavings: PropTypes.number,
+        listingsToday: PropTypes.number,
+        refreshRate: PropTypes.string,
+    }),
 };
 
 export default TrustStats;

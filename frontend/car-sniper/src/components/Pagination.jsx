@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
@@ -67,6 +68,13 @@ const Pagination = ({ carsPerPage, totalCars, paginate, currentPage }) => {
             </button>
         </div>
     );
+};
+
+Pagination.propTypes = {
+    carsPerPage: PropTypes.number.isRequired,
+    totalCars: PropTypes.number.isRequired,
+    paginate: PropTypes.func.isRequired,
+    currentPage: PropTypes.number.isRequired,
 };
 
 export default Pagination;
