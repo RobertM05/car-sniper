@@ -94,7 +94,7 @@ const CarCard = ({ car, index = 0 }) => {
                     )}
                     <img
                         src={car.image || "https://placehold.co/600x400/1e293b/cbd5e1?text=Fără+Poză"}
-                        alt={car.title}
+                        alt={car.title || car.name || 'Car listing'}
                         className="car-image"
                         loading="lazy"
                         referrerPolicy="no-referrer"

@@ -428,6 +428,7 @@ const AppContent = () => {
         <Helmet>
           <title>{`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | CarSniper`}</title>
           <meta name="description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare. Prețuri excelente și mașini verificate.`} />
+          <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"SearchResultsPage","name":`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vanzare`,"url":`https://carsniper.ro/masini/${urlMake}/${urlModel}`})}</script>
         </Helmet>
       )}
       {!urlMake && !urlModel && (

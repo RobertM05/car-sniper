@@ -61,7 +61,7 @@ const PricingPage = () => {
 
     return (
         <div className="container" style={{ paddingTop: '6rem' }}>
-            <Helmet><title>Pricing | CarSniper</title></Helmet>
+            <Helmet><title>Pricing | CarSniper</title><meta name="description" content="Dealer subscription plans — Free, Premium (50EUR/mo), and Enterprise (200EUR/mo). List your cars on CarSniper." /><link rel="canonical" href="https://carsniper.ro/pricing" /></Helmet>
             <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
                 <h1 style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Dealer Plans</h1>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '1.125rem' }}>Choose the plan that fits your dealership.</p>
