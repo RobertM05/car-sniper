@@ -14,6 +14,17 @@ load_dotenv(dotenv_path=env_path)
 
 # Kill switches for expensive operations on Vercel serverless functions.
 # Set VERCEL_LIVE_SCRAPING=true in Vercel dashboard to re-enable.
+
+import stripe
+STRIPE_SECRET = os.environ.get("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+stripe.api_key = STRIPE_SECRET
+
+# Subscription price IDs — set in .env or Stripe dashboard
+STRIPE_PRICE_FREE = os.environ.get("STRIPE_PRICE_FREE", "")
+STRIPE_PRICE_PREMIUM = os.environ.get("STRIPE_PRICE_PREMIUM", "price_premium")
+STRIPE_PRICE_ENTERPRISE = os.environ.get("STRIPE_PRICE_ENTERPRISE", "price_enterprise")
+
 IS_VERCEL = os.environ.get("VERCEL") == "1"
 VERCEL_LIVE_SCRAPING = os.environ.get("VERCEL_LIVE_SCRAPING", "false").lower() == "true"
 ALLOW_LIVE_SCRAPING = not IS_VERCEL or VERCEL_LIVE_SCRAPING
@@ -852,6 +863,78 @@ def api_dead_letter_replay(source: str = "", date_str: str = ""):
     for record in dead_letter.replay_iter(source=source, date_str=date_str):
         count += 1
     return {"status": "success", "replayed": count}
+
+class CheckoutRequest(BaseModel):
+    tier: str  # "premium" or "enterprise"
+
+@app.post("/api/stripe/create-checkout")
+def api_create_checkout(request: Request, req: CheckoutRequest, email: str):
+    """Create a Stripe Checkout Session for subscription."""
+    if not STRIPE_SECRET:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    try:
+        profile = car_db_optimizer.get_dealer_profile(email)
+        if not profile:
+            raise HTTPException(status_code=404, detail="Dealer profile not found")
+        price_id = STRIPE_PRICE_PREMIUM if req.tier == "premium" else STRIPE_PRICE_ENTERPRISE
+        customer_id = profile.get("stripe_customer_id")
+        if not customer_id:
+            customer = stripe.Customer.create(email=email, metadata={"dealer_id": str(profile["id"])})
+            customer_id = customer.id
+            car_db_optimizer.set_stripe_customer_id(profile["id"], customer_id)
+        session = stripe.checkout.Session.create(
+            mode="subscription",
+            customer=customer_id,
+            line_items=[{"price": price_id, "quantity": 1}],
+            success_url=os.environ.get("FRONTEND_URL", "http://localhost:5173") + "/partner-dashboard?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=os.environ.get("FRONTEND_URL", "http://localhost:5173") + "/pricing",
+            metadata={"dealer_id": str(profile["id"]), "tier": req.tier},
+            subscription_data={"metadata": {"dealer_id": str(profile["id"]), "tier": req.tier}},
+        )
+        return {"url": session.url}
+    except Exception as e:
+        logging.error(f"Checkout error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/stripe/webhook")
+async def api_stripe_webhook(request: Request):
+    """Handle Stripe webhook events."""
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature")
+    if not STRIPE_WEBHOOK_SECRET or not sig:
+        return {"status": "skipped"}
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if event.type == "checkout.session.completed":
+        session = event.data.object
+        metadata = session.get("metadata", {})
+        dealer_id = metadata.get("dealer_id")
+        tier = metadata.get("tier", "premium")
+        customer_id = session.get("customer")
+        subscription_id = session.get("subscription")
+        if dealer_id:
+            car_db_optimizer.update_subscription(customer_id, tier, "active", subscription_id)
+    elif event.type == "customer.subscription.deleted":
+        sub = event.data.object
+        customer_id = sub.get("customer")
+        car_db_optimizer.update_subscription(customer_id, "free", "canceled", None)
+    return {"status": "ok"}
+
+@app.post("/api/stripe/portal")
+def api_create_portal(request: Request, email: str):
+    """Create a Stripe Customer Portal session."""
+    if not STRIPE_SECRET:
+        raise HTTPException(status_code=500, detail="Stripe not configured")
+    profile = car_db_optimizer.get_dealer_profile(email)
+    if not profile or not profile.get("stripe_customer_id"):
+        raise HTTPException(status_code=404, detail="No Stripe customer found")
+    portal = stripe.billing_portal.Session.create(
+        customer=profile["stripe_customer_id"],
+        return_url=os.environ.get("FRONTEND_URL", "http://localhost:5173") + "/partner-dashboard",
+    )
+    return {"url": portal.url}
 
 
 from fastapi import HTTPException, Depends

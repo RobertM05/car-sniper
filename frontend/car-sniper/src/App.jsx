@@ -16,6 +16,7 @@ import FilterSidebar from "./components/FilterSidebar";
 import LegalPage from "./components/LegalPage";
 import PartnerDashboard from "./components/PartnerDashboard";
 import DealerProfile from "./components/DealerProfile";
+import PricingPage from "./components/PricingPage";
 import AlertManager from "./components/AlertManager";
 import Breadcrumbs from "./components/Breadcrumbs";
 import { useLanguage } from "./LanguageContext";
@@ -670,6 +671,7 @@ const App = () => {
       <Route path="/termeni" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="terms" /></div>} />
       <Route path="/confidentialitate" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="privacy" /></div>} />
       <Route path="/partner-dashboard" element={<PartnerDashboard />} />
+      <Route path="/pricing" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><PricingPage /></div>} />
           <Route path="/dealer/:email" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><DealerProfile /></div>} />
       <Route path="/alerts" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><AlertManager /></div>} />
       <Route path="*" element={

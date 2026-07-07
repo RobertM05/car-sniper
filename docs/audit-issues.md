@@ -317,7 +317,7 @@ No route `/dealer/:id`, no component.
 Missing filter for dealer-only listings.
 **Domain:** Frontend + Backend
 
-### M15. [~] No dealer pricing/subscription model
+### M15. [x] No dealer pricing/subscription model
 No tiers, no feature gating, no billing.
 **Domain:** Business
 

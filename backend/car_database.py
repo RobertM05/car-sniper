@@ -1931,6 +1931,68 @@ class CarDatabaseOptimizer:
             )
             conn.commit()
 
+    def migrate_subscription_columns(self):
+        """Add subscription columns to dealer_profiles if they don't exist."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            for col, dtype in [
+                ("stripe_customer_id", "VARCHAR(255)"),
+                ("subscription_tier", "VARCHAR(50) DEFAULT 'free'"),
+                ("subscription_status", "VARCHAR(50) DEFAULT 'active'"),
+                ("subscription_id", "VARCHAR(255)"),
+                ("listings_used", "INTEGER DEFAULT 0"),
+            ]:
+                try:
+                    cursor.execute(f"ALTER TABLE dealer_profiles ADD COLUMN IF NOT EXISTS {col} {dtype}")
+                except Exception:
+                    pass
+            conn.commit()
+
+    def get_tier_limit(self, tier):
+        limits = {"free": 5, "premium": 50, "enterprise": 999999}
+        return limits.get(tier, 5)
+
+    def can_add_listing(self, dealer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT subscription_tier, listings_used FROM dealer_profiles WHERE id = %s",
+                (dealer_id,)
+            )
+            row = cursor.fetchone()
+            if not row:
+                return False
+            tier = row["subscription_tier"] or "free"
+            used = row["listings_used"] or 0
+            return used < self.get_tier_limit(tier)
+
+    def increment_listings_used(self, dealer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET listings_used = listings_used + 1 WHERE id = %s",
+                (dealer_id,)
+            )
+            conn.commit()
+
+    def update_subscription(self, stripe_customer_id, tier, status, subscription_id=None):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET subscription_tier = %s, subscription_status = %s, subscription_id = %s WHERE stripe_customer_id = %s",
+                (tier, status, subscription_id, stripe_customer_id)
+            )
+            conn.commit()
+
+    def set_stripe_customer_id(self, dealer_id, customer_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE dealer_profiles SET stripe_customer_id = %s WHERE id = %s",
+                (customer_id, dealer_id)
+            )
+            conn.commit()
+
 
 car_db_optimizer = CarDatabaseOptimizer()
 
@@ -1953,3 +2015,9 @@ def get_optimized_search_params(
         "selected_generation": None,
         "normalized_model": car_db_optimizer.normalize_model_name(make, model),
     }
+
+
+try:
+    car_db_optimizer.migrate_subscription_columns()
+except Exception:
+    pass
