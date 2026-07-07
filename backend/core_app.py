@@ -632,13 +632,13 @@ class ResetPasswordRequest(BaseModel):
 
 class DealerListingRequest(BaseModel):
     title: str
-    price: int = None
-    year: int = None
-    km: int = None
-    fuel: str = None
-    transmission: str = None
-    description: str = None
-    image_url: str = None
+    price: int | None = None
+    year: int | None = None
+    km: int | None = None
+    fuel: str | None = None
+    transmission: str | None = None
+    description: str | None = None
+    image_url: str | None = None
 
 
 class ReviewRequest(BaseModel):
