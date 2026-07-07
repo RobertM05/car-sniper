@@ -15,6 +15,19 @@ const DealOfTheDay = () => {
     useEffect(() => {
         const fetchDeals = async () => {
             try {
+                if (deals.length === 0) {
+                    try {
+                        const initRes = await fetch('/initial-data.json');
+                        if (initRes.ok) {
+                            const initData = await initRes.json();
+                            if (initData.deals && initData.deals.length > 0) {
+                                setDeals(initData.deals);
+                                setLoading(false);
+                            }
+                        }
+                    } catch (e) { /* fall through to API */ }
+                }
+                if (deals.length > 0) return;
                 const cached = getCached('top_deals');
                 if (cached) {
                     setDeals(cached);

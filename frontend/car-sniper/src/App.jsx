@@ -122,6 +122,7 @@ const AppContent = () => {
       setCurrentUser({ email: storedEmail, role: storedRole || 'user' });
     }
     fetchBrands();
+    fetch('/initial-data.json').then(r => r.json()).then(d => { if (d.stats && d.stats.carsMonitored) { setSiteStats(d.stats); setCache('site_stats', d.stats); } }).catch(() => {});
     const cachedStats = getCached('site_stats');
     if (cachedStats) setSiteStats(cachedStats);
     fetch(API_BASE_URL + '/api/site/stats').then(r => r.json()).then(d => { setSiteStats(d); setCache('site_stats', d); }).catch(() => {});

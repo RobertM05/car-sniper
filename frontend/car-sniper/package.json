@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "prebuild": "node scripts/prebuild.cjs",
+    "build": "npm run prebuild && vite build",
     "build:ssr": "vite build && vite build --ssr",
     "lint": "eslint .",
     "preview": "vite preview"
