@@ -1,7 +1,7 @@
 # SSR Setup — Status & Next Steps
 
 **Date:** 2026-07-07
-**Status:** Merged to main, SPA mode active on Vercel
+**Status:** vike files in repo but plugin removed from vite.config.js. Pure SPA on Vercel.
 
 ## What's in the repo
 
@@ -35,3 +35,6 @@ Full rewrite. Built-in SSR. Planned for next month.
 ```json
 { "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }
 ```
+
+
+**Update 2026-07-07:** vike plugin removed from vite.config.js — caused Vercel 404. Files preserved for future SSR setup.

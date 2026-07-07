@@ -13,7 +13,7 @@ Car marketplace aggregator for Romania. Scrapes OLX.ro and Autovit.ro, scores de
 | Email | Resend |
 | Payments | Stripe (Checkout + Customer Portal) |
 | SEO | react-helmet-async, JSON-LD, sitemap, robots.txt |
-| SSR | vike (installed, inactive — needs Vercel serverless) |
+| SSR | vike files in repo, plugin removed — pure SPA on Vercel |
 
 ## Directory Map
 
