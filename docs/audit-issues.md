@@ -329,7 +329,7 @@ Should be "Website URL" with URL placeholder.
 Contact form to email only. No approval tracking.
 **Domain:** Backend + Frontend
 
-### M18. [~] No dealer-specific analytics
+### M18. [x] No dealer-specific analytics
 Dashboard shows platform aggregates, not per-dealer metrics.
 **Domain:** Backend + Frontend
 

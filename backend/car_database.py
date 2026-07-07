@@ -313,6 +313,18 @@ class CarDatabaseOptimizer:
                     )
                 """)
 
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS dealer_reviews (
+                        id SERIAL PRIMARY KEY,
+                        dealer_id INTEGER NOT NULL REFERENCES dealer_profiles(id) ON DELETE CASCADE,
+                        user_email VARCHAR(255) NOT NULL,
+                        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+                        comment TEXT,
+                        created_at TIMESTAMP DEFAULT NOW()
+                    )
+                """)
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_dealer_reviews_dealer ON dealer_reviews(dealer_id)")
+
                 cursor.execute("ALTER TABLE ads ADD COLUMN IF NOT EXISTS dealer_id INTEGER")
                 cursor.execute("ALTER TABLE ads ADD COLUMN IF NOT EXISTS is_verified_partner BOOLEAN DEFAULT FALSE")
                 # Foreign key constraints (best-effort — skip if tables referenced don't exist yet)
@@ -1783,6 +1795,37 @@ class CarDatabaseOptimizer:
             )
             return [dict(r) for r in cursor.fetchall()]
 
+    def get_dealer_analytics(self, dealer_id):
+        """Get analytics for a dealer (listing views)."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as total FROM listing_views WHERE dealer_id = %s",
+                (dealer_id,),
+            )
+            total_views = cursor.fetchone()["total"]
+            cursor.execute(
+                """SELECT dl.id, dl.title, COUNT(lv.id) as views
+                   FROM dealer_listings dl
+                   LEFT JOIN listing_views lv ON lv.listing_id = dl.id
+                   WHERE dl.dealer_id = %s AND dl.active = TRUE
+                   GROUP BY dl.id, dl.title
+                   ORDER BY views DESC""",
+                (dealer_id,),
+            )
+            listings = [dict(r) for r in cursor.fetchall()]
+            return {"total_views": total_views, "listings": listings}
+
+    def track_listing_view(self, listing_id, dealer_id):
+        """Record a view of a dealer listing."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO listing_views (listing_id, dealer_id) VALUES (%s, %s)",
+                (listing_id, dealer_id),
+            )
+            conn.commit()
+
     def save_contact_submission(self, name, phone=None, email=None, company_name=None, website=None, message=None):
         """Save a contact form submission."""
         with self.get_connection() as conn:
@@ -1833,6 +1876,43 @@ class CarDatabaseOptimizer:
                 (listing_id, dealer_id),
             )
             conn.commit()
+
+    def add_dealer_review(self, dealer_id, user_email, rating, comment=None):
+        """Add a review for a dealer."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO dealer_reviews (dealer_id, user_email, rating, comment)
+                   VALUES (%s, %s, %s, %s) RETURNING id""",
+                (dealer_id, user_email, rating, comment),
+            )
+            review_id = cursor.fetchone()["id"]
+            conn.commit()
+            return review_id
+
+    def get_dealer_reviews(self, dealer_id):
+        """Get all reviews for a dealer with aggregate stats."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT id, user_email, rating, comment, created_at
+                   FROM dealer_reviews
+                   WHERE dealer_id = %s
+                   ORDER BY created_at DESC""",
+                (dealer_id,),
+            )
+            reviews = [dict(r) for r in cursor.fetchall()]
+            cursor.execute(
+                """SELECT COUNT(*) as total, COALESCE(AVG(rating), 0) as avg_rating
+                   FROM dealer_reviews WHERE dealer_id = %s""",
+                (dealer_id,),
+            )
+            agg = cursor.fetchone()
+            return {
+                "reviews": reviews,
+                "total_reviews": agg["total"],
+                "avg_rating": round(float(agg["avg_rating"]), 1),
+            }
 
     def get_pending_dealers(self):
         """Get unverified dealer profiles."""

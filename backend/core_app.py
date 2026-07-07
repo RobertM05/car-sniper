@@ -648,6 +648,15 @@ def api_get_dealer_listings(request: Request, email: str):
     }
 
 
+@app.get("/api/dealer/analytics")
+def api_dealer_analytics(email: str):
+    """Get analytics for a dealer."""
+    profile = car_db_optimizer.get_dealer_profile(email)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Dealer profile not found")
+    return car_db_optimizer.get_dealer_analytics(profile["id"])
+
+
 @app.post("/api/dealer/listings")
 @limiter.limit("30/minute")
 def api_create_dealer_listing(request: Request, email: str, req: DealerListingRequest):

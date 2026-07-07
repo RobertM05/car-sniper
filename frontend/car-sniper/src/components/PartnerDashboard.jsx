@@ -23,6 +23,7 @@ const PartnerDashboard = () => {
     trendData: []
   });
   const [listings, setListings] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newListing, setNewListing] = useState({
     title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: ''
@@ -62,7 +63,22 @@ const PartnerDashboard = () => {
 
     fetchStats();
     fetchDealerListings();
+    fetchAnalytics();
   }, [navigate]);
+
+  const fetchAnalytics = async () => {
+    const email = localStorage.getItem('user_email');
+    if (!email) return;
+    try {
+      const res = await fetch(API_BASE_URL + '/api/dealer/analytics?email=' + encodeURIComponent(email));
+      if (res.ok) {
+        const data = await res.json();
+        setAnalytics(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics:', err);
+    }
+  };
 
   const fetchDealerListings = async () => {
     const email = localStorage.getItem('user_email');
@@ -188,6 +204,32 @@ const PartnerDashboard = () => {
         </div>
 
       </div>
+
+      {analytics && analytics.listings && analytics.listings.length > 0 && (
+        <div className="stats-grid">
+          <div className="stat-card">
+            <div className="stat-header">
+              <h3 className="stat-title">Total Listing Views</h3>
+            </div>
+            <div className="stat-value">{analytics.total_views.toLocaleString()}</div>
+          </div>
+        </div>
+      )}
+      {analytics && analytics.listings && analytics.listings.length > 0 && (
+        <div className="chart-card">
+          <h3 className="chart-title">Views Per Listing</h3>
+          <div className="inventory-table-wrap">
+            <table className="inventory-table">
+              <thead><tr><th>Listing</th><th>Views</th></tr></thead>
+              <tbody>
+                {analytics.listings.map(l => (
+                  <tr key={l.id}><td>{l.title}</td><td>{l.views}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Charts Area */}
       <div className="charts-area">
