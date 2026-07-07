@@ -144,7 +144,7 @@ html, body {
 .search-fields-row {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
 }
 
@@ -667,7 +667,7 @@ html, body {
   }
 
   .search-fields-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 0.5rem;
     max-width: 100%;
     overflow: hidden;
@@ -874,7 +874,7 @@ html, body {
   margin: 0 auto;
   padding: 1.5rem 2rem;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   text-align: center;
 }
@@ -899,7 +899,7 @@ html, body {
 
 @media (max-width: 768px) {
   .trust-stats-container {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     padding: 1rem;
     gap: 1rem;
   }
@@ -1253,7 +1253,7 @@ html, body {
 
 @media (max-width: 420px) {
   .brand-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

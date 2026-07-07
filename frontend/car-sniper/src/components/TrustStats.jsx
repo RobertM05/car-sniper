@@ -1,5 +1,5 @@
 import React from 'react';
-import { Crosshair, TrendingUp, RefreshCw, Clock } from 'lucide-react';
+import { Crosshair, RefreshCw, Clock } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
@@ -22,7 +22,6 @@ const TrustStats = ({ stats }) => {
 
     const items = [
         { icon: Crosshair, value: s.carsMonitored.toLocaleString('ro-RO'), labelKey: 'carsMonitored' },
-        { icon: TrendingUp, value: currencyFormatter.format(s.avgSavings), labelKey: 'avgSavings' },
         { icon: RefreshCw, value: s.listingsToday.toLocaleString('ro-RO'), labelKey: 'listingsToday' },
         { icon: Clock, value: s.refreshRate, labelKey: 'refreshRate' },
     ];
