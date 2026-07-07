@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import random
-import time
 import dotenv
 
 dotenv.load_dotenv()

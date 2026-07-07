@@ -1224,7 +1224,7 @@ def get_model_stats(request: Request, make: str, model: str):
 
 
 from fastapi import Header
-from mailer import send_new_cars_email, send_dealer_welcome_email, send_verification_email, send_password_reset_email
+from mailer import send_new_cars_email, send_dealer_welcome_email, send_password_reset_email
 
 CRON_SECRET_KEY = os.environ.get("CRON_SECRET")
 if not CRON_SECRET_KEY:
