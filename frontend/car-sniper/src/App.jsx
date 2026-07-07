@@ -121,6 +121,7 @@ const AppContent = () => {
       setCurrentUser({ email: storedEmail, role: storedRole || 'user' });
     }
     fetchBrands();
+    fetch(API_BASE_URL + '/api/site/stats').then(r => r.json()).then(d => setSiteStats(d)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -320,6 +321,7 @@ const AppContent = () => {
   const [searchHistory, setSearchHistory] = useState(getSearchHistory());
   const [comparedCars, setComparedCars] = useState(getComparedCars());
   const [showCompare, setShowCompare] = useState(false);
+  const [siteStats, setSiteStats] = useState({});
   const [sidebarFilters, setSidebarFilters] = useState({
     minPrice: '',
     maxPrice: '',
@@ -510,7 +512,7 @@ const AppContent = () => {
         </div>
       </div>
 
-      <TrustStats />
+      <TrustStats stats={siteStats} />
       <Breadcrumbs />
 
       <div className="container">

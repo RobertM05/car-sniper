@@ -2074,6 +2074,34 @@ class CarDatabaseOptimizer:
             conn.commit()
 
 
+
+    def get_active_ads_count(self):
+        """Get count of active ads."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM ads WHERE active = TRUE")
+            row = cursor.fetchone()
+            return row["count"] if row else 0
+
+    def get_users_count(self):
+        """Get count of registered users."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM users")
+            row = cursor.fetchone()
+            return row["count"] if row else 0
+
+    def get_avg_savings(self):
+        """Get average savings from deal scores."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COALESCE(AVG(original_price - price), 0) as avg_savings FROM ads WHERE original_price > 0 AND price > 0 AND active = TRUE"
+            )
+            row = cursor.fetchone()
+            return int(row["avg_savings"]) if row else 0
+
+
 car_db_optimizer = CarDatabaseOptimizer()
 
 
