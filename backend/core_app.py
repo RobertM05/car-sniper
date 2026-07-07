@@ -16,6 +16,7 @@ load_dotenv(dotenv_path=env_path)
 # Set VERCEL_LIVE_SCRAPING=true in Vercel dashboard to re-enable.
 
 import stripe
+
 STRIPE_SECRET = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 stripe.api_key = STRIPE_SECRET
@@ -90,7 +91,12 @@ def root():
 def scraper_status():
     """Basic scraper status — shows cache info."""
     import time as _time
-    deals_age = _time.time() - _TOP_DEALS_CACHE["timestamp"] if _TOP_DEALS_CACHE["timestamp"] else None
+
+    deals_age = (
+        _time.time() - _TOP_DEALS_CACHE["timestamp"]
+        if _TOP_DEALS_CACHE["timestamp"]
+        else None
+    )
     return {
         "deals_cache_age_seconds": round(deals_age) if deals_age else None,
         "deals_cached_count": len(_TOP_DEALS_CACHE.get("deals", [])),
@@ -101,7 +107,10 @@ def scraper_status():
 def health_check():
     """Health check endpoint for monitoring."""
     db_ok = car_db_optimizer.health_check()
-    return {"status": "healthy" if db_ok else "degraded", "database": "connected" if db_ok else "disconnected"}
+    return {
+        "status": "healthy" if db_ok else "degraded",
+        "database": "connected" if db_ok else "disconnected",
+    }
 
 
 from fastapi.responses import JSONResponse
@@ -314,7 +323,9 @@ async def api_search(
         order=order,
     )
 
-    print(f"DEBUG: DB returned {len(results)} results, ALLOW_LIVE={ALLOW_LIVE_SCRAPING}")
+    print(
+        f"DEBUG: DB returned {len(results)} results, ALLOW_LIVE={ALLOW_LIVE_SCRAPING}"
+    )
     if not results and ALLOW_LIVE_SCRAPING:
         # DB has no active results — scrape on the fly (disabled on Vercel by default)
         from functii import search_cars
@@ -334,7 +345,9 @@ async def api_search(
             limit=20000,
             max_pages=1000,
         )
-        print(f"DEBUG: Live scrape returned {len(live_results) if live_results else 0} ads")
+        print(
+            f"DEBUG: Live scrape returned {len(live_results) if live_results else 0} ads"
+        )
         if live_results:
             car_db_optimizer.upsert_ads(live_results)
             # Use in-memory results directly — DB model matching is too strict
@@ -626,9 +639,11 @@ def api_register_dealer(request: Request, req: ContactRequest):
 class ForgotPasswordRequest(BaseModel):
     email: str
 
+
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
+
 
 class DealerListingRequest(BaseModel):
     title: str
@@ -697,8 +712,6 @@ def api_create_dealer_listing(request: Request, email: str, req: DealerListingRe
     return {"status": "success", "listing_id": listing_id}
 
 
-
-
 @app.post("/api/dealer/listings/bulk")
 @limiter.limit("10/minute")
 async def api_bulk_dealer_listings(request: Request, email: str):
@@ -709,7 +722,9 @@ async def api_bulk_dealer_listings(request: Request, email: str):
     try:
         body = await request.json()
         if not isinstance(body, list):
-            raise HTTPException(status_code=400, detail="Expected JSON array of listings")
+            raise HTTPException(
+                status_code=400, detail="Expected JSON array of listings"
+            )
         created = 0
         for item in body:
             car_db_optimizer.create_dealer_listing(
@@ -746,7 +761,9 @@ def api_add_review(request: Request, req: ReviewRequest, email: str):
     """Add a review for a dealer."""
     if req.rating < 1 or req.rating > 5:
         raise HTTPException(status_code=400, detail="Rating must be 1-5")
-    review_id = car_db_optimizer.add_dealer_review(req.dealer_id, email, req.rating, req.comment)
+    review_id = car_db_optimizer.add_dealer_review(
+        req.dealer_id, email, req.rating, req.comment
+    )
     return {"status": "success", "review_id": review_id}
 
 
@@ -771,6 +788,7 @@ def api_verify_email(token: str):
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid token")
 
+
 @app.post("/api/forgot-password")
 @limiter.limit("3/minute")
 def api_forgot_password(request: Request, req: ForgotPasswordRequest):
@@ -778,11 +796,20 @@ def api_forgot_password(request: Request, req: ForgotPasswordRequest):
     user = car_db_optimizer.get_user(req.email)
     if user:
         reset_token = jwt.encode(
-            {"email": req.email, "exp": datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)},
-            JWT_SECRET, algorithm=JWT_ALGORITHM
+            {
+                "email": req.email,
+                "exp": datetime.datetime.now(datetime.timezone.utc)
+                + datetime.timedelta(hours=1),
+            },
+            JWT_SECRET,
+            algorithm=JWT_ALGORITHM,
         )
         send_password_reset_email(req.email, reset_token)
-    return {"status": "success", "message": "If the email exists, a reset link has been sent."}
+    return {
+        "status": "success",
+        "message": "If the email exists, a reset link has been sent.",
+    }
+
 
 @app.post("/api/reset-password")
 @limiter.limit("5/minute")
@@ -800,6 +827,7 @@ def api_reset_password(request: Request, req: ResetPasswordRequest):
         raise HTTPException(status_code=400, detail="Token expired")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid token")
+
 
 @app.get("/api/alerts")
 def api_get_alerts(email: str):
@@ -824,6 +852,7 @@ def api_pending_dealers(email: str):
     dealers = car_db_optimizer.get_pending_dealers()
     return {"dealers": dealers}
 
+
 @app.post("/api/admin/approve-dealer")
 def api_approve_dealer(email: str, dealer_id: int):
     """Approve a dealer and send welcome email."""
@@ -846,26 +875,33 @@ def api_dead_letter_files():
     from dead_letter import dead_letter
     from glob import glob
     import os
+
     files = []
     for path in sorted(glob(os.path.join(dead_letter.directory, "*.jsonl"))):
-        files.append({
-            "name": os.path.basename(path),
-            "size": os.path.getsize(path),
-            "modified": os.path.getmtime(path),
-        })
+        files.append(
+            {
+                "name": os.path.basename(path),
+                "size": os.path.getsize(path),
+                "modified": os.path.getmtime(path),
+            }
+        )
     return {"files": files}
+
 
 @app.post("/api/dead-letter/replay")
 def api_dead_letter_replay(source: str = "", date_str: str = ""):
     """Replay dead letter entries. Returns count of replayed items."""
     from dead_letter import dead_letter
+
     count = 0
     for record in dead_letter.replay_iter(source=source, date_str=date_str):
         count += 1
     return {"status": "success", "replayed": count}
 
+
 class CheckoutRequest(BaseModel):
     tier: str  # "premium" or "enterprise"
+
 
 @app.post("/api/stripe/create-checkout")
 def api_create_checkout(request: Request, req: CheckoutRequest, email: str):
@@ -876,25 +912,34 @@ def api_create_checkout(request: Request, req: CheckoutRequest, email: str):
         profile = car_db_optimizer.get_dealer_profile(email)
         if not profile:
             raise HTTPException(status_code=404, detail="Dealer profile not found")
-        price_id = STRIPE_PRICE_PREMIUM if req.tier == "premium" else STRIPE_PRICE_ENTERPRISE
+        price_id = (
+            STRIPE_PRICE_PREMIUM if req.tier == "premium" else STRIPE_PRICE_ENTERPRISE
+        )
         customer_id = profile.get("stripe_customer_id")
         if not customer_id:
-            customer = stripe.Customer.create(email=email, metadata={"dealer_id": str(profile["id"])})
+            customer = stripe.Customer.create(
+                email=email, metadata={"dealer_id": str(profile["id"])}
+            )
             customer_id = customer.id
             car_db_optimizer.set_stripe_customer_id(profile["id"], customer_id)
         session = stripe.checkout.Session.create(
             mode="subscription",
             customer=customer_id,
             line_items=[{"price": price_id, "quantity": 1}],
-            success_url=os.environ.get("FRONTEND_URL", "http://localhost:5173") + "/partner-dashboard?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=os.environ.get("FRONTEND_URL", "http://localhost:5173") + "/pricing",
+            success_url=os.environ.get("FRONTEND_URL", "http://localhost:5173")
+            + "/partner-dashboard?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=os.environ.get("FRONTEND_URL", "http://localhost:5173")
+            + "/pricing",
             metadata={"dealer_id": str(profile["id"]), "tier": req.tier},
-            subscription_data={"metadata": {"dealer_id": str(profile["id"]), "tier": req.tier}},
+            subscription_data={
+                "metadata": {"dealer_id": str(profile["id"]), "tier": req.tier}
+            },
         )
         return {"url": session.url}
     except Exception as e:
         logging.error(f"Checkout error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/stripe/webhook")
 async def api_stripe_webhook(request: Request):
@@ -915,12 +960,15 @@ async def api_stripe_webhook(request: Request):
         customer_id = session.get("customer")
         subscription_id = session.get("subscription")
         if dealer_id:
-            car_db_optimizer.update_subscription(customer_id, tier, "active", subscription_id)
+            car_db_optimizer.update_subscription(
+                customer_id, tier, "active", subscription_id
+            )
     elif event.type == "customer.subscription.deleted":
         sub = event.data.object
         customer_id = sub.get("customer")
         car_db_optimizer.update_subscription(customer_id, "free", "canceled", None)
     return {"status": "ok"}
+
 
 @app.post("/api/stripe/portal")
 def api_create_portal(request: Request, email: str):
@@ -932,7 +980,8 @@ def api_create_portal(request: Request, email: str):
         raise HTTPException(status_code=404, detail="No Stripe customer found")
     portal = stripe.billing_portal.Session.create(
         customer=profile["stripe_customer_id"],
-        return_url=os.environ.get("FRONTEND_URL", "http://localhost:5173") + "/partner-dashboard",
+        return_url=os.environ.get("FRONTEND_URL", "http://localhost:5173")
+        + "/partner-dashboard",
     )
     return {"url": portal.url}
 
@@ -945,8 +994,11 @@ import datetime
 JWT_SECRET = os.environ.get("JWT_SECRET")
 if not JWT_SECRET:
     import secrets
+
     JWT_SECRET = secrets.token_hex(32)
-    logging.warning("JWT_SECRET not set — using random fallback. Set JWT_SECRET in .env for production.")
+    logging.warning(
+        "JWT_SECRET not set — using random fallback. Set JWT_SECRET in .env for production."
+    )
 JWT_ALGORITHM = "HS256"
 security = HTTPBearer()
 
@@ -978,7 +1030,9 @@ class AuthRequest(BaseModel):
 @limiter.limit("15/minute")
 def api_auth_register(request: Request, req: AuthRequest):
     if len(req.password) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+        raise HTTPException(
+            status_code=400, detail="Password must be at least 6 characters"
+        )
     result = car_db_optimizer.register_user(req.email, req.password)
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
@@ -1022,8 +1076,6 @@ def api_create_alert(
     )
 
     return {"alert": alert}
-
-
 
 
 @app.get("/api/scrape")
@@ -1169,9 +1221,9 @@ def get_models_for_brand(request: Request, brand: str):
             (
                 k
                 for k in catalog.keys()
-                if k.lower().strip() == brand.lower().strip()
-                or # Intentional: normalize Mercedes-Benz to Mercedes for catalog matching
-            k.lower().replace("-benz", "") == brand.lower().replace("-benz", "")
+                if k.lower().strip()
+                == brand.lower().strip()  # Intentional: normalize Mercedes-Benz to Mercedes for catalog matching
+                or k.lower().replace("-benz", "") == brand.lower().replace("-benz", "")
             ),
             None,
         )
@@ -1212,7 +1264,11 @@ def get_model_stats(request: Request, make: str, model: str):
 
 
 from fastapi import Header
-from mailer import send_new_cars_email, send_dealer_welcome_email, send_password_reset_email
+from mailer import (
+    send_new_cars_email,
+    send_dealer_welcome_email,
+    send_password_reset_email,
+)
 
 CRON_SECRET_KEY = os.environ.get("CRON_SECRET")
 if not CRON_SECRET_KEY:
@@ -1290,6 +1346,7 @@ async def api_cron_run(request: Request, authorization: str = Header(None)):
 
                 if matched_cars:
                     email = alert["user_email"]
+
                     def _send_safe(e=email, mk=make, md=model, mc=matched_cars):
                         try:
                             send_new_cars_email(e, mk, md, mc)
