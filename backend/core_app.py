@@ -644,7 +644,7 @@ class DealerListingRequest(BaseModel):
 class ReviewRequest(BaseModel):
     dealer_id: int
     rating: int
-    comment: str = None
+    comment: str | None = None
 
 
 @app.get("/api/dealer/listings")
@@ -1024,18 +1024,6 @@ def api_create_alert(
     return {"alert": alert}
 
 
-@app.get("/api/alerts")
-def api_get_alerts(email: str):
-    """Get all alerts for a user."""
-    alerts = car_db_optimizer.get_alerts_for_user(email)
-    return {"alerts": alerts}
-
-
-@app.delete("/api/alerts/{alert_id}")
-def api_delete_alert(alert_id: int, email: str):
-    """Delete an alert."""
-    car_db_optimizer.deactivate_alert(alert_id)
-    return {"status": "deleted"}
 
 
 @app.get("/api/scrape")
