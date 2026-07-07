@@ -72,7 +72,7 @@ async def verify_ads_liveness(ads_list):
                     f"🗑️ Found {len(dead_ads)} dead links. Skipping deletion to prevent Cloudflare false positives..."
                 )
                 for dead_ad in dead_ads:
-                    car_db_optimizer.delete_ad(dead_ad.get('id'))
+                    car_db_optimizer.delete_ad(dead_ad.get("id"))
             else:
                 logging.info("✅ All checked links are active.")
 
@@ -117,7 +117,7 @@ async def cron_cleanup_ads(limit=100):
 
             # Delete dead ads
             for dead_ad in dead_ads:
-                car_db_optimizer.delete_ad(dead_ad.get('id'))
+                car_db_optimizer.delete_ad(dead_ad.get("id"))
 
             # Update last_seen for alive ads so they aren't checked again immediately
             if alive_ads:

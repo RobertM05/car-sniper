@@ -720,13 +720,16 @@ async def search_cars(
         model_tokens = normalize_tokens(model or "")
         # For AMG models, the 'amg' badge is often omitted from titles
         # (e.g., 'C63s saloon' is an AMG C63). Don't require 'amg' token.
-        _check_tokens = model_tokens - {"amg"} if "amg" in model_tokens else model_tokens
+        _check_tokens = (
+            model_tokens - {"amg"} if "amg" in model_tokens else model_tokens
+        )
         model_matches = (
             model_tokens.issubset(searchable_tokens)
             or model_norm in title_norm
             or model_norm in link_norm
             or all(t in title_norm or t in link_norm for t in _check_tokens)
-            if model_tokens else True
+            if model_tokens
+            else True
         )
 
         bad_keywords = {"dezmembrari", "dezmembrez", "piese", "piesa"}
@@ -789,7 +792,6 @@ async def search_cars(
             car.pop(key, None)
         title_str = str(car.get("title", ""))
         car["title"] = re.sub(r"\b07\d{8}\b", "[REDACTED]", title_str)
-
 
         # Validate make — at least one make token must appear in title or link
         if _make_tokens and not any(t in searchable_tokens for t in _make_tokens):
