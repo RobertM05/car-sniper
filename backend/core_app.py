@@ -87,7 +87,6 @@ def root():
     return {"message": "Car Sniper API running!"}
 
 
-
 @app.get("/api/site/stats")
 def api_site_stats():
     """Return real-time site statistics."""
@@ -97,7 +96,6 @@ def api_site_stats():
         avg_savings = car_db_optimizer.get_avg_savings()
     except Exception:
         ads_count = 0
-        users_count = 0
         avg_savings = 0
     return {
         "carsMonitored": ads_count,
@@ -105,6 +103,7 @@ def api_site_stats():
         "listingsToday": ads_count,  # approximate
         "refreshRate": "5 min",
     }
+
 
 @app.get("/api/scraper/status")
 def scraper_status():

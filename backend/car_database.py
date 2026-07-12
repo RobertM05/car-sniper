@@ -2073,8 +2073,6 @@ class CarDatabaseOptimizer:
             )
             conn.commit()
 
-
-
     def get_active_ads_count(self):
         """Get count of active ads."""
         with self.get_connection() as conn:
