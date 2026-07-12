@@ -221,7 +221,7 @@ async def search_cars(
                 "amg s63": "s-63-amg",
                 "amg gt": "amg-gt",
                 "amg g63": "clasa-g",  # G63 lives under G-Class
-                "amg e63": "clasa-e",  # E63 lives under E-Class
+                "amg e63": "e_classe",  # E63 lives under E-Class
                 "amg c63 s": "c-63-amg",  # C63 S maps to C63
                 "amg gt 63": "amg-gt",  # GT 63 maps to AMG GT
                 "amg gt 43": "amg-gt",
@@ -430,7 +430,7 @@ async def search_cars(
                 "amg s63": "s-63-amg",
                 "amg gt": "amg-gt",
                 "amg g63": "clasa-g",  # G63 lives under G-Class
-                "amg e63": "clasa-e",  # E63 lives under E-Class
+                "amg e63": "e_classe",  # E63 lives under E-Class
                 "amg c63 s": "c-63-amg",  # C63 S maps to C63
                 "amg gt 63": "amg-gt",  # GT 63 maps to AMG GT
                 "amg gt 43": "amg-gt",
