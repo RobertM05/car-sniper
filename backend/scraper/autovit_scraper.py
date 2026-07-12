@@ -414,8 +414,13 @@ async def scrape_autovit(
                         if html_model and expected_model:
                             html_model_lc = html_model.lower()
                             if html_model_lc != expected_model:
+                                # If model is a URL slug (e.g. "e_classe"), skip
+                                # validation — the HTML model won't match the slug.
+                                # We're already on the correct category page via URL.
+                                if "_" in expected_model:
+                                    pass
                                 # For cases like 'e' and 'e-class'
-                                if html_model_lc in expected_model.split(
+                                elif html_model_lc in expected_model.split(
                                     "-"
                                 ) or expected_model in html_model_lc.split("-"):
                                     pass
