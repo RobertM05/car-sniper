@@ -441,14 +441,14 @@ async def search_cars(
             if "amg" in model_lc and "gt" not in model_lc:
                 letter = re.search("([aecs])[\\- ]?\\d", model_lc)
                 if letter:
-                    return f"clasa-{letter.group(1)}"
+                    return f"{letter.group(1)}_classe"
             if "class" in model_lc or "clasa" in model_lc:
                 letter = re.search("([a-z])[- ]?clas", model_lc)
                 if not letter:
                     letter = re.search("clas(?:s|a)[- ]?([a-z])", model_lc)
 
                 if letter:
-                    return f"clasa-{letter.group(1)}"  # ALWAYS format as clasa-{char} for Autovit
+                    return f"{letter.group(1)}_classe"  # ALWAYS format as clasa-{char} for Autovit
             return model_lc.replace("-", "_").replace(" ", "-")
         if make_lc == "bmw":
             m = re.match("seria[- ]?(\\d)", model_lc)
