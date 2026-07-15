@@ -101,6 +101,36 @@ async def scrape_and_classify(make, possible_models):
 
                 results = await get_all_cars_sharded(make, model, 1950, 2026)
 
+                # AMG models that map to shared class pages (e.g. AMG E63 -> e_classe)
+                # get all E-Class listings -- filter to only actual AMG variants by title
+                if "amg" in model.lower():
+                    import re
+
+                    # Extract engine code: "AMG E63" -> "e63"
+                    amg_code = (
+                        model.lower()
+                        .replace("amg", "")
+                        .strip()
+                        .replace(" ", "")
+                        .replace("-", "")
+                    )
+                    before = len(results)
+                    results = [
+                        r
+                        for r in results
+                        if amg_code
+                        in (r.get("title") or "").lower().replace(" ", "").replace("-", "")
+                    ]
+                    log.info(
+                        "AMG title filter",
+                        extra={
+                            "model": model,
+                            "code": amg_code,
+                            "before": before,
+                            "after": len(results),
+                        },
+                    )
+
                 valid_cars = []
                 for car in results:
                     try:
