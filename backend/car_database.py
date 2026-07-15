@@ -152,6 +152,8 @@ class CarDatabaseOptimizer:
     def init_database(self):
         try:
             with self.get_connection() as conn:
+                conn.rollback()  # Clear any residual transaction from pool
+                conn.autocommit = True
                 cursor = conn.cursor()
 
                 cursor.execute("""
@@ -365,9 +367,12 @@ class CarDatabaseOptimizer:
 
                 conn.commit()
         except Exception as e:
+            import traceback
+
             print(
                 f"Eroare la crearea bazei de date (probabil nu e configurat DATABASE_URL): {e}"
             )
+            traceback.print_exc()
 
     def health_check(self):
         """Check database connectivity."""

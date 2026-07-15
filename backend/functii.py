@@ -220,8 +220,8 @@ async def search_cars(
                 "amg a45": "a-45-amg",
                 "amg s63": "s-63-amg",
                 "amg gt": "amg-gt",
-                "amg g63": "clasa-g",  # G63 lives under G-Class
-                "amg e63": "e_classe",  # E63 lives under E-Class
+                "amg g63": None,  # G63 — use query search on OLX
+                "amg e63": None,  # E63 — use query search on OLX
                 "amg c63 s": "c-63-amg",  # C63 S maps to C63
                 "amg gt 63": "amg-gt",  # GT 63 maps to AMG GT
                 "amg gt 43": "amg-gt",
@@ -234,7 +234,7 @@ async def search_cars(
                 if not letter:
                     letter = re.search("clas(?:s|a)[- ]?([a-z])", model_lc)
                 if letter:
-                    return f"clasa-{letter.group(1)}"
+                    return None  # OLX filter value unmatched — use query search
                 return model_lc.replace(" ", "-").replace(".", "-")
             if model_lc in ["glc", "gle", "gls", "gla", "glb", "cla", "cls"]:
                 return model_lc
@@ -429,7 +429,7 @@ async def search_cars(
                 "amg a45": "a-45-amg",
                 "amg s63": "s-63-amg",
                 "amg gt": "amg-gt",
-                "amg g63": "clasa-g",  # G63 lives under G-Class
+                "amg g63": "g_classe",  # G63 lives under G-Class
                 "amg e63": "e_classe",  # E63 lives under E-Class
                 "amg c63 s": "c-63-amg",  # C63 S maps to C63
                 "amg gt 63": "amg-gt",  # GT 63 maps to AMG GT

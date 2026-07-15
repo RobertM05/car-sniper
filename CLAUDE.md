@@ -32,4 +32,4 @@ React 19 + Vite | Python FastAPI | PostgreSQL (Supabase) | Stripe | Resend
 - Run `python3 -m py_compile` after backend changes
 - Run `ruff check backend/ && ruff format backend/` before commits
 - NEVER use `git add .` — it pulls in venv noise. Stage specific files only.
-- Use `--no-verify` for commits (pre-commit hooks have pre-existing issues with .githooks/)
+- Commits must pass `.githooks/` checks: no AI markers in code, no trailing whitespace, clean commit messages
