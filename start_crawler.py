@@ -119,7 +119,10 @@ async def scrape_and_classify(make, possible_models):
                         r
                         for r in results
                         if amg_code
-                        in (r.get("title") or "").lower().replace(" ", "").replace("-", "")
+                        in (r.get("title") or "")
+                        .lower()
+                        .replace(" ", "")
+                        .replace("-", "")
                     ]
                     log.info(
                         "AMG title filter",
