@@ -1,4 +1,4 @@
-# CarSniper — Handoff Document
+# Motorbit — Handoff Document
 
 **Date:** 2026-07-06
 **Branch:** `feature/canva-design-upgrade`
@@ -7,7 +7,7 @@
 ## Quick Start
 ```sh
 cd backend && source venv/bin/activate && uvicorn main:app --reload
-cd frontend/car-sniper && npm run dev
+cd frontend/motorbit && npm run dev
 ```
 Backend: http://localhost:8000 | Frontend: http://localhost:5173
 
@@ -126,11 +126,11 @@ Feedback received: "Design direction 8.5/10, Execution 7.5/10. Strong concept �
 
 | File | Purpose |
 |---|---|
-| `frontend/car-sniper/src/App.jsx` | Routes, state, search logic, all component wiring |
-| `frontend/car-sniper/src/App.css` | All component styles (~1400 lines) |
-| `frontend/car-sniper/src/index.css` | Design tokens: CSS variables, fonts, light/dark themes |
-| `frontend/car-sniper/src/LanguageContext.jsx` | RO/EN translations (25+ sections) |
-| `frontend/car-sniper/src/components/` | 17 React components |
+| `frontend/motorbit/src/App.jsx` | Routes, state, search logic, all component wiring |
+| `frontend/motorbit/src/App.css` | All component styles (~1400 lines) |
+| `frontend/motorbit/src/index.css` | Design tokens: CSS variables, fonts, light/dark themes |
+| `frontend/motorbit/src/LanguageContext.jsx` | RO/EN translations (25+ sections) |
+| `frontend/motorbit/src/components/` | 17 React components |
 | `backend/core_app.py` | FastAPI: 20+ endpoints, JWT, dealer API, search |
 | `backend/car_database.py` | PostgreSQL: tables, queries, dealer methods (~1750 lines) |
 | `backend/functii.py` | Scraper logic, price parsing, deal scoring |

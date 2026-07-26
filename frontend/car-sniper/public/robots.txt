@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Sitemap: https://carsniper.ro/sitemap.xml
+Sitemap: https://motorbit.ro/sitemap.xml

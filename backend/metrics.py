@@ -1,5 +1,5 @@
 """
-Simple in-process metrics registry for car-sniper.
+Simple in-process metrics registry for motorbit.
 Provides counters and a @timed decorator; dumps summary on exit via atexit.
 
 Usage:

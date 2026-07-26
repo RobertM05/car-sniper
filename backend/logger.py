@@ -1,5 +1,5 @@
 """
-Shared structured JSON-line logger for car-sniper.
+Shared structured JSON-line logger for motorbit.
 Replaces bare print() calls with machine-readable JSON log lines.
 
 Usage:
@@ -81,4 +81,4 @@ def get_logger(name: str) -> logging.Logger:
 
 
 # Convenience: a root logger for the whole package
-log = get_logger("car-sniper")
+log = get_logger("motorbit")

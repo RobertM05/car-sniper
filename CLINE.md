@@ -1,6 +1,6 @@
 # CLINE.md — Agent Memory File
 
-> **Read this first when starting any session in car-sniper.**
+> **Read this first when starting any session in motorbit.**
 
 ---
 
@@ -12,8 +12,8 @@
 
 ---
 
-## Project: car-sniper
-- **Repo:** `github.com/RobertM05/car-sniper`
+## Project: motorbit
+- **Repo:** `github.com/RobertM05/motorbit`
 - **Purpose:** Scrapes car listings from OLX.ro & Autovit.ro
 - **Stack:** Python 3.11, PostgreSQL, Playwright, aiohttp
 - **Entry points:** `start_crawler.py`, `deep_scrape.py`, `crawler.py`
@@ -54,7 +54,7 @@
 
 ## Key Files Map
 ```
-car-sniper/
+motorbit/
 ├── CLINE.md                    ← THIS FILE — agent memory
 ├── SESSION_NOTES.md            ← session-by-session log
 ├── docs/

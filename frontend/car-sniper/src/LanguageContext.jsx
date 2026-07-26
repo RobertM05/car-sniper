@@ -146,15 +146,15 @@ const translations = {
             listingsToday: 'Anunturi actualizate azi',
             refreshRate: 'Rata de actualizare',
         },
-        footer: '© {year} CarSniper. Toate drepturile rezervate.',
+        footer: '© {year} Motorbit. Toate drepturile rezervate.',
         legal: {
             termsTitle: 'Termeni și Condiții',
             privacyTitle: 'Politica de Confidențialitate',
             termsContent: `
-                <h2>1. Despre CarSniper</h2>
-                <p>CarSniper funcționează ca un motor de căutare și agregator de anunțuri auto. Nu vindem mașini și nu intermediem tranzacții.</p>
+                <h2>1. Despre Motorbit</h2>
+                <p>Motorbit funcționează ca un motor de căutare și agregator de anunțuri auto. Nu vindem mașini și nu intermediem tranzacții.</p>
                 <h2>2. Răspunderea pentru Anunțuri</h2>
-                <p>Conform Legii 365/2002 privind comerțul electronic și a Directivei e-Commerce (2000/31/CE), CarSniper are rolul exclusiv de furnizor de servicii de căutare. Nu suntem responsabili pentru corectitudinea datelor, kilometrajul, starea tehnică a vehiculelor sau eventualele fraude de pe platformele sursă (ex: OLX, Autovit). Toate achizițiile se fac pe riscul utilizatorului.</p>
+                <p>Conform Legii 365/2002 privind comerțul electronic și a Directivei e-Commerce (2000/31/CE), Motorbit are rolul exclusiv de furnizor de servicii de căutare. Nu suntem responsabili pentru corectitudinea datelor, kilometrajul, starea tehnică a vehiculelor sau eventualele fraude de pe platformele sursă (ex: OLX, Autovit). Toate achizițiile se fac pe riscul utilizatorului.</p>
                 <h2>3. Drepturi de Autor și Web Scraping</h2>
                 <p>Informațiile indexate provin din surse publice și sunt utilizate strict în scop informațional, conform excepțiilor privind "Text and Data Mining" (Directiva UE 2019/790). Mărcile înregistrate aparțin deținătorilor de drept.</p>
             `,
@@ -356,15 +356,15 @@ const translations = {
             listingsToday: 'Listings updated today',
             refreshRate: 'Refresh rate',
         },
-        footer: '© {year} CarSniper. All rights reserved.',
+        footer: '© {year} Motorbit. All rights reserved.',
         legal: {
             termsTitle: 'Terms and Conditions',
             privacyTitle: 'Privacy Policy',
             termsContent: `
-                <h2>1. About CarSniper</h2>
-                <p>CarSniper operates strictly as a search engine and aggregator for automotive listings. We do not sell cars nor intermediate transactions.</p>
+                <h2>1. About Motorbit</h2>
+                <p>Motorbit operates strictly as a search engine and aggregator for automotive listings. We do not sell cars nor intermediate transactions.</p>
                 <h2>2. Liability for Listings</h2>
-                <p>In accordance with the EU e-Commerce Directive (2000/31/EC) and national laws, CarSniper acts as an intermediary search service. We hold no liability for the accuracy of the listings, the condition of the vehicles, or potential scams originating from third-party platforms (e.g., OLX, Autovit). All purchases are made at the user's own risk.</p>
+                <p>In accordance with the EU e-Commerce Directive (2000/31/EC) and national laws, Motorbit acts as an intermediary search service. We hold no liability for the accuracy of the listings, the condition of the vehicles, or potential scams originating from third-party platforms (e.g., OLX, Autovit). All purchases are made at the user's own risk.</p>
                 <h2>3. Copyright and Web Scraping</h2>
                 <p>The indexed information comes from publicly available sources and is used strictly for informational purposes, falling under the "Text and Data Mining" exception (EU Directive 2019/790). Trademarks belong to their respective owners.</p>
             `,

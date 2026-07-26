@@ -9,7 +9,7 @@
 
 ## Architecture Summary
 
-**car-sniper** scrapes car listings from **OLX.ro** and **Autovit.ro**. Three independent entry points exist:
+**motorbit** scrapes car listings from **OLX.ro** and **Autovit.ro**. Three independent entry points exist:
 
 | Script | Role |
 |---|---|

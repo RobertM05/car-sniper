@@ -76,4 +76,4 @@ These bugs change how the scraper interacts with websites. Each needs explicit r
 
 ---
 
-*Maintained by: Cline AI Agent | Project: car-sniper | Repo: github.com/RobertM05/car-sniper*
+*Maintained by: Cline AI Agent | Project: motorbit | Repo: github.com/RobertM05/motorbit*

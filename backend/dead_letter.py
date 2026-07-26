@@ -1,5 +1,5 @@
 """
-File-based dead-letter queue for car-sniper.
+File-based dead-letter queue for motorbit.
 Captures failed ad payloads so they can be replayed / inspected later.
 
 Usage:

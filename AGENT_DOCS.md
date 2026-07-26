@@ -1,9 +1,9 @@
-# CarSniper - Agent Knowledge Base
+# Motorbit - Agent Knowledge Base
 
-Welcome! This document provides a deep dive into the CarSniper project structure, architecture, and quirks to help agents and developers understand the codebase quickly.
+Welcome! This document provides a deep dive into the Motorbit project structure, architecture, and quirks to help agents and developers understand the codebase quickly.
 
 ## 1. Project Overview
-CarSniper is a smart aggregator for used car ads in Romania, fetching data from **OLX** and **Autovit**. It offers unified search, "deal scoring", bilingual support (RO/EN), and email alerts for specific price drops or new listings.
+Motorbit is a smart aggregator for used car ads in Romania, fetching data from **OLX** and **Autovit**. It offers unified search, "deal scoring", bilingual support (RO/EN), and email alerts for specific price drops or new listings.
 
 ## 2. Technology Stack & Deployment
 - **Frontend**: React 18 + Vite. Styled with Vanilla CSS focusing on a Dark Mode "Glassmorphism" UI.
@@ -17,7 +17,7 @@ CarSniper is a smart aggregator for used car ads in Romania, fetching data from 
 
 ## 3. Directory Structure
 ```
-car-sniper/
+motorbit/
 ├── backend/                  # Core Python/FastAPI logic
 │   ├── core_app.py           # API endpoints, deal scoring logic, CORS & Rate Limiting
 │   ├── functii.py            # Search core & "Slug Intelligence" (Make/Model mappings)
@@ -28,7 +28,7 @@ car-sniper/
 │       ├── olx_scraper.py
 │       ├── autovit_scraper.py
 │       └── autovit_playwright.py
-├── frontend/car-sniper/      # React Application
+├── frontend/motorbit/      # React Application
 │   ├── src/App.jsx           # Main routing & application state
 │   ├── src/LanguageContext.jsx # i18n support (RO/EN)
 │   └── src/components/       # Reusable UI components
@@ -56,6 +56,6 @@ The backend utilizes `slowapi` to prevent abuse. Because it's deployed on Vercel
 
 ## 5. Development Guidelines
 - **Startup**: Run `./start.sh` from the root directory. This script starts Uvicorn on port 8000 and Vite on port 5173.
-- **Database setup**: Ensure you have a local PostgreSQL instance running. Create a database named `car_sniper` or override the connection string by setting `DATABASE_URL` in `backend/.env`.
+- **Database setup**: Ensure you have a local PostgreSQL instance running. Create a database named `motorbit` or override the connection string by setting `DATABASE_URL` in `backend/.env`.
 - **Background Crawler (CI/CD)**: The background crawler (`start_crawler.py`) is heavily reliant on GitHub Actions. It runs on a schedule (`0 */4 * * *`) and connects directly to Supabase using secrets (`DATABASE_URL`). When running locally, it is disabled by default in `start.sh` so as not to consume unnecessary resources.
 - **Styling**: Stick to the existing `App.css` variables and classes to maintain the glassmorphism aesthetic. Avoid introducing Tailwind unless explicitly migrating the whole app.

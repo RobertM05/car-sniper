@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const API_BASE = process.env.VITE_API_URL || 'https://car-sniper.vercel.app';
+const API_BASE = process.env.VITE_API_URL || 'https://motorbit.vercel.app';
 
 async function fetchData() {
     const initialData = { deals: [], stats: {} };

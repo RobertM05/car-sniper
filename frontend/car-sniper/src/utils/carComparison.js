@@ -1,4 +1,4 @@
-const COMPARE_KEY = 'carsniper_compare';
+const COMPARE_KEY = 'motorbit_compare';
 const MAX_COMPARE = 3;
 
 export function getComparedCars() {

@@ -1,4 +1,4 @@
-# CarSniper — Project Context
+# Motorbit — Project Context
 
 Car marketplace aggregator for Romania. Scrapes OLX.ro and Autovit.ro, scores deals, provides dealer platform.
 
@@ -18,7 +18,7 @@ Car marketplace aggregator for Romania. Scrapes OLX.ro and Autovit.ro, scores de
 ## Directory Map
 
 ```
-frontend/car-sniper/src/
+frontend/motorbit/src/
   App.jsx              — Routes, global state, search logic (~650 lines)
   App.css              — All styles (~1900 lines)
   index.css            — CSS variables, fonts, light/dark themes
@@ -135,7 +135,7 @@ search_stats        — make, model, search count
 ## Common Commands
 
 ```sh
-cd frontend/car-sniper && npm run dev     # Frontend dev
+cd frontend/motorbit && npm run dev     # Frontend dev
 cd backend && uvicorn main:app --reload   # Backend dev
 ./start.sh                                # Both at once
 npm run build                             # Production build

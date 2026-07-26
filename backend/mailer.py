@@ -19,17 +19,17 @@ def send_alert_email(user_email: str, make: str, model: str, max_price: int):
 
     try:
         params = {
-            "from": "CarSniper Alerts <onboarding@resend.dev>",
+            "from": "Motorbit Alerts <onboarding@resend.dev>",
             "to": [user_email],
             "subject": f"Alerta Activata: {make} {model}",
             "html": f"""
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #ffffff; border-radius: 10px;">
-                <h2 style="color: #38bdf8; text-align: center;">Alerta CarSniper Activata!</h2>
+                <h2 style="color: #f59e0b; text-align: center;">Alerta Motorbit Activata!</h2>
                 
                 <p style="font-size: 16px; line-height: 1.5;">Salut,</p>
                 <p style="font-size: 16px; line-height: 1.5;">Am înregistrat alerta ta. Te vom notifica imediat ce găsim oferte noi care corespund criteriilor tale:</p>
                 
-                <div style="background-color: #121212; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #38bdf8;">
+                <div style="background-color: #121212; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #f59e0b;">
                     <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 16px;">
                         <li style="margin-bottom: 10px;"><strong>Marca:</strong> {make}</li>
                         <li style="margin-bottom: 10px;"><strong>Model:</strong> {model}</li>
@@ -38,7 +38,7 @@ def send_alert_email(user_email: str, make: str, model: str, max_price: int):
                 </div>
                 
                 <p style="font-size: 14px; color: #a1a1aa; text-align: center; margin-top: 30px;">
-                    © 2024 CarSniper. Aceasta este o platformă SaaS demo.
+                    © 2024 Motorbit. Aceasta este o platformă SaaS demo.
                 </p>
             </div>
             """,
@@ -72,28 +72,28 @@ def send_contact_email(
 
     try:
         params = {
-            "from": "CarSniper Leads <onboarding@resend.dev>",
+            "from": "Motorbit Leads <onboarding@resend.dev>",
             "to": ["robert.musoiu05@gmail.com"],
             "subject": f"Lead Nou Partener: {company_name}",
             "html": f"""
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #ffffff; border-radius: 10px;">
-                <h2 style="color: #4ade80; text-align: center;">Solicitare Noua: Devino Partener</h2>
+                <h2 style="color: #f59e0b; text-align: center;">Solicitare Noua: Devino Partener</h2>
                 
-                <p style="font-size: 16px; line-height: 1.5; text-align: center;">Ai primit o noua cerere de la un dealer auto care doreste sa intre in reteaua CarSniper.</p>
+                <p style="font-size: 16px; line-height: 1.5; text-align: center;">Ai primit o noua cerere de la un dealer auto care doreste sa intre in reteaua Motorbit.</p>
                 
-                <div style="background-color: #121212; padding: 20px; border-radius: 8px; margin: 30px 0; border: 1px solid #4ade80;">
+                <div style="background-color: #121212; padding: 20px; border-radius: 8px; margin: 30px 0; border: 1px solid #f59e0b;">
                     <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 16px;">
                         <li style="margin-bottom: 15px;"><strong>Nume Contact:</strong> {name}</li>
                         <li style="margin-bottom: 15px;"><strong>Companie:</strong> {company_name}</li>
-                        <li style="margin-bottom: 15px;"><strong>Email Firma:</strong> <a href="mailto:{company_email}" style="color: #38bdf8;">{company_email}</a></li>
-                        <li style="margin-bottom: 15px;"><strong>Telefon:</strong> <a href="tel:{phone}" style="color: #38bdf8;">{phone}</a></li>
+                        <li style="margin-bottom: 15px;"><strong>Email Firma:</strong> <a href="mailto:{company_email}" style="color: #f59e0b;">{company_email}</a></li>
+                        <li style="margin-bottom: 15px;"><strong>Telefon:</strong> <a href="tel:{phone}" style="color: #f59e0b;">{phone}</a></li>
                         <li style="margin-bottom: 15px;"><strong>Are Website?</strong> {has_website}</li>
                         {f'<li style="margin-bottom: 15px;"><strong>Website IP:</strong> {website_ip}</li>' if has_website == "Da" and website_ip else ""}
                     </ul>
                 </div>
                 
                 <p style="font-size: 12px; color: #a1a1aa; text-align: center; margin-top: 30px; border-top: 1px solid #27272a; padding-top: 20px;">
-                    CarSniper B2B Dashboard
+                    Motorbit B2B Dashboard
                 </p>
             </div>
             """,
@@ -132,29 +132,29 @@ def send_new_cars_email(user_email: str, make: str, model: str, cars: list):
                 <img src="{image}" alt="Car" style="width: 100%; height: 150px; object-fit: cover; border-radius: 5px;">
                 <div style="margin-top: 15px;">
                     <h3 style="margin: 0 0 10px 0; color: #ffffff;"><a href="{link}" style="color: #ffffff; text-decoration: none;">{car.get("title", "Vehicul Nou")}</a></h3>
-                    <p style="margin: 0 0 5px 0; color: #4ade80; font-weight: bold; font-size: 18px;">{price_display}</p>
+                    <p style="margin: 0 0 5px 0; color: #f59e0b; font-weight: bold; font-size: 18px;">{price_display}</p>
                     <p style="margin: 0; color: #a1a1aa; font-size: 14px;">An: {year_display} • Rulaj: {km_display} • {car.get("city", "N/A")}</p>
-                    <a href="{link}" style="display: block; text-align: center; margin-top: 15px; background-color: #38bdf8; color: #000; padding: 10px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px;">Vezi Anunțul</a>
+                    <a href="{link}" style="display: block; text-align: center; margin-top: 15px; background-color: #f59e0b; color: #000; padding: 10px 16px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 14px;">Vezi Anunțul</a>
                 </div>
             </div>
             """
 
         params = {
-            "from": "CarSniper Alerts <onboarding@resend.dev>",
+            "from": "Motorbit Alerts <onboarding@resend.dev>",
             "to": [user_email],
             "subject": f"🔥 {make} {model}: {len(cars)} Anunțuri Recente!",
             "html": f"""
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #ffffff; border-radius: 10px;">
-                <h2 style="color: #38bdf8; text-align: center;">Am găsit oferte noi!</h2>
+                <h2 style="color: #f59e0b; text-align: center;">Am găsit oferte noi!</h2>
                 
-                <p style="font-size: 16px; line-height: 1.5; text-align: center;">Sniperul nostru a identificat <strong style="color: #4ade80;">{len(cars)}</strong> mașini complet noi apărute în ultima perioadă care corespund filtrului tău pentru <strong>{make} {model}</strong>.</p>
+                <p style="font-size: 16px; line-height: 1.5; text-align: center;">Sniperul nostru a identificat <strong style="color: #f59e0b;">{len(cars)}</strong> mașini complet noi apărute în ultima perioadă care corespund filtrului tău pentru <strong>{make} {model}</strong>.</p>
                 
                 <div style="margin: 30px 0;">
                     {cars_html}
                 </div>
                 
                 <p style="font-size: 12px; color: #a1a1aa; text-align: center; margin-top: 30px; border-top: 1px solid #27272a; padding-top: 20px;">
-                    © {make.title()} CarSniper Alerts
+                    © {make.title()} Motorbit Alerts
                 </p>
             </div>
             """,
@@ -170,7 +170,7 @@ def send_new_cars_email(user_email: str, make: str, model: str, cars: list):
 
 
 # Note: Add unsubscribe link to alert emails for GDPR compliance.
-# Use a URL like: https://carsniper.ro/unsubscribe?email={email}&token={token}
+# Use a URL like: https://motorbit.ro/unsubscribe?email={email}&token={token}
 
 
 def send_dealer_welcome_email(email, company_name):
@@ -179,9 +179,9 @@ def send_dealer_welcome_email(email, company_name):
 
         resend.Emails.send(
             {
-                "from": "CarSniper <onboarding@resend.dev>",
+                "from": "Motorbit <onboarding@resend.dev>",
                 "to": email,
-                "subject": "Welcome to CarSniper Partner Network",
+                "subject": "Welcome to Motorbit Partner Network",
                 "html": f"<h2>Welcome, {company_name}!</h2><p>Your dealer application has been received. We will review it shortly.</p>",
             }
         )
@@ -193,10 +193,10 @@ def send_verification_email(email, token):
     try:
         import resend
 
-        link = f"https://carsniper.ro/api/verify-email?token={token}"
+        link = f"https://motorbit.ro/api/verify-email?token={token}"
         resend.Emails.send(
             {
-                "from": "CarSniper <onboarding@resend.dev>",
+                "from": "Motorbit <onboarding@resend.dev>",
                 "to": email,
                 "subject": "Verify your email address",
                 "html": f"<p>Click to verify: <a href='{link}'>{link}</a></p>",
@@ -210,10 +210,10 @@ def send_password_reset_email(email, token):
     try:
         import resend
 
-        link = f"https://carsniper.ro/reset-password?token={token}"
+        link = f"https://motorbit.ro/reset-password?token={token}"
         resend.Emails.send(
             {
-                "from": "CarSniper <onboarding@resend.dev>",
+                "from": "Motorbit <onboarding@resend.dev>",
                 "to": email,
                 "subject": "Reset your password",
                 "html": f"<p>Reset link: <a href='{link}'>{link}</a></p><p>Expires in 1 hour.</p>",

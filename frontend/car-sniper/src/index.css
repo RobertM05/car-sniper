@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+/* DM Sans loaded via <link> in index.html */
 
 :root {
   /* Light mode (default) */
@@ -14,7 +14,9 @@
 
   --accent-color: #111827;
   --accent-glow: rgba(0, 0, 0, 0.04);
-  --primary-color: #10b981;
+  --primary-color: #1e3a5f;
+  --primary-hover: #152a47;
+  --highlight-color: #f59e0b;
 
   --bg-card: #ffffff;
   --border-color: #e5e7eb;
@@ -35,11 +37,11 @@
 }
 
 .dark {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
+  --bg-primary: #0a1628;
+  --bg-secondary: #132440;
 
-  --bg-shell: #1e293b;
-  --bg-core: #0f172a;
+  --bg-shell: #132440;
+  --bg-core: #0a1628;
 
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
@@ -47,14 +49,16 @@
 
   --accent-color: #f1f5f9;
   --accent-glow: rgba(255, 255, 255, 0.03);
-  --primary-color: #10b981;
+  --primary-color: #f59e0b;
+  --primary-hover: #d97706;
+  --highlight-color: #f59e0b;
 
-  --bg-card: #1e293b;
-  --border-color: #334155;
+  --bg-card: #132440;
+  --border-color: #1e3a5f;
 
-  --border-shell: #334155;
-  --border-core: #1e293b;
-  --border-highlight: #475569;
+  --border-shell: #1e3a5f;
+  --border-core: #132440;
+  --border-highlight: #2d4a6e;
 
   --shadow-ambient: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);

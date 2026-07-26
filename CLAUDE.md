@@ -1,4 +1,4 @@
-# CarSniper — Car Deal Aggregator for Romania
+# Motorbit — Car Deal Aggregator for Romania
 
 Aggregates listings from OLX.ro and Autovit.ro. Scores deals vs market average. Dealer platform with Stripe subscriptions.
 

@@ -1,9 +1,9 @@
 # 🤖 AI State Handoff Document
 
-> **ATTENTION NEXT AI AGENT**: If you are reading this, the previous AI instance ran out of tokens or usage limits. You are taking over the role of CTO / Lead Developer for the `car-sniper` project. Read this file carefully to synchronize your context.
+> **ATTENTION NEXT AI AGENT**: If you are reading this, the previous AI instance ran out of tokens or usage limits. You are taking over the role of CTO / Lead Developer for the `motorbit` project. Read this file carefully to synchronize your context.
 
 ## 🏢 Project Philosophy (The LLC Structure)
-* **Goal**: Build a highly scalable, premium used-car aggregator (CarSniper).
+* **Goal**: Build a highly scalable, premium used-car aggregator (Motorbit).
 * **Mindset**: "Slow but steady." We prioritize a stable codebase, zero-cost scaling, and extremely premium UI/UX (glassmorphism, dark mode) over rushed features. 
 * **Architecture**: We use a multi-agent "Team" structure. We never commit directly to `main` without rigorous QA auditing.
 

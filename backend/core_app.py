@@ -54,7 +54,7 @@ except ImportError:
     redis_client = None
 
 
-# Custom IP extractor for Vercel (care folosește x-forwarded-for)
+# Custom IP extractor for Vercel (which uses x-forwarded-for)
 def get_real_ip(request: Request) -> str:
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
@@ -73,8 +73,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",
         "http://localhost:3000",
-        "https://car-sniper.vercel.app",
-        "https://car-sniper-*.vercel.app",
+        "https://motorbit.vercel.app",
+        "https://motorbit-*.vercel.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -1417,13 +1417,15 @@ def get_sitemap():
 
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    xml_content += "  <url><loc>https://car-sniper.com/</loc></url>\n"
+    xml_content += "  <url><loc>https://motorbit.ro/</loc></url>\n"
 
     for m in models:
         make = m.get("make", "").lower().replace(" ", "-")
         model = m.get("model", "").lower().replace(" ", "-")
         if make and model:
-            xml_content += f"  <url><loc>https://car-sniper.com/masini/{make}/{model}</loc></url>\n"
+            xml_content += (
+                f"  <url><loc>https://motorbit.ro/masini/{make}/{model}</loc></url>\n"
+            )
 
     xml_content += "</urlset>"
 

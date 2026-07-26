@@ -14,7 +14,7 @@ const LegalPage = ({ type }) => {
     return (
         <div className="container" style={{ marginTop: '40px', padding: '2rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '12px' }}>
             <Helmet>
-                <title>{title} | CarSniper</title>
+                <title>{title} | Motorbit</title>
                 <meta name="description" content={title} />
             </Helmet>
             

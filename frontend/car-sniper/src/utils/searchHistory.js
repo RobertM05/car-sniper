@@ -1,4 +1,4 @@
-const HISTORY_KEY = 'carsniper_search_history';
+const HISTORY_KEY = 'motorbit_search_history';
 const MAX_HISTORY = 10;
 
 export function getSearchHistory() {

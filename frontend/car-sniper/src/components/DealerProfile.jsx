@@ -58,8 +58,8 @@ const DealerProfile = () => {
     return (
         <div className="container">
             <Helmet>
-                <title>{profile?.company_name || email} | CarSniper</title>
-                <meta name="description" content={`View inventory from ${profile?.company_name || email}. ${listings.length} active car listings on CarSniper.`} />
+                <title>{profile?.company_name || email} | Motorbit</title>
+                <meta name="description" content={`View inventory from ${profile?.company_name || email}. ${listings.length} active car listings on Motorbit.`} />
             </Helmet>
             <div className="dealer-header">
                 <h1>{profile?.company_name || email}</h1>

@@ -28,7 +28,7 @@ echo "🕷️  Crawler is DISABLED (Live Search Mode)..."
 
 # 3. Start Frontend
 echo "💻 Starting Frontend..."
-cd frontend/car-sniper
+cd frontend/motorbit
 npm run dev &
 FRONTEND_PID=$!
 cd ../..

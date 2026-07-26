@@ -22,7 +22,7 @@ class CarDatabaseOptimizer:
             # Preluam de la Vercel sau din mediul local. Daca lipsește, dăm un fallback simulat.
             self.db_path = os.environ.get(
                 "DATABASE_URL",
-                "postgresql://postgres:postgres@localhost:5432/car_sniper",
+                "postgresql://postgres:postgres@localhost:5432/motorbit",
             )
         else:
             self.db_path = db_path

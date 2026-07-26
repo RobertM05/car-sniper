@@ -1,4 +1,4 @@
-# CarSniper — Implementation Plan for Remaining 23 Items
+# Motorbit — Implementation Plan for Remaining 23 Items
 
 **Date:** 2026-07-06 | **Branch:** `feature/canva-design-upgrade`
 

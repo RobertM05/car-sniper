@@ -138,7 +138,7 @@ const PartnerDashboard = () => {
   return (
     <div className="dashboard-container">
       <Helmet>
-        <title>{t('dashboard', 'title')} | CarSniper</title>
+        <title>{t('dashboard', 'title')} | Motorbit</title>
         <meta name="description" content="Dealer partner dashboard — manage your inventory and track performance." />
       </Helmet>
       

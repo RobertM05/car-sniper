@@ -1,4 +1,4 @@
-# CarSniper — Audit Issue Tracker
+# Motorbit — Audit Issue Tracker
 
 **Date:** 2026-07-06
 **Branch:** `feature/canva-design-upgrade`

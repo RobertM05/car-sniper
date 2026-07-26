@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/CarSniper-v2.0-0ea5e9?style=for-the-badge&labelColor=0a0a0a" alt="version"/>
+  <img src="https://img.shields.io/badge/Motorbit-v2.0-0ea5e9?style=for-the-badge&labelColor=0a0a0a" alt="version"/>
   <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white&labelColor=0a0a0a" alt="react"/>
   <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white&labelColor=0a0a0a" alt="fastapi"/>
   <img src="https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white&labelColor=0a0a0a" alt="vite"/>
   <img src="https://img.shields.io/badge/Vercel-Deployed-000?style=for-the-badge&logo=vercel&logoColor=white&labelColor=0a0a0a" alt="vercel"/>
 </p>
 
-<h1 align="center">CarSniper</h1>
+<h1 align="center">Motorbit</h1>
 
 <p align="center">
   <strong>Agregator inteligent de anunturi auto SH din Romania</strong><br/>
@@ -82,7 +82,7 @@
 ## Structura Proiectului
 
 ```
-car-sniper/
+motorbit/
 ├── backend/
 │   ├── core_app.py              # FastAPI app + toate rutele API
 │   ├── functii.py               # Motor de cautare, slug mappings, filtre
@@ -96,7 +96,7 @@ car-sniper/
 │       ├── autovit_scraper.py   # Autovit API scraper
 │       └── autovit_playwright.py # Autovit headless browser fallback
 ├── frontend/
-│   └── car-sniper/              # React + Vite application
+│   └── motorbit/              # React + Vite application
 │       └── src/
 │           ├── App.jsx          # Main app component
 │           ├── App.css          # Design system (dark glassmorphism)
@@ -131,8 +131,8 @@ car-sniper/
 ### 1. Clonare
 
 ```bash
-git clone https://github.com/RobertM05/car-sniper.git
-cd car-sniper
+git clone https://github.com/RobertM05/motorbit.git
+cd motorbit
 ```
 
 ### 2. Backend
@@ -158,7 +158,7 @@ RESEND_API_KEY=re_xxxxxxxxxxxx    # Pentru alerte email (optional)
 ### 4. Frontend
 
 ```bash
-cd frontend/car-sniper
+cd frontend/motorbit
 npm install
 ```
 
@@ -177,7 +177,7 @@ cd backend && source venv/bin/activate
 uvicorn main:app --reload --port 8000
 
 # Terminal 2 — Frontend
-cd frontend/car-sniper
+cd frontend/motorbit
 npm run dev
 ```
 
@@ -319,7 +319,7 @@ Distribuit sub licenta **MIT**. Vezi fisierul [LICENSE](LICENSE) pentru detalii.
 ---
 
 <p align="center">
-  <strong>CarSniper</strong> — Agregator de anunturi auto SH din Romania
+  <strong>Motorbit</strong> — Agregator de anunturi auto SH din Romania
   <br/>
   <sub>Built with FastAPI + React</sub>
 </p>

@@ -1,7 +1,7 @@
 import asyncio
 from dotenv import load_dotenv
 
-# Încărcăm variabilele de mediu pentru a avea acces la DATABASE_URL
+# Load environment variables to access DATABASE_URL
 load_dotenv()
 
 from scraper.autovit_scraper import scrape_autovit

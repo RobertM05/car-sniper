@@ -1,4 +1,4 @@
-const CACHE_PREFIX = 'carsniper_cache_';
+const CACHE_PREFIX = 'motorbit_cache_';
 const DEFAULT_TTL = 300000; // 5 minutes
 
 export function getCached(key) {

@@ -37,7 +37,7 @@ const AlertManager = () => {
 
     return (
         <div className="container">
-            <Helmet><title>{t('alerts', 'title')} | CarSniper</title><meta name="description" content="Manage your CarSniper price alerts. Get notified when new cars match your criteria." /></Helmet>
+            <Helmet><title>{t('alerts', 'title')} | Motorbit</title><meta name="description" content="Manage your Motorbit price alerts. Get notified when new cars match your criteria." /></Helmet>
             <h1 style={{ marginBottom: '2rem', color: 'var(--text-primary)', fontSize: '1.75rem', fontWeight: 700 }}>{t('alerts', 'title')}</h1>
             {alerts.length === 0 ? (
                 <div className="empty-state">

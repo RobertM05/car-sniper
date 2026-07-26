@@ -1,15 +1,15 @@
-# Project: CarSniper - Deal of the Day
+# Project: Motorbit - Deal of the Day
 
 ## Architecture
-CarSniper is a React/Vite + FastAPI web application using PostgreSQL (Supabase) as the backend database.
+Motorbit is a React/Vite + FastAPI web application using PostgreSQL (Supabase) as the backend database.
 - **Backend**: FastAPI app serving APIs. Rutele sunt definite în `backend/core_app.py`. DB helper functions are in `backend/car_database.py`.
-- **Frontend**: React application inside `frontend/car-sniper/src`. Components are in `frontend/car-sniper/src/components`.
+- **Frontend**: React application inside `frontend/motorbit/src`. Components are in `frontend/motorbit/src/components`.
 - **Database**: PostgreSQL database. The main table for car listings is `ads`, containing details like make, model, price, year, km, created_at, updated_at, active.
 
 ## Code Layout
-- Backend: `/Users/robert/car-sniper/backend`
-- Frontend: `/Users/robert/car-sniper/frontend/car-sniper`
-- Agent metadata: `/Users/robert/car-sniper/.agents`
+- Backend: `/Users/robert/motorbit/backend`
+- Frontend: `/Users/robert/motorbit/frontend/motorbit`
+- Agent metadata: `/Users/robert/motorbit/.agents`
 
 ## Milestones
 | # | Name | Scope | Dependencies | Status |

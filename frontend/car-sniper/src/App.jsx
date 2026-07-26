@@ -432,30 +432,30 @@ const AppContent = () => {
     <div>
       {urlMake && urlModel && (
         <Helmet>
-          <title>{`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | CarSniper`}</title>
+          <title>{`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | Motorbit`}</title>
           <meta name="description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare. Prețuri excelente și mașini verificate.`} />
-          <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"SearchResultsPage","name":`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vanzare`,"url":`https://carsniper.ro/masini/${urlMake}/${urlModel}`})}</script>
+          <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"SearchResultsPage","name":`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vanzare`,"url":`https://motorbit.ro/masini/${urlMake}/${urlModel}`})}</script>
         </Helmet>
       )}
       {!urlMake && !urlModel && (
         <Helmet>
-          <title>CarSniper - Găsește mașina dorită</title>
+          <title>Motorbit - Găsește mașina dorită</title>
           <meta name="description" content="Caută și găsește cele mai bune mașini second hand și noi." />
-          <meta property="og:title" content="CarSniper - Găsește mașina dorită" />
+          <meta property="og:title" content="Motorbit - Găsește mașina dorită" />
           <meta property="og:description" content="Caută și găsește cele mai bune mașini second hand și noi." />
           <meta property="og:type" content="website" />
-          <meta property="og:url" content="https://carsniper.ro" />
-          <link rel="canonical" href="https://carsniper.ro" />
+          <meta property="og:url" content="https://motorbit.ro" />
+          <link rel="canonical" href="https://motorbit.ro" />
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebSite",
-              "name": "CarSniper",
-              "url": "https://carsniper.ro",
+              "name": "Motorbit",
+              "url": "https://motorbit.ro",
               "description": "Cauta si gaseste cele mai bune masini second hand si noi.",
               "potentialAction": {
                 "@type": "SearchAction",
-                "target": "https://carsniper.ro/?make={search_term_string}",
+                "target": "https://motorbit.ro/?make={search_term_string}",
                 "query-input": "required name=search_term_string"
               }
             })}

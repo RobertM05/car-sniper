@@ -13,7 +13,7 @@ def export_to_csv():
     with car_db_optimizer.get_connection() as conn:
         cursor = conn.cursor()
 
-        # Obținem numele coloanelor pentru tabelul ads
+        # Get column names for the ads table
         cursor.execute("SELECT * FROM ads LIMIT 0")
         column_names = [desc[0] for desc in cursor.description]
 

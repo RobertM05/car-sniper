@@ -1115,11 +1115,11 @@ def send_email_notification(to_email: str, car_list: list, search_details: str):
         )
         return
 
-    subject = f"CarSniper: {len(car_list)} oferte noi pentru {search_details}"
+    subject = f"Motorbit: {len(car_list)} oferte noi pentru {search_details}"
 
     html_content = f"""
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0a0a0a; color: #ffffff; border-radius: 10px;">
-        <h2 style="color: #38bdf8; text-align: center;">Vânătoare încheiată cu succes!</h2>
+        <h2 style="color: #f59e0b; text-align: center;">Vânătoare încheiată cu succes!</h2>
         <p style="font-size: 16px; line-height: 1.5; text-align: center;">Am găsit <strong>{len(car_list)}</strong> mașini noi pentru căutarea ta ({search_details}):</p>
         <div style="margin-top: 30px;">
     """
@@ -1127,12 +1127,12 @@ def send_email_notification(to_email: str, car_list: list, search_details: str):
     for car in car_list:
         link = car.get("link") or car.get("url")
         html_content += f"""
-        <div style="background-color: #121212; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #38bdf8; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="background-color: #121212; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #f59e0b; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h3 style="margin-top: 0; font-size: 18px;">
-                <a href="{link}" style="color: #38bdf8; text-decoration: none;">{car.get("title")}</a>
+                <a href="{link}" style="color: #f59e0b; text-decoration: none;">{car.get("title")}</a>
             </h3>
             <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 14px; color: #e4e4e7;">
-                <li><strong>Preț:</strong> <span style="color: #4ade80; font-weight: bold;">{car.get("price")}</span></li>
+                <li><strong>Preț:</strong> <span style="color: #f59e0b; font-weight: bold;">{car.get("price")}</span></li>
                 <li><strong>An:</strong> {car.get("year") or "?"}</li>
                 <li><strong>Km:</strong> {car.get("km") or "?"}</li>
             </ul>
@@ -1142,13 +1142,13 @@ def send_email_notification(to_email: str, car_list: list, search_details: str):
     html_content += """
         </div>
         <p style="font-size: 12px; color: #a1a1aa; text-align: center; margin-top: 30px; border-top: 1px solid #27272a; padding-top: 20px;">
-            Aceasta este o notificare generată automat de algoritmul CarSniper.
+            Aceasta este o notificare generată automat de algoritmul Motorbit.
         </p>
     </div>
     """
 
     params = {
-        "from": "CarSniper Alerts <onboarding@resend.dev>",
+        "from": "Motorbit Alerts <onboarding@resend.dev>",
         "to": [to_email],
         "subject": subject,
         "html": html_content,

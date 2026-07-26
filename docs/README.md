@@ -10,5 +10,5 @@
 ## Quick Links
 - **Bug Tracker:** [docs/BUG_TRACKER.md](BUG_TRACKER.md)
 - **Changelog:** [docs/CHANGELOG.md](CHANGELOG.md)  
-- **GitHub Repo:** [github.com/RobertM05/car-sniper](https://github.com/RobertM05/car-sniper)
-- **CI Pipeline:** [GitHub Actions](https://github.com/RobertM05/car-sniper/actions)
+- **GitHub Repo:** [github.com/RobertM05/motorbit](https://github.com/RobertM05/motorbit)
+- **CI Pipeline:** [GitHub Actions](https://github.com/RobertM05/motorbit/actions)
