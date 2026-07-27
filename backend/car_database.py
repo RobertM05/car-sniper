@@ -1,13 +1,15 @@
+import json
+import logging
+import os
+import re
+from contextlib import contextmanager
+from typing import Dict, List, Optional, Tuple
+
+import bcrypt
 import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor
-import json
-from typing import Dict, List, Optional, Tuple
-import re
-import bcrypt
-import os
-import logging
-from contextlib import contextmanager
+
 from logger import get_logger
 from metrics import metrics
 
@@ -15,9 +17,9 @@ log = get_logger("car_database")
 
 
 class CarDatabaseOptimizer:
-    _NUMERIC_MODEL_NAMES: set[str] = {"2008", "3008", "5008", "4007", "1007"}
+    _NUMERIC_MODEL_NAMES: frozenset[str] = frozenset({"2008", "3008", "5008", "4007", "1007"})
 
-    def __init__(self, db_path: str = None):
+    def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
             # Preluam de la Vercel sau din mediul local. Daca lipsește, dăm un fallback simulat.
             self.db_path = os.environ.get(
@@ -64,7 +66,7 @@ class CarDatabaseOptimizer:
                 if from_pool and self.connection_pool:
                     try:
                         self.connection_pool.putconn(conn, close=bool(conn.closed))
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         pass
                 else:
                     if conn:

@@ -1,7 +1,9 @@
 import csv
 import datetime
 import os
+
 from dotenv import load_dotenv
+
 from car_database import car_db_optimizer
 
 load_dotenv()
