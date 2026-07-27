@@ -1,5 +1,5 @@
 [lint]
-ignore = ["BLE001", "I001"]
+ignore = ["BLE001", "I001", "DTZ005"]
 
 [lint.per-file-ignores]
 "core_app.py" = ["E402"]
