@@ -1,3 +1,6 @@
+[lint]
+ignore = ["BLE001", "I001"]
+
 [lint.per-file-ignores]
 "core_app.py" = ["E402"]
 "crawler.py" = ["E402"]

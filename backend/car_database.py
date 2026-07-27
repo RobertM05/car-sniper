@@ -17,7 +17,9 @@ log = get_logger("car_database")
 
 
 class CarDatabaseOptimizer:
-    _NUMERIC_MODEL_NAMES: frozenset[str] = frozenset({"2008", "3008", "5008", "4007", "1007"})
+    _NUMERIC_MODEL_NAMES: frozenset[str] = frozenset(
+        {"2008", "3008", "5008", "4007", "1007"}
+    )
 
     def __init__(self, db_path: Optional[str] = None):
         if db_path is None:
