@@ -434,7 +434,16 @@ const AppContent = () => {
         <Helmet>
           <title>{`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | Motorbit`}</title>
           <meta name="description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare. Prețuri excelente și mașini verificate.`} />
-          <script type="application/ld+json">{JSON.stringify({"@context":"https://schema.org","@type":"SearchResultsPage","name":`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vanzare`,"url":`https://motorbit.ro/masini/${urlMake}/${urlModel}`})}</script>
+          <meta property="og:title" content={`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | Motorbit`} />
+          <meta property="og:description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare.`} />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content={`https://motorbit.ro/masini/${urlMake}/${urlModel}`} />
+          <meta property="og:image" content="https://motorbit.ro/og-image.png" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={`${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare - Cele mai bune prețuri | Motorbit`} />
+          <meta name="twitter:description" content={`Găsește cele mai bune oferte pentru ${decodeURIComponent(urlMake)} ${decodeURIComponent(urlModel)} de vânzare.`} />
+          <meta name="twitter:image" content="https://motorbit.ro/og-image.png" />
+          <link rel="canonical" href={`https://motorbit.ro/masini/${urlMake}/${urlModel}`} />
         </Helmet>
       )}
       {!urlMake && !urlModel && (
@@ -445,14 +454,21 @@ const AppContent = () => {
           <meta property="og:description" content="Caută și găsește cele mai bune mașini second hand și noi." />
           <meta property="og:type" content="website" />
           <meta property="og:url" content="https://motorbit.ro" />
+          <meta property="og:image" content="https://motorbit.ro/og-image.png" />
+          <meta property="og:image:width" content="1200" />
+          <meta property="og:image:height" content="630" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content="Motorbit - Găsește mașina dorită" />
+          <meta name="twitter:description" content="Caută și găsește cele mai bune mașini second hand și noi." />
+          <meta name="twitter:image" content="https://motorbit.ro/og-image.png" />
           <link rel="canonical" href="https://motorbit.ro" />
           <script type="application/ld+json">
             {JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebSite",
+              "@type": ["WebSite", "Organization"],
               "name": "Motorbit",
               "url": "https://motorbit.ro",
-              "description": "Cauta si gaseste cele mai bune masini second hand si noi.",
+              "description": "Cauta si gaseste cele mai bune masini second hand si noi. Analiza de piata si scoruri de oferta pentru anunturi de pe OLX si Autovit.",
               "potentialAction": {
                 "@type": "SearchAction",
                 "target": "https://motorbit.ro/?make={search_term_string}",
@@ -464,7 +480,7 @@ const AppContent = () => {
       )}
       <nav className="top-nav">
         <div className="nav-brand">
-          <span>C</span> CARSNIPER
+          <span>M</span> MOTORBIT
         </div>
         <div className="nav-links">
           <a href="#">{t('nav', 'browse')}</a>
@@ -675,14 +691,15 @@ const App = () => {
     <Routes>
       <Route path="/" element={<AppContent />} />
       <Route path="/masini/:make/:model" element={<AppContent />} />
-      <Route path="/termeni" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="terms" /></div>} />
-      <Route path="/confidentialitate" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><LegalPage type="privacy" /></div>} />
+      <Route path="/termeni" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>M</span> MOTORBIT</a></div></nav><LegalPage type="terms" /></div>} />
+      <Route path="/confidentialitate" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>M</span> MOTORBIT</a></div></nav><LegalPage type="privacy" /></div>} />
       <Route path="/partner-dashboard" element={<PartnerDashboard />} />
-      <Route path="/pricing" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><PricingPage /></div>} />
-          <Route path="/dealer/:email" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><DealerProfile /></div>} />
-      <Route path="/alerts" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>C</span> CARSNIPER</a></div></nav><AlertManager /></div>} />
+      <Route path="/pricing" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>M</span> MOTORBIT</a></div></nav><PricingPage /></div>} />
+          <Route path="/dealer/:email" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>M</span> MOTORBIT</a></div></nav><DealerProfile /></div>} />
+      <Route path="/alerts" element={<div><nav className="top-nav"><div className="nav-brand"><a href="/" style={{textDecoration: 'none', color: 'inherit'}}><span>M</span> MOTORBIT</a></div></nav><AlertManager /></div>} />
       <Route path="*" element={
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'DM Sans, sans-serif' }}>
+          <Helmet><title>404 - Pagina nu a fost gasita | Motorbit</title><meta name="robots" content="noindex" /></Helmet>
           <h1 style={{ fontSize: '4rem', fontWeight: 800, margin: 0, color: 'var(--primary-color)' }}>404</h1>
           <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', margin: '1rem 0' }}>Pagina nu a fost gasita</p>
           <a href="/" style={{ color: 'var(--primary-color)', fontWeight: 600, textDecoration: 'none', marginTop: '1rem' }}>Inapoi acasa</a>

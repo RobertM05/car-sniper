@@ -1418,6 +1418,9 @@ def get_sitemap():
     xml_content = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml_content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     xml_content += "  <url><loc>https://motorbit.ro/</loc></url>\n"
+    xml_content += "  <url><loc>https://motorbit.ro/pricing</loc><priority>0.8</priority></url>\n"
+    xml_content += "  <url><loc>https://motorbit.ro/termeni</loc><priority>0.3</priority></url>\n"
+    xml_content += "  <url><loc>https://motorbit.ro/confidentialitate</loc><priority>0.3</priority></url>\n"
 
     for m in models:
         make = m.get("make", "").lower().replace(" ", "-")
