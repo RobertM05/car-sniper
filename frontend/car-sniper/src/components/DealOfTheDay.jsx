@@ -36,16 +36,33 @@ const DealOfTheDay = () => {
                 }
                 setLoading(true);
                 setError(null);
-                const response = await fetch(`${API_BASE_URL}/api/deals/top`);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/deals/top`, {
+                        signal: controller.signal,
+                    });
+                    clearTimeout(timeoutId);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    setDeals(data.results || []);
+                    setCache('top_deals', data.results || []);
+                } catch (fetchErr) {
+                    clearTimeout(timeoutId);
+                    if (fetchErr.name === 'AbortError') {
+                        const stale = getCached('top_deals');
+                        if (stale && stale.length > 0) {
+                            setDeals(stale);
+                            return;
+                        }
+                    }
+                    throw fetchErr;
                 }
-                const data = await response.json();
-                if (data.error) {
-                    throw new Error(data.error);
-                }
-                setDeals(data.results || []);
-                setCache('top_deals', data.results || []);
             } catch (err) {
                 console.error("Failed to fetch top deals:", err);
                 setError(err.message);
