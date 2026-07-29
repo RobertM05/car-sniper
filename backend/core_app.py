@@ -408,7 +408,7 @@ async def api_search(
 
 
 # WARNING: Process-local cache. Use Redis in production with multiple workers.
-_CACHE_TIMEOUT = 300  # 5 minutes
+_CACHE_TIMEOUT = 1800  # 30 minutes
 _TOP_DEALS_CACHE = {"timestamp": 0, "deals": []}
 _TOP_DEALS_CACHE_TTL = _CACHE_TIMEOUT
 
@@ -1410,6 +1410,56 @@ async def api_cron_cleanup(request: Request, authorization: str = Header(None)):
 
 from fastapi import Response
 
+
+
+@app.get("/api/cron/prewarm")
+def cron_prewarm_deals():
+    """Vercel cron: pre-warm the top deals cache so it never expires cold."""
+    try:
+        global _TOP_DEALS_CACHE
+        _TOP_DEALS_CACHE["timestamp"] = 0  # force refresh
+        recent_ads = car_db_optimizer.get_recent_active_ads(hours_threshold=72)
+        if not recent_ads:
+            return {"status": "no_ads", "cached": 0}
+
+        import random
+        random.shuffle(recent_ads)
+        candidates = recent_ads[:30]
+
+        grouped = {}
+        for ad in candidates:
+            make, model = ad.get("make"), ad.get("model")
+            if not make or not model:
+                continue
+            key = (make.lower().strip(), model.lower().strip())
+            grouped.setdefault(key, []).append(ad)
+
+        for (make_lower, model_lower), group in grouped.items():
+            peer_pool = car_db_optimizer.get_active_ads_for_make_model(
+                group[0]["make"], group[0]["model"]
+            )
+            if not peer_pool:
+                continue
+            s_model = model_lower.replace(" ", "-")
+            stats = car_db_optimizer.get_model_stats(group[0]["make"], s_model) or {}
+            scored = calculate_deal_scores(peer_pool, stats)
+            scores = {ad["id"]: ad.get("deal_score") for ad in scored if "id" in ad}
+            for ad in group:
+                ad["deal_score"] = scores.get(ad.get("id"))
+
+        valid = [ad for ad in candidates if ad.get("deal_score") is not None]
+        valid.sort(key=lambda x: x["deal_score"], reverse=True)
+        top_deals = valid[:8]
+        for ad in top_deals:
+            p = ad.get("price")
+            if p is not None:
+                ad["price"] = str(p).replace(",", "").replace(" EUR", "").replace(" €", "") + " €"
+
+        _TOP_DEALS_CACHE["timestamp"] = time.time()
+        _TOP_DEALS_CACHE["deals"] = top_deals
+        return {"status": "ok", "cached": len(top_deals)}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 @app.get("/sitemap.xml")
 def get_sitemap():

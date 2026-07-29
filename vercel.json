@@ -1,41 +1,49 @@
 {
-    "regions": ["fra1"],
-    "builds": [
-        {
-            "src": "backend/main.py",
-            "use": "@vercel/python"
-        },
-        {
-            "src": "frontend/car-sniper/package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/(.*)",
-            "dest": "/backend/main.py"
-        },
-        {
-            "src": "/(assets/.*|.*\\.(ico|png|jpg|jpeg|svg|css|js|json|woff|woff2|ttf|eot))$",
-            "dest": "/frontend/car-sniper/$1"
-        },
-        { "handle": "filesystem" },
-        {
-            "src": "/(.*)",
-            "dest": "/frontend/car-sniper/index.html"
-        }
-    ],
-    "crons": [
-        {
-            "path": "/api/cron/run",
-            "schedule": "0 0 * * *"
-        },
-        {
-            "path": "/api/cron/cleanup",
-            "schedule": "0 2 * * *"
-        }
-    ]
+  "regions": [
+    "fra1"
+  ],
+  "builds": [
+    {
+      "src": "backend/main.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "frontend/car-sniper/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/backend/main.py"
+    },
+    {
+      "src": "/(assets/.*|.*\\.(ico|png|jpg|jpeg|svg|css|js|json|woff|woff2|ttf|eot))$",
+      "dest": "/frontend/car-sniper/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/car-sniper/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/prewarm",
+      "schedule": "*/25 * * * *"
+    },
+    {
+      "path": "/api/cron/run",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }
