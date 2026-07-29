@@ -1,6 +1,6 @@
 from scraper.olx_scraper import scrape_olx
 from scraper.autovit_scraper import scrape_autovit
-from car_database import get_optimized_search_params, car_db_optimizer
+from car_database import get_optimized_search_params, car_db_optimizer, parse_ro_price
 import re
 import time
 import functools
@@ -953,8 +953,7 @@ async def search_cars(
                         soup = BeautifulSoup(html, "html.parser")
                         nd = soup.find("script", {"id": "__NEXT_DATA__"})
                         p_str = str(ad.get("price", "0"))
-                        p_digits = "".join(filter(str.isdigit, p_str))
-                        current_price = int(p_digits) if p_digits else 0
+                        current_price = parse_ro_price(p_str)
                         if nd and nd.string:
                             d = _json_live.loads(nd.string)
                             pp = d.get("props", {}).get("pageProps", {})

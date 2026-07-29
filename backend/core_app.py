@@ -32,7 +32,7 @@ ALLOW_LIVE_SCRAPING = not IS_VERCEL or VERCEL_LIVE_SCRAPING
 
 from scraper.olx_scraper import scrape_olx
 from functii import search_cars, add_alert
-from car_database import car_db_optimizer, get_optimized_search_params
+from car_database import car_db_optimizer, get_optimized_search_params, parse_ro_price
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -200,8 +200,7 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
         for car in car_list:
             try:
                 p_str = str(car.get("price", "0"))
-                p_digits = "".join(filter(str.isdigit, p_str))
-                p = int(p_digits) if p_digits else 0
+                p = parse_ro_price(p_str)
 
                 y_str = "".join(filter(str.isdigit, str(car.get("year", 0))))
                 y = int(y_str) if y_str else 0
@@ -448,7 +447,9 @@ def get_top_deals(request: Request):
             if isinstance(score, Decimal):
                 ad["deal_score"] = float(score)
             elif score is not None:
-                ad["deal_score"] = float(score) if hasattr(score, '__float__') else score
+                ad["deal_score"] = (
+                    float(score) if hasattr(score, "__float__") else score
+                )
 
         _TOP_DEALS_CACHE["timestamp"] = current_time
         _TOP_DEALS_CACHE["deals"] = top_deals
@@ -1423,9 +1424,14 @@ def cron_refresh_scores():
     """Refresh market snapshots for deal scoring. Runs as a Vercel cron job."""
     try:
         count = car_db_optimizer.refresh_market_snapshots()
+        repaired = car_db_optimizer.repair_inflated_prices()
         global _TOP_DEALS_CACHE
         _TOP_DEALS_CACHE["timestamp"] = 0
-        return {"status": "ok", "snapshots_refreshed": count}
+        return {
+            "status": "ok",
+            "snapshots_refreshed": count,
+            "prices_repaired": repaired,
+        }
     except Exception as e:
         return {"status": "error", "detail": str(e)}
 
