@@ -684,6 +684,29 @@ class CarDatabaseOptimizer:
             conn.commit()
             return count
 
+    def get_stale_ad_urls(self, hours_threshold: int = 336, limit: int = 20) -> List[Dict]:
+        """Fetch a batch of stale ad URLs for liveness verification."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, link FROM ads
+                WHERE active = TRUE
+                  AND last_seen < NOW() - CAST(%s AS interval)
+                ORDER BY last_seen ASC
+                LIMIT %s
+                """,
+                (f"{hours_threshold} hours", limit),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+
+    def deactivate_ad(self, ad_id: str):
+        """Deactivate a single ad by ID."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE ads SET active = FALSE WHERE id = %s", (ad_id,))
+            conn.commit()
+
     def deduplicate_ads(self):
         """One-time cleanup: deactivate duplicate active ads by normalized URL hash."""
         with self.get_connection() as conn:
