@@ -812,7 +812,6 @@ class CarDatabaseOptimizer:
                  AND ms.year_bucket_end >= a.year
                 WHERE a.active = TRUE
                   AND a.price > 0
-                  AND a.deal_score IS NULL
                 ORDER BY deal_score DESC
                 LIMIT %s
             """,
