@@ -1285,14 +1285,17 @@ html, body {
   align-items: center;
   gap: 0.35rem;
   margin-bottom: 1rem;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 .deal-dot {
   font-size: 1rem;
 }
-.deal-inline-score.deal-excellent { color: #10b981; }
-.deal-inline-score.deal-good { color: #f59e0b; }
-.deal-inline-score.deal-fair { color: #f59e0b; }
-.deal-inline-score.deal-overpriced { color: #ef4444; }
+.deal-inline-score.deal-excellent { color: #10b981 !important; }
+.deal-inline-score.deal-good { color: #f59e0b !important; }
+.deal-inline-score.deal-fair { color: #f59e0b !important; }
+.deal-inline-score.deal-overpriced { color: #ef4444 !important; }
 
 .car-footer-deal {
   margin-top: auto;
