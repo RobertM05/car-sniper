@@ -37,33 +37,27 @@
 }
 
 .dark {
-  --bg-primary: #0a1628;
-  --bg-secondary: #132440;
-
-  --bg-shell: #132440;
-  --bg-core: #0a1628;
-
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-
-  --accent-color: #f1f5f9;
-  --accent-glow: rgba(255, 255, 255, 0.03);
-  --primary-color: #f59e0b;
-  --primary-hover: #d97706;
-  --highlight-color: #f59e0b;
-
-  --bg-card: #132440;
-  --border-color: #1e3a5f;
-
-  --border-shell: #1e3a5f;
-  --border-core: #132440;
-  --border-highlight: #2d4a6e;
-
-  --shadow-ambient: 0 4px 16px rgba(0, 0, 0, 0.3);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.2);
-  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.4);
-  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-shell: #161b22;
+  --bg-core: #0d1117;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --accent-color: #e6edf3;
+  --accent-glow: rgba(88, 166, 255, 0.04);
+  --primary-color: #58a6ff;
+  --primary-hover: #79c0ff;
+  --highlight-color: #58a6ff;
+  --bg-card: #161b22;
+  --border-color: #21262d;
+  --border-shell: #21262d;
+  --border-core: #161b22;
+  --border-highlight: #30363d;
+  --shadow-ambient: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   --shimmer-color: rgba(255, 255, 255, 0.04);
 }
 

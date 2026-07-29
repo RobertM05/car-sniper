@@ -518,21 +518,24 @@ const AppContent = () => {
           <p className="hero-subtitle">
             {t('hero', 'subtitle')}
           </p>
-          <SearchForm
-            formData={formData}
-            setFormData={setFormData}
-            brands={brands}
-            models={models}
-            loadingBrands={loadingBrands}
-            loadingModels={loadingModels}
-            onSubmit={handleSearchSubmit}
-            loading={loading}
-            onAlertClick={() => setIsAlertOpen(true)}
-          />
         </div>
       </div>
 
       <TrustStats stats={siteStats} />
+
+      <div className="container">
+        <SearchForm
+          formData={formData}
+          setFormData={setFormData}
+          brands={brands}
+          models={models}
+          loadingBrands={loadingBrands}
+          loadingModels={loadingModels}
+          onSubmit={handleSearchSubmit}
+          loading={loading}
+          onAlertClick={() => setIsAlertOpen(true)}
+        />
+      </div>
       <Breadcrumbs />
 
       <div className="container">

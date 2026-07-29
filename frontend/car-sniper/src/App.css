@@ -73,36 +73,35 @@ html, body {
 
 /* === HERO SECTION === */
 .hero-section {
-  text-align: left;
-  height: 520px;
+  text-align: center;
+  min-height: 380px;
   position: relative;
-  background-image:
-    linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%),
-    url('./assets/hero_bg.webp');
-  background-size: cover;
-  background-position: center 60%;
-  background-repeat: no-repeat;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 85%, rgba(88, 166, 255, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+    var(--bg-core);
 }
 
 .hero-section .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem;
-  padding-bottom: 0;
-  height: 100%;
+  padding: 2rem 2rem 0 2rem;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .hero-title {
   color: #ffffff;
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: 800;
   line-height: 1.05;
   margin-bottom: 1.5rem;
   letter-spacing: -0.04em;
-  max-width: 900px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
   animation: fadeUp 1s var(--spring-easing) forwards;
 }
 
@@ -124,7 +123,8 @@ html, body {
 }
 
 .hero-section .search-form-shell {
-  margin-top: 2rem;
+  margin-top: 1rem;
+  padding-bottom: 1rem;
   animation: fadeUp 1s var(--spring-easing) 0.6s forwards;
 }
 
@@ -254,7 +254,7 @@ html, body {
   font-weight: 500;
   cursor: pointer;
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1em;
@@ -285,9 +285,10 @@ html, body {
   border-radius: 1rem;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   position: relative;
   transition: box-shadow 0.4s ease;
+  overflow: hidden;
 }
 
 .car-card-shell:hover .car-card-core {
@@ -295,11 +296,13 @@ html, body {
 }
 
 .car-image-container {
-  width: 100%;
-  aspect-ratio: 16/11;
+  width: 200px;
+  min-width: 200px;
+  height: 150px;
   position: relative;
   overflow: hidden;
-  border-radius: inherit;
+  border-radius: 1rem 0 0 1rem;
+  flex-shrink: 0;
 }
 
 /* Vignette overlay to blend image into dark mode */
@@ -339,7 +342,7 @@ html, body {
 }
 
 .car-card-shell:hover .car-image {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
 .car-link-overlay {
