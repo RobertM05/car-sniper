@@ -302,6 +302,7 @@ html, body {
   border: 1px solid var(--border-shell);
   border-radius: 1rem;
   height: 100%;
+  min-height: 170px;
   display: flex;
   flex-direction: row;
   position: relative;
