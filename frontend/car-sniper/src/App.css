@@ -76,10 +76,19 @@ html, body {
   text-align: center;
   min-height: 380px;
   position: relative;
-  background:
-    radial-gradient(ellipse 80% 60% at 20% 85%, rgba(88, 166, 255, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 80% 20%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
-    var(--bg-core);
+  background-image: url('./assets/hero_bg.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.dark .hero-section {
+  background-image: url('./assets/hero_bg.webp');
+}
+
+.light .hero-section,
+.hero-section {
+  background-image: url('./assets/hero_bg_light.webp');
 }
 
 .hero-section .container {
@@ -93,7 +102,7 @@ html, body {
 }
 
 .hero-title {
-  color: #ffffff;
+  color: var(--text-primary);
   font-size: 2.5rem;
   font-weight: 800;
   line-height: 1.05;
@@ -106,12 +115,20 @@ html, body {
 }
 
 .hero-subtitle {
-  color: rgba(255,255,255,0.8);
+  color: var(--text-secondary);
   font-size: 1.125rem;
   max-width: 500px;
   line-height: 1.6;
   font-weight: 400;
   animation: fadeUp 1s var(--spring-easing) 0.2s forwards;
+}
+
+.dark .hero-title {
+  color: #ffffff;
+}
+
+.dark .hero-subtitle {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* === SEARCH FORM === */
