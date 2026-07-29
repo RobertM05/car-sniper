@@ -432,13 +432,23 @@ def get_top_deals(request: Request):
             return {"results": []}
 
         for ad in top_deals:
-            price_val = ad.get("price")
+            from decimal import Decimal
+
+            price_val = ad.get("original_price") or ad.get("price")
             if price_val is not None:
+                if isinstance(price_val, Decimal):
+                    price_val = int(price_val)
                 if isinstance(price_val, str):
                     if "€" not in price_val:
                         ad["price"] = f"{price_val} €"
                 else:
-                    ad["price"] = f"{price_val} €"
+                    ad["price"] = f"{int(price_val)} €"
+
+            score = ad.get("deal_score")
+            if isinstance(score, Decimal):
+                ad["deal_score"] = float(score)
+            elif score is not None:
+                ad["deal_score"] = float(score) if hasattr(score, '__float__') else score
 
         _TOP_DEALS_CACHE["timestamp"] = current_time
         _TOP_DEALS_CACHE["deals"] = top_deals
