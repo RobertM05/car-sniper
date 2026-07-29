@@ -531,19 +531,21 @@ html, body {
 
 .spec-chip {
   background: var(--bg-secondary);
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border: 1px solid var(--border-shell);
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  border: 1px solid var(--border-highlight);
+  letter-spacing: -0.01em;
 }
 
 .car-footer {
   margin-top: auto;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
+  padding-top: 0.25rem;
 }
 
 .price {
