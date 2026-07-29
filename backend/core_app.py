@@ -32,7 +32,7 @@ ALLOW_LIVE_SCRAPING = not IS_VERCEL or VERCEL_LIVE_SCRAPING
 
 from scraper.olx_scraper import scrape_olx
 from functii import search_cars, add_alert
-from car_database import car_db_optimizer, get_optimized_search_params
+from car_database import car_db_optimizer, get_optimized_search_params, parse_ro_price
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -200,8 +200,7 @@ def calculate_deal_scores(results: list, stats: dict, peer_pool: list = None) ->
         for car in car_list:
             try:
                 p_str = str(car.get("price", "0"))
-                p_digits = "".join(filter(str.isdigit, p_str))
-                p = int(p_digits) if p_digits else 0
+                p = parse_ro_price(p_str)
 
                 y_str = "".join(filter(str.isdigit, str(car.get("year", 0))))
                 y = int(y_str) if y_str else 0

@@ -24,6 +24,27 @@ def _normalize_url(url: str) -> str:
     return urlunparse((parsed.scheme, parsed.netloc.lower(), path, "", "", ""))
 
 
+
+def parse_ro_price(price_raw) -> int:
+    """Parse a Romanian-formatted price string to integer EUR.
+
+    Romanian format: dot = thousands separator, comma = decimal separator.
+    Examples: "26.426 EUR" -> 26426, "26.426,40 EUR" -> 26426, "12.500 EUR" -> 12500.
+    """
+    if not price_raw:
+        return 0
+    s = str(price_raw).strip()
+    s = s.replace(" EUR", "").replace(" €", "").replace("EUR", "").replace("€", "").strip()
+    s = s.replace(".", "")
+    s = s.replace(",", ".")
+    m = re.match(r"^(\d+(?:\.\d+)?)", s)
+    if not m:
+        return 0
+    try:
+        return int(float(m.group(1)))
+    except (ValueError, TypeError):
+        return 0
+
 class CarDatabaseOptimizer:
     _NUMERIC_MODEL_NAMES: frozenset[str] = frozenset(
         {"2008", "3008", "5008", "4007", "1007"}
@@ -414,8 +435,7 @@ class CarDatabaseOptimizer:
                 ad_id = ad_data["id"]
             try:
                 p_str = str(ad_data.get("price", "0"))
-                p_digits = "".join(filter(str.isdigit, p_str))
-                price_val = int(p_digits) if p_digits else 0
+                price_val = parse_ro_price(p_str)
             except Exception:
                 price_val = 0
 
@@ -494,8 +514,7 @@ class CarDatabaseOptimizer:
                     ad_id = ad_data["id"]
                 try:
                     p_str = str(ad_data.get("price", "0"))
-                    p_digits = "".join(filter(str.isdigit, p_str))
-                    price_val = int(p_digits) if p_digits else 0
+                    price_val = parse_ro_price(p_str)
                 except Exception:
                     price_val = 0
 
