@@ -103,22 +103,31 @@ const DealOfTheDay = () => {
     return (
         <div className="deals-section-shell">
             <div className="deals-section-core">
-                <div className="deals-section-header">
-                    <h2 className="deals-section-title">
-                        {t('dealOfTheDay', 'title')}
-                    </h2>
-                    <p className="deals-section-subtitle">
-                        {t('dealOfTheDay', 'subtitle')}
-                    </p>
-                </div>
+                
+                {/* 1. FEATURED DEAL OF THE DAY */}
                 {deals.length > 0 && (() => {
                     const top = deals[0];
                     const rawPrice = parseInt(String(top.price).replace(/\D/g, '')) || 0;
                     const displayPrice = rawPrice === 0 ? t('card', 'priceOnRequest')
                         : new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(rawPrice);
+                    
+                    const hasPeerAvg = top.peer_avg_price > 0;
+                    const formattedPeerAvgPrice = hasPeerAvg
+                        ? new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(top.peer_avg_price)
+                        : '';
+                        
                     const formattedSavings = top.price_diff > 0
                         ? new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(top.price_diff)
                         : '';
+                    
+                    // calculate price diff percentage
+                    const diffPercent = hasPeerAvg && rawPrice > 0 
+                        ? (((top.peer_avg_price - rawPrice) / top.peer_avg_price) * 100).toFixed(1)
+                        : null;
+                    
+                    const isOlx = (top.link || top.url || "").includes('olx');
+                    const siteName = top.subsource || top.source || (isOlx ? 'OLX' : 'Autovit');
+                    
                     let dealClass = '';
                     let dealTextKey = '';
                     if (top.deal_score != null) {
@@ -127,56 +136,159 @@ const DealOfTheDay = () => {
                         else if (top.deal_score >= 40) { dealClass = 'deal-fair'; dealTextKey = 'fair'; }
                         else { dealClass = 'deal-overpriced'; dealTextKey = 'overpriced'; }
                     }
+                    
                     return (
-                        <div className="dotd-featured-card">
-                            <img
-                                src={top.image || "https://placehold.co/600x400/1e293b/cbd5e1?text=No+Image"}
-                                alt={top.title}
-                                className="dotd-featured-image"
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/1e293b/cbd5e1?text=Error"; }}
-                            />
-                            <div className="dotd-featured-content">
-                                <div style={{ flex: 1 }}>
-                                    <div className="dotd-featured-meta">
-                                        <span className="dotd-featured-source">{top.source || top.subsource || 'OLX'}</span>
-                                    </div>
-                                    <h3 className="dotd-featured-title">{top.title || top.name}</h3>
-                                    <p className="dotd-featured-specs">
-                                        {[top.km && top.km + ' km', top.year, top.fuel, top.transmission].filter(Boolean).join(' · ')}
-                                    </p>
-                                    <p className="dotd-featured-price">{displayPrice}</p>
-                                    {top.price_diff > 0 && (
-                                        <p className="dotd-featured-savings">
-                                            {t('deal', 'savingsMessage', { amount: formattedSavings })}
-                                        </p>
-                                    )}
-                                </div>
-                                {top.deal_score != null && (
-                                    <div className="dotd-featured-score-area">
-                                        <div className={`deal-ring ${dealClass}`}>
-                                            <div className="deal-score">{top.deal_score}</div>
-                                            <div className="deal-label">{t('deal', dealTextKey)}</div>
-                                        </div>
-                                    </div>
-                                )}
+                        <div className="dotd-featured-wrapper">
+                            <div className="dotd-section-header">
+                                <h2 className="dotd-section-title">
+                                    <span className="dotd-title-accent"></span>
+                                    {t('dealOfTheDay', 'title')}
+                                </h2>
+                                <span className="dotd-badge">{t('dealOfTheDay', 'badge')}</span>
                             </div>
-                            <a
-                                href={top.url || top.link}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ position: 'absolute', inset: 0, zIndex: 10, opacity: 0 }}
-                                aria-label={t('deal', 'viewDealAriaLabel', { title: top.title })}
-                            />
+                            
+                            <div className="dotd-featured-card">
+                                <div className="dotd-featured-image-col">
+                                    <img
+                                        src={top.image || "https://placehold.co/600x400/1e293b/cbd5e1?text=No+Image"}
+                                        alt={top.title}
+                                        className="dotd-featured-image"
+                                        loading="lazy"
+                                        referrerPolicy="no-referrer"
+                                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/1e293b/cbd5e1?text=Error"; }}
+                                    />
+                                </div>
+                                
+                                <div className="dotd-featured-content-col">
+                                    {top.deal_score != null && (
+                                        <div className="dotd-score-header">
+                                            <div className={`dotd-score-circle ${dealClass}`}>
+                                                {top.deal_score}
+                                            </div>
+                                            <div className="dotd-score-label">
+                                                <span className={`dotd-score-text ${dealClass}`}>{t('deal', dealTextKey).toUpperCase()}</span>
+                                                <span className="dotd-score-subtext">{t('deal', 'scoreLabel')}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    <h3 className="dotd-featured-title">{top.title || top.name}</h3>
+                                    <p className="dotd-featured-price">{displayPrice}</p>
+                                    
+                                    <table className="dotd-specs-table">
+                                        <tbody>
+                                            {top.year && (
+                                                <tr>
+                                                    <td className="spec-label">An</td>
+                                                    <td className="spec-val">{top.year}</td>
+                                                </tr>
+                                            )}
+                                            {top.km != null && top.km !== '' && (
+                                                <tr>
+                                                    <td className="spec-label">km</td>
+                                                    <td className="spec-val">{top.km} km</td>
+                                                </tr>
+                                            )}
+                                            {top.fuel && (
+                                                <tr>
+                                                    <td className="spec-label">Combustibil</td>
+                                                    <td className="spec-val">{top.fuel}</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                    
+                                    <div className="dotd-featured-actions">
+                                        <a href={top.url || top.link} target="_blank" rel="noreferrer" className="btn-navy">
+                                            {t('card', 'viewDetails')}
+                                        </a>
+                                        <a href={top.url || top.link} target="_blank" rel="noreferrer" className="btn-outline-source">
+                                            {siteName}
+                                        </a>
+                                    </div>
+                                </div>
+                                
+                                <div className="dotd-market-col">
+                                    <div className="market-panel">
+                                        <div className="market-panel-title">
+                                            {t('dealOfTheDay', 'marketTitle')} — {top.title || top.name}
+                                        </div>
+                                        
+                                        <div className="market-stats">
+                                            {hasPeerAvg && (
+                                                <div className="market-stat-row">
+                                                    <div className="stat-left">
+                                                        <span className="stat-lbl">{t('dealOfTheDay', 'avgPrice')}</span>
+                                                        <span className="stat-val">{formattedPeerAvgPrice}</span>
+                                                    </div>
+                                                    {diffPercent != null && (
+                                                        <div className="stat-right">
+                                                            <span className={`stat-diff ${top.price_diff > 0 ? 'good' : 'bad'}`}>
+                                                                {top.price_diff > 0 ? `-${diffPercent}%` : `+${diffPercent}%`}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                            
+                                            {top.peer_avg_km > 0 && (
+                                                <div className="market-stat-row">
+                                                    <div className="stat-left">
+                                                        <span className="stat-lbl">{t('dealOfTheDay', 'avgKm')}</span>
+                                                        <span className="stat-val">{new Intl.NumberFormat('ro-RO').format(top.peer_avg_km)} km</span>
+                                                    </div>
+                                                    <div className="stat-right">
+                                                        {top.km > 0 && (() => {
+                                                            const kmDiff = ((top.peer_avg_km - top.km) / top.peer_avg_km * 100).toFixed(0);
+                                                            return (
+                                                                <span className={`stat-diff ${kmDiff > 0 ? 'good' : 'bad'}`}>
+                                                                    {kmDiff > 0 ? `-${kmDiff}%` : `+${Math.abs(kmDiff)}%`}
+                                                                </span>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        {top.price_diff > 0 && (
+                                            <div className="market-savings-box">
+                                                <div className="savings-title">{t('dealOfTheDay', 'vsPiata')}</div>
+                                                <div className="savings-amount">+{formattedSavings} {t('dealOfTheDay', 'savedVsAvg')}</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                            </div>
                         </div>
                     );
                 })()}
-                <div className="deals-grid">
-                    {deals.slice(1, 9).map((car, idx) => (
-                        <CarCard key={car.id || car.link || `deal-${idx}`} car={car} index={idx + 1} />
-                    ))}
-                </div>
+
+                {/* 2. TOP DEALS NOW GRID */}
+                {deals.length > 1 && (
+                    <div className="top-deals-wrapper">
+                        <div className="top-deals-header">
+                            <div className="top-deals-header-left">
+                                <h2 className="dotd-section-title">
+                                    <span className="dotd-title-accent"></span>
+                                    {t('dealOfTheDay', 'topDealsTitle')}
+                                </h2>
+                                <p className="top-deals-subtitle">{t('dealOfTheDay', 'topDealsSubtitle')}</p>
+                            </div>
+                            <div className="top-deals-header-right">
+                                <a href="#results-area" className="view-all-link">{t('dealOfTheDay', 'viewAll')} &rarr;</a>
+                            </div>
+                        </div>
+                        
+                        <div className="deals-grid-v2">
+                            {deals.slice(1, 9).map((car, idx) => (
+                                <CarCard key={car.id || car.link || `deal-${idx}`} car={car} index={idx + 1} variant="deal" />
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
             </div>
         </div>
     );

@@ -3,7 +3,7 @@ import { useLanguage } from '../LanguageContext';
 import PropTypes from 'prop-types';
 import { toggleCompareCar, isCarCompared } from '../utils/carComparison';
 
-const CarCard = ({ car, index = 0 }) => {
+const CarCard = ({ car, index = 0, variant = "default" }) => {
     const { t } = useLanguage();
     const [tooltipOpen, setTooltipOpen] = useState(false);
     const [compared, setCompared] = useState(isCarCompared(car));
@@ -40,6 +40,93 @@ const CarCard = ({ car, index = 0 }) => {
         else { dealClass = "deal-overpriced"; dealTextKey = "overpriced"; }
     }
 
+    const handleCompare = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const cars = toggleCompareCar(car);
+        setCompared(cars.some(c => c.id === car.id || c.link === (car.link || car.url)));
+    };
+
+    if (variant === 'deal') {
+        return (
+            <div
+                className="car-card-deal-shell group"
+                style={{
+                    animation: 'fadeUp 0.6s var(--spring-easing) forwards',
+                    opacity: 0,
+                    animationDelay: `${index * 0.05}s`
+                }}
+            >
+                <div className="car-card-deal-core">
+                    <div className="car-image-container-deal">
+                        <img
+                            src={car.image || "https://placehold.co/600x400/1e293b/cbd5e1?text=Fără+Poză"}
+                            alt={car.title || car.name || 'Car listing'}
+                            className="car-image-deal"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/1e293b/cbd5e1?text=Eroare+Poză"; }}
+                        />
+                        <div className={`site-badge-overlay ${badgeClass}`}>
+                            {siteName}
+                        </div>
+                        {car.deal_score != null && (
+                            <div className={`deal-score-circle ${dealClass}`}>
+                                {car.deal_score}
+                            </div>
+                        )}
+                        <button className="compare-btn-deal" onClick={handleCompare} title={compared ? "Remove from compare" : "Add to compare"}>
+                            <span className="compare-icon">{compared ? "★" : "☆"}</span> {t('card', 'compare')}
+                        </button>
+                    </div>
+
+                    <div className="car-content-deal">
+                        <div className="car-header-deal">
+                            <h3 className="car-title-deal" title={car.title || car.name}>
+                                {car.title || car.name || t('card', 'noTitle')}
+                            </h3>
+                            <div className="price-deal">
+                                {displayPrice}
+                            </div>
+                        </div>
+
+                        {(car.location || car.city) && (
+                            <div className="car-location-deal">
+                                {car.location || car.city}
+                            </div>
+                        )}
+
+                        <div className="car-specs-deal">
+                            {car.year && <span className="spec-item-deal">⊙ {car.year}</span>}
+                            {car.km != null && car.km !== '' && <span className="spec-item-deal">◷ {car.km} km</span>}
+                            {car.fuel && <span className="spec-item-deal">⛽ {car.fuel}</span>}
+                        </div>
+
+                        {car.deal_score != null && (
+                            <div className={`deal-inline-score ${dealClass}`}>
+                                <span className="deal-dot">●</span> {t('deal', dealTextKey)} · {t('deal', 'scoreLabel')} {car.deal_score}/100
+                            </div>
+                        )}
+
+                        <div className="car-footer-deal">
+                            <div className="view-details-deal">
+                                {t('card', 'viewDetails')} &rarr;
+                            </div>
+                        </div>
+                    </div>
+
+                    <a
+                        href={car.url || car.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="car-link-overlay"
+                        aria-label={`${t('deal', 'viewDealAriaLabel', { title: car.title })}`}
+                    ></a>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div
             className="car-card-shell group"
@@ -50,7 +137,7 @@ const CarCard = ({ car, index = 0 }) => {
             }}
         >
             <div className="car-card-core">
-                <button className="compare-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); const cars = toggleCompareCar(car); setCompared(cars.some(c => c.id === car.id || c.link === (car.link || car.url))); }} title={compared ? "Remove from compare" : "Add to compare"}>{compared ? "★" : "☆"}</button>
+                <button className="compare-btn" onClick={handleCompare} title={compared ? "Remove from compare" : "Add to compare"}>{compared ? "★" : "☆"}</button>
 
                 {car.is_verified_partner && (
                     <div className="verified-badge">
@@ -160,8 +247,11 @@ CarCard.propTypes = {
         source: PropTypes.string,
         subsource: PropTypes.string,
         is_verified_partner: PropTypes.bool,
+        location: PropTypes.string,
+        city: PropTypes.string,
     }).isRequired,
     index: PropTypes.number,
+    variant: PropTypes.string,
 };
 
 export default CarCard;

@@ -279,7 +279,7 @@ html, body {
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
   gap: 1.5rem;
 }
 
@@ -502,7 +502,7 @@ html, body {
 }
 
 .car-content {
-  padding: 1rem 1.25rem 1.25rem 1.25rem;
+  padding: 1rem 1.5rem 1rem 1.5rem;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -768,7 +768,7 @@ html, body {
     background: linear-gradient(to right, var(--bg-core) 0%, transparent 40%);
   }
   .car-content {
-    padding: 1rem 1.25rem 1.25rem 1.25rem;
+    padding: 1rem 1.5rem 1rem 1.5rem;
   }
 
   .car-title {
@@ -851,55 +851,460 @@ html, body {
   margin-top: 4rem;
   margin-bottom: 2rem;
   animation: fadeUp 1s var(--spring-easing) 0.5s forwards;
+  background: var(--bg-secondary);
+  padding: 3rem 0;
+  border-top: 1px solid var(--border-shell);
+  border-bottom: 1px solid var(--border-shell);
 }
 
 .deals-section-core {
-  /* No special background or border */
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
 }
 
-.deals-section-header {
-  margin-bottom: 2rem;
+.dotd-section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
-.deals-section-title {
-  font-size: 1.8rem;
+.dotd-section-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dotd-title-accent {
+  width: 4px;
+  height: 24px;
+  background-color: var(--primary-color);
+  border-radius: 4px;
+}
+
+.dotd-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 100px;
+}
+
+/* Featured Card */
+.dotd-featured-wrapper {
+  margin-bottom: 3rem;
+}
+
+.dotd-featured-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-core);
+  border: 1px solid var(--border-shell);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-ambient);
+}
+
+@media (min-width: 1024px) {
+  .dotd-featured-card {
+    flex-direction: row;
+    height: 380px;
+  }
+}
+
+.dotd-featured-image-col {
+  flex: 0 0 40%;
+  position: relative;
+}
+
+.dotd-featured-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  min-height: 240px;
+}
+
+.dotd-featured-content-col {
+  flex: 1;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-right: 1px solid var(--border-shell);
+}
+
+.dotd-score-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.dotd-score-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.dotd-score-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.dotd-score-text {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.dotd-score-subtext {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.dotd-featured-title {
+  font-size: 2rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
   color: var(--text-primary);
-  letter-spacing: -0.03em;
 }
 
-.deals-section-subtitle {
-  font-size: 0.95rem;
+.dotd-featured-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 1.5rem;
+}
+
+.dotd-specs-table {
+  width: 100%;
+  max-width: 300px;
+  margin-bottom: 2rem;
+}
+
+.dotd-specs-table td {
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border-core);
+}
+
+.spec-label {
   color: var(--text-secondary);
-  font-weight: 400;
+  font-size: 0.875rem;
 }
 
-.deals-grid {
+.spec-val {
+  color: var(--text-primary);
+  font-weight: 600;
+  text-align: right;
+}
+
+.dotd-featured-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.btn-navy {
+  background: var(--primary-color);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.btn-outline-source {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.dotd-market-col {
+  flex: 0 0 28%;
+  padding: 2rem;
+  background: var(--bg-core);
+}
+
+.market-panel-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.market-stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-shell);
+}
+
+.stat-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-lbl {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.stat-val {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-diff {
+  font-size: 0.875rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.stat-diff.good {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.stat-diff.bad {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.market-savings-box {
+  background: var(--primary-color);
+  color: #fff;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  margin-top: 2rem;
+}
+
+.savings-title {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  margin-bottom: 0.25rem;
+}
+
+.savings-amount {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* TOP DEALS GRID */
+.top-deals-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.top-deals-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.view-all-link {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.deals-grid-v2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
-  align-items: stretch;
 }
 
-@media (max-width: 768px) {
-  .deals-section-shell {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+@media (max-width: 1024px) {
+  .deals-grid-v2 {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .deals-section-title {
-    font-size: 1.4rem;
-  }
-
-  .deals-section-subtitle {
-    font-size: 0.85rem;
-  }
-
-  .deals-grid {
+@media (max-width: 640px) {
+  .deals-grid-v2 {
     grid-template-columns: 1fr;
-    gap: 1.25rem;
   }
+  .top-deals-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .dotd-featured-content-col, .dotd-market-col {
+    padding: 1.25rem;
+  }
+  .deals-section-core {
+    padding: 0 1rem;
+  }
+}
+
+/* Vertical Deal Card (CarCard variant="deal") */
+.car-card-deal-shell {
+  height: 100%;
+}
+.car-card-deal-core {
+  background: var(--bg-core);
+  border: 1px solid var(--border-shell);
+  border-radius: 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.car-card-deal-core:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+}
+.car-image-container-deal {
+  position: relative;
+  height: 200px;
+  width: 100%;
+}
+.car-image-deal {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.site-badge-overlay {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 0.25rem 0.75rem;
+  border-radius: 100px;
+  color: #fff;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.deal-score-circle {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 800;
+  z-index: 2;
+  background: var(--bg-core);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.deal-score-circle.deal-excellent { color: #10b981; border: 2px solid #10b981; }
+.deal-score-circle.deal-good { color: #f59e0b; border: 2px solid #f59e0b; }
+.deal-score-circle.deal-fair { color: #f59e0b; border: 2px solid #f59e0b; }
+.deal-score-circle.deal-overpriced { color: #ef4444; border: 2px solid #ef4444; }
+
+.compare-btn-deal {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.75rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  backdrop-filter: blur(4px);
+  border: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.compare-btn-deal:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+.car-content-deal {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.car-header-deal {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+.car-title-deal {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.3;
+}
+.price-deal {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  white-space: nowrap;
+}
+.car-location-deal {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+.car-specs-deal {
+  display: flex;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+.deal-inline-score {
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+.deal-dot {
+  font-size: 1rem;
+}
+.deal-inline-score.deal-excellent { color: #10b981; }
+.deal-inline-score.deal-good { color: #f59e0b; }
+.deal-inline-score.deal-fair { color: #f59e0b; }
+.deal-inline-score.deal-overpriced { color: #ef4444; }
+
+.car-footer-deal {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-shell);
+  display: flex;
+  justify-content: center;
+}
+.view-details-deal {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* === TRUST STATS SECTION === */
@@ -1118,121 +1523,7 @@ html, body {
   }
 }
 
-/* === DOTD FEATURED CARD === */
-.dotd-featured-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: 1rem;
-  overflow: hidden;
-  border: 1px solid var(--border-shell);
-  background: var(--bg-core);
-  position: relative;
-  transition: all var(--transition-fast);
-  margin-bottom: 2rem;
-}
-
-.dotd-featured-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-}
-
-.dotd-featured-image {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-}
-
-.dotd-featured-content {
-  padding: 1.5rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.dotd-featured-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.5rem;
-}
-
-.dotd-featured-source {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 100px;
-  background: rgba(16, 185, 129, 0.15);
-  color: var(--primary-color);
-  font-weight: 600;
-}
-
-.dotd-featured-updated {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.dotd-featured-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin: 0 0 0.25rem 0;
-}
-
-.dotd-featured-specs {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  margin: 0 0 1rem 0;
-}
-
-.dotd-featured-price {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--primary-color);
-  margin: 0 0 0.25rem 0;
-}
-
-.dotd-featured-savings {
-  font-size: 0.875rem;
-  color: var(--primary-color);
-  margin: 0;
-}
-
-.dotd-featured-score-area {
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.dotd-featured-score-area .deal-ring {
-  position: static;
-  width: 64px;
-  height: 64px;
-}
-
-.dotd-featured-score-area .deal-score {
-  font-size: 1.25rem;
-}
-
-.dotd-featured-score-area .deal-label {
-  font-size: 0.625rem;
-}
-
-@media (min-width: 640px) {
-  .dotd-featured-card {
-    flex-direction: row;
-  }
-  .dotd-featured-image {
-    width: 320px;
-    height: auto;
-    min-height: 240px;
-    flex-shrink: 0;
-  }
-  .dotd-featured-content {
-    flex: 1;
-  }
-}
+/* Old DOTD FEATURED CARD (Removed) */
 
 /* === BRAND GRID === */
 .brand-grid-section {
