@@ -51,47 +51,14 @@ const CarCard = ({ car, index = 0 }) => {
         >
             <div className="car-card-core">
                 <button className="compare-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); const cars = toggleCompareCar(car); setCompared(cars.some(c => c.id === car.id || c.link === (car.link || car.url))); }} title={compared ? "Remove from compare" : "Add to compare"}>{compared ? "★" : "☆"}</button>
-                <div className={`site-badge ${badgeClass}`}>
-                    {siteName}
-                </div>
+
                 {car.is_verified_partner && (
                     <div className="verified-badge">
                         Partener Verificat
                     </div>
                 )}
 
-                {car.deal_score != null && (
-                    <div
-                        className={`deal-ring ${dealClass} group/tooltip relative ${tooltipOpen ? 'is-open' : ''}`}
-                        onClick={() => {
-                            setTooltipOpen(!tooltipOpen);
-                        }}
-                    >
-                        <div className="deal-score">{car.deal_score}</div>
-                        <div className="deal-label">{t('deal', dealTextKey)}</div>
-
-                        {/* Tooltip Explanation */}
-                        {car.peer_avg_price > 0 && (
-                            <div className="deal-tooltip">
-                                <div className="deal-tooltip-title">
-                                    {t('deal', 'analysisTitle')}
-                                </div>
-                                <p className="deal-tooltip-text">
-                                    This car is <strong style={{ color: car.price_diff > 0 ? '#4ade80' : '#f87171' }}>
-                                        €{car.price_diff != null ? Math.abs(car.price_diff).toLocaleString() : '0'} {car.price_diff > 0 ? t('deal', 'cheaper') : t('deal', 'moreExpensive')}
-                                    </strong> than the market average of €{car.peer_avg_price.toLocaleString()} for similar models.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                )}
-
                 <div className="car-image-container">
-                    {priceDrop > 0 && (
-                        <div className="price-drop-badge">
-                            ↓ {t('card', 'priceDrop', { percent: priceDrop })}
-                        </div>
-                    )}
                     <img
                         src={car.image || "https://placehold.co/600x400/1e293b/cbd5e1?text=Fără+Poză"}
                         alt={car.title || car.name || 'Car listing'}
@@ -100,12 +67,49 @@ const CarCard = ({ car, index = 0 }) => {
                         referrerPolicy="no-referrer"
                         onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x400/1e293b/cbd5e1?text=Eroare+Poză"; }}
                     />
+
+                    {car.deal_score != null && (
+                        <div
+                            className={`deal-ring ${dealClass} group/tooltip relative ${tooltipOpen ? 'is-open' : ''}`}
+                            onClick={() => {
+                                setTooltipOpen(!tooltipOpen);
+                            }}
+                        >
+                            <div className="deal-score">{car.deal_score}</div>
+                            <div className="deal-label">{t('deal', dealTextKey)}</div>
+
+                            {/* Tooltip Explanation */}
+                            {car.peer_avg_price > 0 && (
+                                <div className="deal-tooltip">
+                                    <div className="deal-tooltip-title">
+                                        {t('deal', 'analysisTitle')}
+                                    </div>
+                                    <p className="deal-tooltip-text">
+                                        This car is <strong style={{ color: car.price_diff > 0 ? '#4ade80' : '#f87171' }}>
+                                            €{car.price_diff != null ? Math.abs(car.price_diff).toLocaleString() : '0'} {car.price_diff > 0 ? t('deal', 'cheaper') : t('deal', 'moreExpensive')}
+                                        </strong> than the market average of €{car.peer_avg_price.toLocaleString()} for similar models.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {priceDrop > 0 && (
+                        <div className="price-drop-badge">
+                            ↓ {t('card', 'priceDrop', { percent: priceDrop })}
+                        </div>
+                    )}
                 </div>
 
                 <div className="car-content">
-                    <h3 className="car-title" title={car.title || car.name}>
-                        {car.title || car.name || t('card', 'noTitle')}
-                    </h3>
+                    <div className="car-header">
+                        <h3 className="car-title" title={car.title || car.name}>
+                            {car.title || car.name || t('card', 'noTitle')}
+                        </h3>
+                        <div className={`site-badge ${badgeClass}`}>
+                            {siteName}
+                        </div>
+                    </div>
 
                     <div className="car-specs">
                         {car.year && <span className="spec-chip">{car.year}</span>}
