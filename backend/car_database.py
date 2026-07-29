@@ -17,7 +17,6 @@ from metrics import metrics
 log = get_logger("car_database")
 
 
-
 def _normalize_url(url: str) -> str:
     """Strip query params, fragment, and trailing slash from a URL for stable dedup."""
     parsed = urlparse(url)
@@ -684,7 +683,9 @@ class CarDatabaseOptimizer:
             conn.commit()
             return count
 
-    def get_stale_ad_urls(self, hours_threshold: int = 336, limit: int = 20) -> List[Dict]:
+    def get_stale_ad_urls(
+        self, hours_threshold: int = 336, limit: int = 20
+    ) -> List[Dict]:
         """Fetch a batch of stale ad URLs for liveness verification."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -739,7 +740,6 @@ class CarDatabaseOptimizer:
             conn.commit()
             return removed
 
-
     def refresh_market_snapshots(self):
         """Rebuild market snapshot aggregates from active ads in a single pass."""
         with self.get_connection() as conn:
@@ -777,7 +777,8 @@ class CarDatabaseOptimizer:
         """Return top-scored deals using market snapshot aggregates. Sub-100ms."""
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT a.*,
                        (50
                          + ((ms.avg_price - a.price)
@@ -796,7 +797,9 @@ class CarDatabaseOptimizer:
                   AND a.deal_score IS NULL
                 ORDER BY deal_score DESC
                 LIMIT %s
-            """, (limit,))
+            """,
+                (limit,),
+            )
             rows = cursor.fetchall()
             return [dict(r) for r in rows]
 
@@ -807,7 +810,6 @@ class CarDatabaseOptimizer:
             return deals
         # Fallback: return recent active ads
         return self.get_recent_active_ads(hours_threshold=48)[:limit]
-
 
     def get_cron_groups(self, limit=2):
         try:

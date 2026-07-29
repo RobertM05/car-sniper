@@ -1355,7 +1355,6 @@ async def api_cron_cleanup(request: Request, authorization: str = Header(None)):
 from fastapi import Response
 
 
-
 @app.get("/api/cron/prewarm")
 def cron_prewarm_deals():
     """Vercel cron: pre-warm the top deals cache so it never expires cold."""
@@ -1367,6 +1366,7 @@ def cron_prewarm_deals():
             return {"status": "no_ads", "cached": 0}
 
         import random
+
         random.shuffle(recent_ads)
         candidates = recent_ads[:30]
 
@@ -1397,13 +1397,16 @@ def cron_prewarm_deals():
         for ad in top_deals:
             p = ad.get("price")
             if p is not None:
-                ad["price"] = str(p).replace(",", "").replace(" EUR", "").replace(" €", "") + " €"
+                ad["price"] = (
+                    str(p).replace(",", "").replace(" EUR", "").replace(" €", "") + " €"
+                )
 
         _TOP_DEALS_CACHE["timestamp"] = time.time()
         _TOP_DEALS_CACHE["deals"] = top_deals
         return {"status": "ok", "cached": len(top_deals)}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
 
 @app.get("/api/cron/refresh-scores")
 def cron_refresh_scores():
