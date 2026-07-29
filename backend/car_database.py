@@ -4,6 +4,7 @@ import os
 import re
 from contextlib import contextmanager
 from typing import Dict, List, Optional, Tuple
+from urllib.parse import urlparse, urlunparse
 
 import bcrypt
 import psycopg2
@@ -14,6 +15,14 @@ from logger import get_logger
 from metrics import metrics
 
 log = get_logger("car_database")
+
+
+
+def _normalize_url(url: str) -> str:
+    """Strip query params, fragment, and trailing slash from a URL for stable dedup."""
+    parsed = urlparse(url)
+    path = parsed.path.rstrip("/")
+    return urlunparse((parsed.scheme, parsed.netloc.lower(), path, "", "", ""))
 
 
 class CarDatabaseOptimizer:
@@ -401,7 +410,7 @@ class CarDatabaseOptimizer:
 
             link = ad_data.get("link", "")
             if not ad_data.get("id"):
-                ad_id = hashlib.md5(link.encode()).hexdigest()
+                ad_id = hashlib.md5(_normalize_url(link).encode()).hexdigest()
             else:
                 ad_id = ad_data["id"]
             try:
@@ -481,8 +490,7 @@ class CarDatabaseOptimizer:
             for ad_data in ads_data:
                 link = ad_data.get("link", "")
                 if not ad_data.get("id"):
-                    clean_link = link.split("?")[0]
-                    ad_id = hashlib.md5(clean_link.encode()).hexdigest()
+                    ad_id = hashlib.md5(_normalize_url(link).encode()).hexdigest()
                 else:
                     ad_id = ad_data["id"]
                 try:
@@ -675,6 +683,38 @@ class CarDatabaseOptimizer:
             count = cursor.rowcount
             conn.commit()
             return count
+
+    def deduplicate_ads(self):
+        """One-time cleanup: deactivate duplicate active ads by normalized URL hash."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                WITH normalized AS (
+                    SELECT
+                        id,
+                        last_seen,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY md5(
+                                lower(
+                                    regexp_replace(
+                                        COALESCE(NULLIF(split_part(link, '?', 1), ''), link),
+                                        '/+$', ''
+                                    )
+                                )
+                            )
+                            ORDER BY last_seen DESC NULLS LAST
+                        ) as rn
+                    FROM ads
+                    WHERE active = TRUE
+                )
+                UPDATE ads SET active = FALSE
+                WHERE id IN (
+                    SELECT id FROM normalized WHERE rn > 1
+                )
+            """)
+            removed = cursor.rowcount
+            conn.commit()
+            return removed
 
     def get_cron_groups(self, limit=2):
         try:
