@@ -170,7 +170,7 @@ async def run_crawler():
             await crawl_target(target)
             await asyncio.sleep(random.randint(5, 10))
         try:
-            cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=168)
+            cleaned = car_db_optimizer.deactivate_stale_ads(hours_threshold=336)
             logging.info(f"🧹 Cleaned up {cleaned} stale ads from database.")
         except Exception as e:
             logging.error(f"Error during stale ads cleanup: {e}")
