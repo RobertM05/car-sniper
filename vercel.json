@@ -34,6 +34,10 @@
   ],
   "crons": [
     {
+      "path": "/api/cron/refresh-scores",
+      "schedule": "0 0 * * *"
+    },
+    {
       "path": "/api/cron/run",
       "schedule": "0 0 * * *"
     },

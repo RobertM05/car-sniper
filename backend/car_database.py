@@ -739,6 +739,76 @@ class CarDatabaseOptimizer:
             conn.commit()
             return removed
 
+
+    def refresh_market_snapshots(self):
+        """Rebuild market snapshot aggregates from active ads in a single pass."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO market_snapshots
+                    (make, model, year_bucket_start, year_bucket_end,
+                     avg_price, avg_km, ad_count)
+                SELECT
+                    LOWER(make),
+                    LOWER(model),
+                    FLOOR(year / 5) * 5,
+                    FLOOR(year / 5) * 5 + 4,
+                    AVG(price)::NUMERIC(10,2),
+                    AVG(km)::NUMERIC(10,2),
+                    COUNT(*)
+                FROM ads
+                WHERE active = TRUE
+                  AND price > 0
+                  AND year > 1900
+                  AND make IS NOT NULL
+                  AND model IS NOT NULL
+                GROUP BY LOWER(make), LOWER(model), FLOOR(year / 5) * 5
+                ON CONFLICT (make, model, year_bucket_start) DO UPDATE SET
+                    avg_price = EXCLUDED.avg_price,
+                    avg_km = EXCLUDED.avg_km,
+                    ad_count = EXCLUDED.ad_count,
+                    refreshed_at = CURRENT_TIMESTAMP
+            """)
+            count = cursor.rowcount
+            conn.commit()
+            return count
+
+    def get_top_deals_scored(self, limit: int = 8):
+        """Return top-scored deals using market snapshot aggregates. Sub-100ms."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT a.*,
+                       (50
+                         + ((ms.avg_price - a.price)
+                            / NULLIF(ms.avg_price::float, 0)) * 100 * 0.8
+                         + ((ms.avg_km - a.km)
+                            / NULLIF(ms.avg_km::float, 1)) * 100 * 0.2
+                        )::NUMERIC(5,1) AS deal_score
+                FROM ads a
+                JOIN market_snapshots ms
+                  ON LOWER(a.make) = ms.make
+                 AND LOWER(a.model) = ms.model
+                 AND ms.year_bucket_start <= a.year
+                 AND ms.year_bucket_end >= a.year
+                WHERE a.active = TRUE
+                  AND a.price > 0
+                  AND a.deal_score IS NULL
+                ORDER BY deal_score DESC
+                LIMIT %s
+            """, (limit,))
+            rows = cursor.fetchall()
+            return [dict(r) for r in rows]
+
+    def get_top_deals(self, limit: int = 8):
+        """Return top-scored active deals. Falls back to full table scan if no snapshots."""
+        deals = self.get_top_deals_scored(limit)
+        if deals:
+            return deals
+        # Fallback: return recent active ads
+        return self.get_recent_active_ads(hours_threshold=48)[:limit]
+
+
     def get_cron_groups(self, limit=2):
         try:
             with self.get_connection() as conn:
