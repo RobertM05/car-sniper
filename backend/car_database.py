@@ -798,13 +798,15 @@ class CarDatabaseOptimizer:
             cursor.execute(
                 """
                 SELECT a.*,
-                       ROUND(
-                         CAST(50
-                           + ((ms.avg_price - a.price)
-                              / NULLIF(ms.avg_price::float, 0)) * 100 * 0.8
-                           + ((ms.avg_km - a.km)
-                              / NULLIF(ms.avg_km::float, 1)) * 100 * 0.2
-                         AS numeric), 1) AS deal_score
+                       LEAST(100, GREATEST(0,
+                         ROUND(
+                           CAST(50
+                             + ((ms.avg_price - a.price)
+                                / NULLIF(ms.avg_price::float, 0)) * 100 * 0.8
+                             + ((ms.avg_km - a.km)
+                                / NULLIF(ms.avg_km::float, 1)) * 100 * 0.2
+                           AS numeric), 1)
+                       )) AS deal_score
                 FROM ads a
                 JOIN market_snapshots ms
                   ON LOWER(a.make) = ms.make
@@ -813,6 +815,7 @@ class CarDatabaseOptimizer:
                  AND ms.year_bucket_end >= a.year
                 WHERE a.active = TRUE
                   AND a.price > 0
+                  AND a.price BETWEEN 100 AND 1000000
                 ORDER BY deal_score DESC NULLS LAST
                 LIMIT %s
             """,
