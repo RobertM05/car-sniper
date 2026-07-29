@@ -745,6 +745,24 @@ class CarDatabaseOptimizer:
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
+                CREATE TABLE IF NOT EXISTS market_snapshots (
+                    id SERIAL PRIMARY KEY,
+                    make TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    year_bucket_start INT NOT NULL,
+                    year_bucket_end INT NOT NULL,
+                    avg_price NUMERIC,
+                    avg_km NUMERIC,
+                    ad_count INT DEFAULT 0,
+                    refreshed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(make, model, year_bucket_start)
+                )
+            """)
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_market_snapshots_lookup "
+                "ON market_snapshots(make, model, year_bucket_start)"
+            )
+            cursor.execute("""
                 INSERT INTO market_snapshots
                     (make, model, year_bucket_start, year_bucket_end,
                      avg_price, avg_km, ad_count)
