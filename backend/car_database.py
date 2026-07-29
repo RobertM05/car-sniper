@@ -24,7 +24,6 @@ def _normalize_url(url: str) -> str:
     return urlunparse((parsed.scheme, parsed.netloc.lower(), path, "", "", ""))
 
 
-
 def parse_ro_price(price_raw) -> int:
     """Parse a Romanian-formatted price string to integer EUR.
 
@@ -34,7 +33,13 @@ def parse_ro_price(price_raw) -> int:
     if not price_raw:
         return 0
     s = str(price_raw).strip()
-    s = s.replace(" EUR", "").replace(" €", "").replace("EUR", "").replace("€", "").strip()
+    s = (
+        s.replace(" EUR", "")
+        .replace(" €", "")
+        .replace("EUR", "")
+        .replace("€", "")
+        .strip()
+    )
     s = s.replace(".", "")
     s = s.replace(",", ".")
     m = re.match(r"^(\d+(?:\.\d+)?)", s)
@@ -44,6 +49,7 @@ def parse_ro_price(price_raw) -> int:
         return int(float(m.group(1)))
     except (ValueError, TypeError):
         return 0
+
 
 class CarDatabaseOptimizer:
     _NUMERIC_MODEL_NAMES: frozenset[str] = frozenset(
@@ -809,6 +815,30 @@ class CarDatabaseOptimizer:
             count = cursor.rowcount
             conn.commit()
             return count
+
+    def repair_inflated_prices(self):
+        """Fix ads where price was inflated by RO number format parsing."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE ads
+                SET price = original_price
+                WHERE original_price IS NOT NULL
+                  AND original_price > 0
+                  AND price > 0
+                  AND price != original_price
+                  AND (
+                    price / 100 = original_price AND price % 100 > 0
+                    OR
+                    price / 10 = original_price AND price % 10 > 0
+                    OR
+                    LENGTH(price::text) - LENGTH(original_price::text) >= 2
+                       AND price > original_price * 5
+                  )
+            """)
+            repaired = cursor.rowcount
+            conn.commit()
+            return repaired
 
     def get_top_deals_scored(self, limit: int = 8):
         """Return top-scored deals using market snapshot aggregates. Sub-100ms."""
