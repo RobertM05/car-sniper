@@ -414,78 +414,23 @@ _TOP_DEALS_CACHE_TTL = _CACHE_TIMEOUT
 
 
 @app.get("/api/deals/top")
-@limiter.limit("10/minute")
+@limiter.limit("30/minute")
 def get_top_deals(request: Request):
-    """
-    Fetch up to 5 active car deals added/updated within the last 48 hours,
-    sorted by their calculated Deal Score (highest first).
-    """
+    """Return top-scored active deals using pre-computed market snapshots."""
     try:
         global _TOP_DEALS_CACHE
         current_time = time.time()
 
-        # Return cached deals if still valid
         if (
             current_time - _TOP_DEALS_CACHE["timestamp"] < _TOP_DEALS_CACHE_TTL
             and _TOP_DEALS_CACHE["deals"]
         ):
             return {"results": _TOP_DEALS_CACHE["deals"]}
 
-        # 1. Fetch active ads updated within the last 48 hours
-        recent_ads = car_db_optimizer.get_recent_active_ads(hours_threshold=48)
-        if not recent_ads:
+        top_deals = car_db_optimizer.get_top_deals(limit=8)
+        if not top_deals:
             return {"results": []}
 
-        # 2. Randomly select up to 50 recent ads to evaluate (prevents hundreds of DB queries)
-        import random
-
-        random.shuffle(recent_ads)
-        candidates_to_evaluate = recent_ads[:50]
-
-        grouped_candidates = {}
-        for ad in candidates_to_evaluate:
-            make = ad.get("make")
-            model = ad.get("model")
-            if not make or not model:
-                continue
-            key = (make.lower().strip(), model.lower().strip())
-            grouped_candidates.setdefault(key, []).append(ad)
-
-        # 3. For each group, calculate deal scores based on their peers
-        for (make_lower, model_lower), candidates in grouped_candidates.items():
-            # Get all active ads for this make/model to act as peers
-            peer_pool = car_db_optimizer.get_active_ads_for_make_model(
-                candidates[0]["make"], candidates[0]["model"]
-            )
-            if not peer_pool:
-                continue
-
-            # Fetch model stats
-            s_model = model_lower.replace(" ", "-")
-            stats = (
-                car_db_optimizer.get_model_stats(candidates[0]["make"], s_model) or {}
-            )
-
-            # Calculate deal scores for all ads in the peer pool (in-place modification)
-            scored_pool = calculate_deal_scores(peer_pool, stats)
-
-            # Create a lookup map for the calculated deal scores
-            scores_map = {
-                ad["id"]: ad.get("deal_score") for ad in scored_pool if "id" in ad
-            }
-
-            # Assign the scores back to the candidate ads
-            for ad in candidates:
-                ad["deal_score"] = scores_map.get(ad["id"])
-
-        # 4. Filter out ads without a valid deal score
-        valid_deals = [ad for ad in recent_ads if ad.get("deal_score") is not None]
-
-        # 5. Sort by deal score descending (highest first)
-        valid_deals.sort(key=lambda x: x["deal_score"], reverse=True)
-
-        # 6. Take top 8 and format their price with " €" to match other endpoints
-        top_deals = valid_deals[:8]
         for ad in top_deals:
             price_val = ad.get("price")
             if price_val is not None:
@@ -495,7 +440,6 @@ def get_top_deals(request: Request):
                 else:
                     ad["price"] = f"{price_val} €"
 
-        # Update the cache with the new top deals
         _TOP_DEALS_CACHE["timestamp"] = current_time
         _TOP_DEALS_CACHE["deals"] = top_deals
 
@@ -1411,7 +1355,6 @@ async def api_cron_cleanup(request: Request, authorization: str = Header(None)):
 from fastapi import Response
 
 
-
 @app.get("/api/cron/prewarm")
 def cron_prewarm_deals():
     """Vercel cron: pre-warm the top deals cache so it never expires cold."""
@@ -1423,6 +1366,7 @@ def cron_prewarm_deals():
             return {"status": "no_ads", "cached": 0}
 
         import random
+
         random.shuffle(recent_ads)
         candidates = recent_ads[:30]
 
@@ -1453,13 +1397,28 @@ def cron_prewarm_deals():
         for ad in top_deals:
             p = ad.get("price")
             if p is not None:
-                ad["price"] = str(p).replace(",", "").replace(" EUR", "").replace(" €", "") + " €"
+                ad["price"] = (
+                    str(p).replace(",", "").replace(" EUR", "").replace(" €", "") + " €"
+                )
 
         _TOP_DEALS_CACHE["timestamp"] = time.time()
         _TOP_DEALS_CACHE["deals"] = top_deals
         return {"status": "ok", "cached": len(top_deals)}
     except Exception as e:
         return {"status": "error", "detail": str(e)}
+
+
+@app.get("/api/cron/refresh-scores")
+def cron_refresh_scores():
+    """Refresh market snapshots for deal scoring. Runs as a Vercel cron job."""
+    try:
+        count = car_db_optimizer.refresh_market_snapshots()
+        global _TOP_DEALS_CACHE
+        _TOP_DEALS_CACHE["timestamp"] = 0
+        return {"status": "ok", "snapshots_refreshed": count}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
 
 @app.get("/sitemap.xml")
 def get_sitemap():
