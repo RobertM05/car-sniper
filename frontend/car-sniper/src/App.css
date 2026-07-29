@@ -316,11 +316,11 @@ html, body {
 .car-image-container {
   width: 200px;
   min-width: 200px;
-  height: 150px;
   position: relative;
   overflow: hidden;
   border-radius: 1rem 0 0 1rem;
   flex-shrink: 0;
+  align-self: stretch;
 }
 
 /* Vignette overlay to blend image into dark mode */
@@ -337,6 +337,7 @@ html, body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  min-height: 150px;
   transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
