@@ -27,7 +27,7 @@ const PartnerDashboard = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingListingId, setEditingListingId] = useState(null);
   const [newListing, setNewListing] = useState({
-    title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: ''
+    title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '', image_url: ''
   });
 
   useEffect(() => {
@@ -105,16 +105,31 @@ const PartnerDashboard = () => {
         : `${API_BASE_URL}/api/dealer/listings?email=${encodeURIComponent(email)}`;
       const method = editingListingId ? 'PUT' : 'POST';
 
+      const payload = {
+        title: newListing.title,
+        price: newListing.price ? parseInt(newListing.price) : null,
+        year: newListing.year ? parseInt(newListing.year) : null,
+        km: newListing.km ? parseInt(newListing.km) : null,
+        fuel: newListing.fuel || null,
+        transmission: newListing.transmission || null,
+        description: newListing.description || null,
+        image_url: newListing.image_url || null,
+      };
+
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newListing),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setShowAddForm(false);
         setEditingListingId(null);
-        setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' });
+        setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '', image_url: '' });
         fetchDealerListings();
+      } else {
+        const errData = await res.json();
+        console.error("Backend error:", errData);
+        alert("Failed to save: " + (errData.detail?.[0]?.msg || errData.detail || "Check console"));
       }
     } catch (err) {
       console.error('Failed to save listing:', err);
@@ -129,7 +144,8 @@ const PartnerDashboard = () => {
       km: listing.km || '',
       fuel: listing.fuel || '',
       transmission: listing.transmission || '',
-      description: listing.description || ''
+      description: listing.description || '',
+      image_url: listing.image_url || ''
     });
     setEditingListingId(listing.id);
     setShowAddForm(true);
@@ -302,7 +318,7 @@ const PartnerDashboard = () => {
           <h3>{t('dashboard', 'actionTitle')}</h3>
           <p>{t('dashboard', 'actionDesc')}</p>
         </div>
-        <button className="action-btn" onClick={() => { setShowAddForm(true); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' }); }}>
+        <button className="action-btn" onClick={() => { setShowAddForm(true); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '', image_url: '' }); }}>
           {t('dashboard', 'addInventory')} <ArrowUpRight size={18} />
         </button>
       </div>
@@ -314,6 +330,7 @@ const PartnerDashboard = () => {
             <table className="inventory-table">
               <thead>
                 <tr>
+                  <th>Photo</th>
                   <th>Title</th>
                   <th>Price</th>
                   <th>Year</th>
@@ -324,6 +341,13 @@ const PartnerDashboard = () => {
               <tbody>
                 {listings.map((l) => (
                   <tr key={l.id}>
+                    <td>
+                      {l.image_url ? (
+                        <img src={l.image_url} alt="Car" style={{ width: '60px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+                      ) : (
+                        <div style={{ width: '60px', height: '40px', background: 'var(--border-shell)', borderRadius: '4px' }} />
+                      )}
+                    </td>
                     <td>{l.title}</td>
                     <td>{l.price ? l.price.toLocaleString() + ' EUR' : '-'}</td>
                     <td>{l.year || '-'}</td>
@@ -370,13 +394,19 @@ const PartnerDashboard = () => {
                 <option value="Manual">Manual</option>
               </select>
             </div>
+            <div className="inventory-form-row">
+              <input className="form-control" type="text" placeholder="Photo URL (e.g. https://...)" value={newListing.image_url} onChange={e => setNewListing({...newListing, image_url: e.target.value})} style={{ flex: 1 }} />
+            </div>
+            <div className="inventory-form-row">
+              <textarea className="form-control" placeholder="Description" value={newListing.description} onChange={e => setNewListing({...newListing, description: e.target.value})} style={{ flex: 1, minHeight: '80px', resize: 'vertical' }} />
+            </div>
             <div className="inventory-form-actions">
               <button type="submit" className="action-btn">Save Listing</button>
-              <button type="button" className="filter-clear-btn" onClick={() => { setShowAddForm(false); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' }); }}>Cancel</button>
+              <button type="button" className="filter-clear-btn" onClick={() => { setShowAddForm(false); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '', image_url: '' }); }}>Cancel</button>
             </div>
           </form>
         ) : (
-          <button className="action-btn" onClick={() => { setShowAddForm(true); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' }); }}>
+          <button className="action-btn" onClick={() => { setShowAddForm(true); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '', image_url: '' }); }}>
             Add Inventory <ArrowUpRight size={18} />
           </button>
         )}
