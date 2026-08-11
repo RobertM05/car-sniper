@@ -2295,6 +2295,14 @@ class CarDatabaseOptimizer:
             row = cursor.fetchone()
             return row["count"] if row else 0
 
+    def get_ads_updated_today_count(self):
+        """Get count of ads updated or seen today."""
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) as count FROM ads WHERE last_seen >= CURRENT_DATE")
+            row = cursor.fetchone()
+            return row["count"] if row else 0
+
     def get_users_count(self):
         """Get count of registered users."""
         with self.get_connection() as conn:
