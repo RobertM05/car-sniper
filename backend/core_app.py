@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, BackgroundTasks
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 import threading
 import time
@@ -328,7 +329,8 @@ async def api_search(
     # Normalizăm modelul (ex: "Seria 3" devine "seria-3")
     norm_model = car_db_optimizer.normalize_model_name(make, model)
 
-    results = car_db_optimizer.search_ads_db(
+    results = await run_in_threadpool(
+        car_db_optimizer.search_ads_db,
         make=make,
         model=norm_model,
         min_price=min_price,
@@ -378,8 +380,8 @@ async def api_search(
     # Calculate deal scores if we have stats for this make/model
     if make and model:
         s_model = model.lower().replace(" ", "-")
-        stats = car_db_optimizer.get_model_stats(make, s_model)
-        peer_pool = car_db_optimizer.get_active_ads_for_make_model(make, norm_model)
+        stats = await run_in_threadpool(car_db_optimizer.get_model_stats, make, s_model)
+        peer_pool = await run_in_threadpool(car_db_optimizer.get_active_ads_for_make_model, make, norm_model)
         results = calculate_deal_scores(results, stats, peer_pool=peer_pool)
 
     # Run the background verifier to clean up any dead links asynchronously.
@@ -495,11 +497,11 @@ class ContactRequest(BaseModel):
 
 @app.get("/api/dashboard/stats")
 @limiter.limit("20/minute")
-def get_dashboard_stats(request: Request):
+async def get_dashboard_stats(request: Request):
     """
     Returns real statistics for the Partner Dashboard.
     """
-    try:
+    def _fetch_stats():
         with car_db_optimizer.get_connection() as conn:
             cursor = conn.cursor()
 
@@ -561,6 +563,8 @@ def get_dashboard_stats(request: Request):
             "trendData": trend_data,
         }
 
+    try:
+        return await run_in_threadpool(_fetch_stats)
     except Exception as e:
         logging.error(f"Error fetching dashboard stats: {e}")
         return {"error": str(e)}
