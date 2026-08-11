@@ -11,8 +11,9 @@ const translations = {
             logout: 'Deconectare',
         },
         hero: {
-            title: 'Mașini Premium. Performanță Excepțională.',
-            subtitle: 'Găsește cele mai bune oferte din mii de anunțuri verificate de pe OLX și Autovit.',
+            title: 'MOTORBIT',
+            subtitle: 'Găsește cele mai bune oferte auto',
+            features: 'OLX & Autovit • Deal Scoring • Analiza de Piață',
         },
         search: {
             make: 'Marca',
@@ -230,8 +231,9 @@ const translations = {
             logout: 'Logout',
         },
         hero: {
-            title: 'Find your car at the right price.',
-            subtitle: 'Explore the finest high-end vehicles globally via OLX and Autovit aggregations.',
+            title: 'MOTORBIT',
+            subtitle: 'Find the best car deals',
+            features: 'OLX & Autovit • Deal Scoring • Market Analysis',
         },
         search: {
             make: 'Make',

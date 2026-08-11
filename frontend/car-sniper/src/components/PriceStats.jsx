@@ -38,7 +38,7 @@ const PriceStats = ({ stats, currentSearch }) => {
 
                 <div className="stat-card-item">
                     <div className="stat-card-label">{t('stats', 'avgYear')}</div>
-                    <div className="stat-card-value stat-value-blue">
+                    <div className="stat-card-value stat-value-silver">
                         {avg_year != null ? Math.round(avg_year) : 'N/A'}
                     </div>
                 </div>

@@ -27,6 +27,7 @@ import { useAuth } from "./contexts/AuthContext";
 import { useSearch } from "./contexts/SearchContext";
 import { Sun, Moon, SlidersHorizontal } from "lucide-react";
 import "./App.css";
+import logo from './assets/logo.png';
 
 
 const AppContent = () => {
@@ -223,7 +224,10 @@ const AppContent = () => {
       )}
       <nav className="top-nav">
         <div className="nav-brand">
-          <span>M</span> MOTORBIT
+          <div style={{ width: '32px', height: '32px', overflow: 'hidden', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={logo} alt="Motorbit Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scale(1.8)' }} onError={(e) => e.target.parentElement.style.display = 'none'} />
+          </div>
+          <span>MOTORBIT</span>
         </div>
         <div className="nav-links">
           <a href="#">{t('nav', 'browse')}</a>
@@ -261,6 +265,9 @@ const AppContent = () => {
           <p className="hero-subtitle">
             {t('hero', 'subtitle')}
           </p>
+          <div className="hero-features">
+            {t('hero', 'features')}
+          </div>
         </div>
       </div>
 

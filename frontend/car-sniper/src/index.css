@@ -45,10 +45,10 @@
   --text-secondary: #8b949e;
   --text-muted: #6e7681;
   --accent-color: #e6edf3;
-  --accent-glow: rgba(88, 166, 255, 0.04);
-  --primary-color: #58a6ff;
-  --primary-hover: #79c0ff;
-  --highlight-color: #58a6ff;
+  --accent-glow: rgba(229, 231, 235, 0.08);
+  --primary-color: #e5e7eb;
+  --primary-hover: #ffffff;
+  --highlight-color: #e5e7eb;
   --bg-card: #161b22;
   --border-color: #21262d;
   --border-shell: #21262d;
