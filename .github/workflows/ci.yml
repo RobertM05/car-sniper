@@ -77,6 +77,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     continue-on-error: true
+    env:
+      PYTHONPATH: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -84,4 +86,4 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
       - run: pip install -r backend/requirements.txt pytest pytest-timeout
-      - run: python -m pytest backend/ -x --timeout=30 --tb=short -v
+      - run: python -m pytest backend/tests/ -x --timeout=30 --tb=short -v
