@@ -92,17 +92,19 @@ def api_site_stats():
     """Return real-time site statistics."""
     try:
         ads_count = car_db_optimizer.get_active_ads_count()
+        today_count = car_db_optimizer.get_ads_updated_today_count()
         _ = (
             car_db_optimizer.get_users_count()
         )  # called for completeness, not in response
         avg_savings = car_db_optimizer.get_avg_savings()
     except Exception:
         ads_count = 0
+        today_count = 0
         avg_savings = 0
     return {
         "carsMonitored": ads_count,
         "avgSavings": avg_savings,
-        "listingsToday": ads_count,  # approximate
+        "listingsToday": today_count,
         "refreshRate": "5 min",
     }
 

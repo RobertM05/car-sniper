@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const DEFAULT_STATS = {
-    carsMonitored: 247832,
-    avgSavings: 2100,
-    listingsToday: 14291,
+    carsMonitored: 0,
+    avgSavings: 0,
+    listingsToday: 0,
     refreshRate: '5 min',
 };
 
