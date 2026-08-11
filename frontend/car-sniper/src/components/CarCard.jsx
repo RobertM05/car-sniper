@@ -254,4 +254,4 @@ CarCard.propTypes = {
     variant: PropTypes.string,
 };
 
-export default CarCard;
+export default React.memo(CarCard);

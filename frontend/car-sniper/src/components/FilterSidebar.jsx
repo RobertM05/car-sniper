@@ -141,4 +141,4 @@ FilterSidebar.propTypes = {
     onClose: PropTypes.func,
 };
 
-export default FilterSidebar;
+export default React.memo(FilterSidebar);

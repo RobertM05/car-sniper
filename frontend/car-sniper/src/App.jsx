@@ -113,7 +113,7 @@ const AppContent = () => {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const handleCreateAlert = async (email) => {
+  const handleCreateAlert = useCallback(async (email) => {
     try {
       const token = localStorage.getItem('jwt_token');
       if (!token) {
@@ -123,7 +123,12 @@ const AppContent = () => {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/alert`, {
+      // We don't have API_BASE_URL defined in App.jsx directly unless imported.
+      // Wait, API_BASE_URL was in App.jsx but we moved it to SearchContext? Let's check where it is.
+      // It's probably globally defined or I'll just use a relative path since Vercel handles it, or use import.meta.env
+      const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://127.0.0.1:8000');
+
+      const response = await fetch(`${API_URL}/api/alert`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -158,7 +163,13 @@ const AppContent = () => {
       console.error(err);
       alert("Eroare la salvarea alertei.");
     }
-  };
+  }, [formData, setCurrentUser, setIsAuthOpen]);
+
+  const handleAlertClick = useCallback(() => setIsAlertOpen(true), []);
+  const handleFilterClose = useCallback(() => setIsFilterOpen(false), []);
+  const handleAlertClose = useCallback(() => setIsAlertOpen(false), []);
+  const handleContactClose = useCallback(() => setIsContactOpen(false), []);
+  const handleAuthClose = useCallback(() => setIsAuthOpen(false), [setIsAuthOpen]);
 
   return (
     <div>
@@ -265,7 +276,7 @@ const AppContent = () => {
           loadingModels={loadingModels}
           onSubmit={handleSearchSubmit}
           loading={loading}
-          onAlertClick={() => setIsAlertOpen(true)}
+          onAlertClick={handleAlertClick}
         />
       </div>
       <Breadcrumbs />
@@ -274,19 +285,19 @@ const AppContent = () => {
 
         <AlertModal
           isOpen={isAlertOpen}
-          onClose={() => setIsAlertOpen(false)}
+          onClose={handleAlertClose}
           onSubmit={handleCreateAlert}
           searchParams={formData}
         />
 
         <ContactModal
           isOpen={isContactOpen}
-          onClose={() => setIsContactOpen(false)}
+          onClose={handleContactClose}
         />
 
         <AuthModal
           isOpen={isAuthOpen}
-          onClose={() => setIsAuthOpen(false)}
+          onClose={handleAuthClose}
           onLoginSuccess={(email, token, role) => setCurrentUser({ email, role })}
         />
 
@@ -314,7 +325,7 @@ const AppContent = () => {
                     onFilterChange={setSidebarFilters}
                     onApply={handleFilterApply}
                     isOpen={isFilterOpen}
-                    onClose={() => setIsFilterOpen(false)}
+                    onClose={handleFilterClose}
                   />
                   <div className="results-main">
                     <div className="results-header">

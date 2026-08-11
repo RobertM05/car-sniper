@@ -221,4 +221,4 @@ SearchForm.propTypes = {
     onAlertClick: PropTypes.func.isRequired,
 };
 
-export default SearchForm;
+export default React.memo(SearchForm);
