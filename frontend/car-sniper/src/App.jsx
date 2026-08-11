@@ -35,7 +35,7 @@ const AppContent = () => {
   const location = useLocation();
   const { make: urlMake, model: urlModel } = useParams();
 
-  const { currentUser, isAuthOpen, setIsAuthOpen, handleLogout } = useAuth();
+  const { currentUser, setCurrentUser, isAuthOpen, setIsAuthOpen, handleLogout } = useAuth();
   const {
     formData, setFormData, brands, models, loadingBrands, loadingModels,
     loading, error, results, stats, currentPage, itemsPerPage, sortBy, setSortBy,
