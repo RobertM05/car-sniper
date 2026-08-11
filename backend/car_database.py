@@ -234,11 +234,14 @@ class CarDatabaseOptimizer:
                         avg_km REAL
                     )
                 """)
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_search_stats_make_model ON search_stats(make, model)"
+                )
 
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS alerts (
                         id SERIAL PRIMARY KEY,
-                        user_email TEXT NOT NULL,
+                        user_email TEXT NOT NULL REFERENCES users(email) ON DELETE CASCADE,
                         make TEXT NOT NULL,
                         model TEXT NOT NULL,
                         min_price INTEGER,
@@ -251,6 +254,9 @@ class CarDatabaseOptimizer:
                         last_checked TIMESTAMP
                     )
                 """)
+                cursor.execute(
+                    "CREATE INDEX IF NOT EXISTS idx_alerts_make_model ON alerts(make, model)"
+                )
 
                 cursor.execute("""
                     CREATE TABLE IF NOT EXISTS ads (
