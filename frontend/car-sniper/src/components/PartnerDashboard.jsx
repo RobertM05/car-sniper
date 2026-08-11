@@ -25,6 +25,7 @@ const PartnerDashboard = () => {
   const [listings, setListings] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingListingId, setEditingListingId] = useState(null);
   const [newListing, setNewListing] = useState({
     title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: ''
   });
@@ -94,24 +95,44 @@ const PartnerDashboard = () => {
     }
   };
 
-  const handleCreateListing = async (e) => {
+  const handleSaveListing = async (e) => {
     e.preventDefault();
     const email = localStorage.getItem('user_email');
     if (!email) return;
     try {
-      const res = await fetch(API_BASE_URL + '/api/dealer/listings?email=' + encodeURIComponent(email), {
-        method: 'POST',
+      const url = editingListingId 
+        ? `${API_BASE_URL}/api/dealer/listings/${editingListingId}?email=${encodeURIComponent(email)}`
+        : `${API_BASE_URL}/api/dealer/listings?email=${encodeURIComponent(email)}`;
+      const method = editingListingId ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newListing),
       });
       if (res.ok) {
         setShowAddForm(false);
+        setEditingListingId(null);
         setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' });
         fetchDealerListings();
       }
     } catch (err) {
-      console.error('Failed to create listing:', err);
+      console.error('Failed to save listing:', err);
     }
+  };
+
+  const handleEditClick = (listing) => {
+    setNewListing({
+      title: listing.title || '',
+      price: listing.price || '',
+      year: listing.year || '',
+      km: listing.km || '',
+      fuel: listing.fuel || '',
+      transmission: listing.transmission || '',
+      description: listing.description || ''
+    });
+    setEditingListingId(listing.id);
+    setShowAddForm(true);
   };
 
   const handleDeleteListing = async (listingId) => {
@@ -281,7 +302,7 @@ const PartnerDashboard = () => {
           <h3>{t('dashboard', 'actionTitle')}</h3>
           <p>{t('dashboard', 'actionDesc')}</p>
         </div>
-        <button className="action-btn" onClick={() => alert(t('dashboard', 'comingSoon'))}>
+        <button className="action-btn" onClick={() => { setShowAddForm(true); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' }); }}>
           {t('dashboard', 'addInventory')} <ArrowUpRight size={18} />
         </button>
       </div>
@@ -308,9 +329,14 @@ const PartnerDashboard = () => {
                     <td>{l.year || '-'}</td>
                     <td>{l.km ? l.km.toLocaleString() : '-'}</td>
                     <td>
-                      <button className="inventory-delete-btn" onClick={() => handleDeleteListing(l.id)}>
-                        Delete
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button className="secondary-btn" style={{ padding: '6px 12px', fontSize: '0.85rem' }} onClick={() => handleEditClick(l)}>
+                          Edit
+                        </button>
+                        <button className="inventory-delete-btn" onClick={() => handleDeleteListing(l.id)}>
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -321,9 +347,9 @@ const PartnerDashboard = () => {
       )}
 
       <div className="inventory-section">
-        <h3 className="chart-title">Add New Listing</h3>
+        <h3 className="chart-title">{editingListingId ? 'Edit Listing' : 'Add New Listing'}</h3>
         {showAddForm ? (
-          <form onSubmit={handleCreateListing} className="inventory-form">
+          <form onSubmit={handleSaveListing} className="inventory-form">
             <input className="form-control" placeholder="Title" value={newListing.title} onChange={e => setNewListing({...newListing, title: e.target.value})} required />
             <div className="inventory-form-row">
               <input className="form-control" type="number" placeholder="Price (EUR)" value={newListing.price} onChange={e => setNewListing({...newListing, price: e.target.value})} />
@@ -346,11 +372,11 @@ const PartnerDashboard = () => {
             </div>
             <div className="inventory-form-actions">
               <button type="submit" className="action-btn">Save Listing</button>
-              <button type="button" className="filter-clear-btn" onClick={() => setShowAddForm(false)}>Cancel</button>
+              <button type="button" className="filter-clear-btn" onClick={() => { setShowAddForm(false); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' }); }}>Cancel</button>
             </div>
           </form>
         ) : (
-          <button className="action-btn" onClick={() => setShowAddForm(true)}>
+          <button className="action-btn" onClick={() => { setShowAddForm(true); setEditingListingId(null); setNewListing({ title: '', price: '', year: '', km: '', fuel: '', transmission: '', description: '' }); }}>
             Add Inventory <ArrowUpRight size={18} />
           </button>
         )}
