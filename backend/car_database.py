@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import re
+import redis
 from contextlib import contextmanager
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse, urlunparse
@@ -76,6 +77,14 @@ class CarDatabaseOptimizer:
             self.connection_pool = None
 
         self.init_database()
+
+        self.redis_client = None
+        redis_url = os.environ.get("REDIS_URL")
+        if redis_url:
+            try:
+                self.redis_client = redis.from_url(redis_url, decode_responses=True)
+            except Exception as e:
+                log.error(f"Failed to connect to Redis for cache invalidation: {e}")
 
     @contextmanager
     def get_connection(self):
@@ -577,7 +586,36 @@ class CarDatabaseOptimizer:
                 template="(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, TRUE, CURRENT_TIMESTAMP)",
             )
             conn.commit()
+
+            # MB-6: Invalidate search caches for affected makes/models
+            if self.redis_client:
+                makes_models = {
+                    (ad.get("make"), ad.get("model"))
+                    for ad in ads_data
+                    if ad.get("make") and ad.get("model")
+                }
+                for mk, md in makes_models:
+                    self.invalidate_search_cache(mk, md)
+
             return ad_ids
+
+    def invalidate_search_cache(self, make: str, model: str = None):
+        """Invalidates Redis cache for specific search queries."""
+        if not self.redis_client or not make:
+            return
+
+        try:
+            if model:
+                pattern = f"search:{make}:{model}:*"
+            else:
+                pattern = f"search:{make}:*"
+
+            keys = self.redis_client.keys(pattern)
+            if keys:
+                self.redis_client.delete(*keys)
+                log.info(f"Invalidated {len(keys)} cache keys for {make} {model}")
+        except Exception as e:
+            log.error(f"Failed to invalidate cache for {make} {model}: {e}")
 
     def mark_ghost_ads_inactive(self, make: str, model: str, buffer_hours: int = 12):
         with self.get_connection() as conn:
@@ -591,6 +629,10 @@ class CarDatabaseOptimizer:
             )
             count = cursor.rowcount
             conn.commit()
+
+            if count > 0:
+                self.invalidate_search_cache(make, model)
+
             return count
 
     def search_ads_db(
@@ -1865,6 +1907,10 @@ class CarDatabaseOptimizer:
             row = cursor.fetchone()
             alert_id = row["id"] if row else None
             conn.commit()
+
+            # MB-6: Invalidate cache when user alerts change
+            self.invalidate_search_cache(make, model)
+
             return {
                 "id": alert_id,
                 "user_email": user_email,
@@ -1891,10 +1937,16 @@ class CarDatabaseOptimizer:
     def deactivate_alert(self, alert_id: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
+            cursor.execute("SELECT make, model FROM alerts WHERE id = %s", (alert_id,))
+            row = cursor.fetchone()
+
             cursor.execute(
                 "UPDATE alerts SET active = FALSE WHERE id = %s", (alert_id,)
             )
             conn.commit()
+
+            if row:
+                self.invalidate_search_cache(row["make"], row["model"])
 
     def get_alerts(self):
         with self.get_connection() as conn:
