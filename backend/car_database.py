@@ -1934,14 +1934,28 @@ class CarDatabaseOptimizer:
             )
             return [dict(r) for r in cursor.fetchall()]
 
-    def deactivate_alert(self, alert_id: int):
+    def delete_alert(self, alert_id: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT make, model FROM alerts WHERE id = %s", (alert_id,))
             row = cursor.fetchone()
 
             cursor.execute(
-                "UPDATE alerts SET active = FALSE WHERE id = %s", (alert_id,)
+                "DELETE FROM alerts WHERE id = %s", (alert_id,)
+            )
+            conn.commit()
+
+            if row:
+                self.invalidate_search_cache(row["make"], row["model"])
+
+    def toggle_alert_status(self, alert_id: int, active: bool):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT make, model FROM alerts WHERE id = %s", (alert_id,))
+            row = cursor.fetchone()
+
+            cursor.execute(
+                "UPDATE alerts SET active = %s WHERE id = %s", (active, alert_id)
             )
             conn.commit()
 

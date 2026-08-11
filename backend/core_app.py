@@ -696,6 +696,30 @@ def api_create_dealer_listing(request: Request, email: str, req: DealerListingRe
     return {"status": "success", "listing_id": listing_id}
 
 
+@app.put("/api/dealer/listings/{listing_id}")
+@limiter.limit("30/minute")
+def api_update_dealer_listing(request: Request, listing_id: int, email: str, req: DealerListingRequest):
+    """Update a dealer listing."""
+    profile = car_db_optimizer.get_dealer_profile(email)
+    if not profile:
+        raise HTTPException(status_code=404, detail="Dealer profile not found")
+    if not profile.get("verified"):
+        raise HTTPException(status_code=403, detail="Dealer not yet approved")
+    car_db_optimizer.update_dealer_listing(
+        listing_id=listing_id,
+        dealer_id=profile["id"],
+        title=req.title,
+        price=req.price,
+        year=req.year,
+        km=req.km,
+        fuel=req.fuel,
+        transmission=req.transmission,
+        description=req.description,
+        image_url=req.image_url,
+    )
+    return {"status": "success"}
+
+
 @app.post("/api/dealer/listings/bulk")
 @limiter.limit("10/minute")
 async def api_bulk_dealer_listings(request: Request, email: str):
@@ -823,8 +847,17 @@ def api_get_alerts(email: str):
 @app.delete("/api/alerts/{alert_id}")
 def api_delete_alert(alert_id: int, email: str):
     """Delete an alert."""
-    car_db_optimizer.deactivate_alert(alert_id)
+    car_db_optimizer.delete_alert(alert_id)
     return {"status": "deleted"}
+
+class ToggleAlertRequest(BaseModel):
+    active: bool
+
+@app.put("/api/alerts/{alert_id}/toggle")
+def api_toggle_alert(alert_id: int, request: ToggleAlertRequest, email: str):
+    """Pause or resume an alert."""
+    car_db_optimizer.toggle_alert_status(alert_id, request.active)
+    return {"status": "success", "active": request.active}
 
 
 @app.get("/api/admin/pending-dealers")

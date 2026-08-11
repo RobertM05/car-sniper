@@ -31,6 +31,22 @@ const AlertManager = () => {
         }
     };
 
+    const handleToggle = async (alertId, currentStatus) => {
+        const newStatus = !currentStatus;
+        try {
+            const res = await fetch(API_BASE_URL + '/api/alerts/' + alertId + '/toggle?email=' + encodeURIComponent(userEmail), {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ active: newStatus })
+            });
+            if (res.ok) {
+                setAlerts(prev => prev.map(a => a.id === alertId ? { ...a, active: newStatus } : a));
+            }
+        } catch (err) {
+            console.error('Failed to toggle alert:', err);
+        }
+    };
+
     if (!userEmail) return <div className="container"><div className="error-message" role="alert">{t('nav', 'account')} required</div></div>;
     if (loading) return <div className="container"><div className="results-grid">{[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}</div></div>;
     if (error) return <div className="container"><div className="error-message" role="alert">{error}</div></div>;
@@ -49,6 +65,7 @@ const AlertManager = () => {
                     <table className="alerts-table">
                         <thead>
                             <tr>
+                                <th>Status</th>
                                 <th>{t('search', 'make')}</th>
                                 <th>{t('search', 'model')}</th>
                                 <th>{t('search', 'maxPrice')}</th>
@@ -58,12 +75,28 @@ const AlertManager = () => {
                         </thead>
                         <tbody>
                             {alerts.map(alert => (
-                                <tr key={alert.id}>
+                                <tr key={alert.id} style={{ opacity: alert.active ? 1 : 0.6 }}>
+                                    <td>
+                                        <span style={{
+                                            padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold',
+                                            backgroundColor: alert.active ? 'rgba(16, 185, 129, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+                                            color: alert.active ? '#10b981' : '#9ca3af'
+                                        }}>
+                                            {alert.active ? 'Active' : 'Paused'}
+                                        </span>
+                                    </td>
                                     <td>{alert.make}</td>
                                     <td>{alert.model}</td>
                                     <td>{alert.max_price ? alert.max_price + ' EUR' : '-'}</td>
                                     <td>{alert.created_at ? new Date(alert.created_at).toLocaleDateString() : '-'}</td>
-                                    <td><button className="inventory-delete-btn" onClick={() => handleDelete(alert.id)}>{t('alerts', 'delete')}</button></td>
+                                    <td>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button className="secondary-btn" style={{ padding: '6px 12px', fontSize: '0.85rem' }} onClick={() => handleToggle(alert.id, alert.active)}>
+                                                {alert.active ? 'Pause' : 'Resume'}
+                                            </button>
+                                            <button className="inventory-delete-btn" onClick={() => handleDelete(alert.id)}>{t('alerts', 'delete')}</button>
+                                        </div>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
