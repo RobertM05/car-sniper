@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 import CarCard from './CarCard';
 
@@ -20,6 +21,10 @@ const ResultsList = ({ results }) => {
             ))}
         </div>
     );
+};
+
+ResultsList.propTypes = {
+    results: PropTypes.array.isRequired,
 };
 
 export default ResultsList;

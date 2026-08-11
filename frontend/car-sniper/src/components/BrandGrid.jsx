@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 // Static list for MVP — wire to /api/brands for dynamic brands
@@ -25,6 +26,10 @@ const BrandGrid = ({ onBrandSelect }) => {
             </div>
         </section>
     );
+};
+
+BrandGrid.propTypes = {
+    onBrandSelect: PropTypes.func.isRequired,
 };
 
 export default BrandGrid;

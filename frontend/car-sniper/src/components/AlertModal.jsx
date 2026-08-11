@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
@@ -112,6 +113,13 @@ const AlertModal = ({ isOpen, onClose, onSubmit, searchParams }) => {
             </div>
         </div>
     );
+};
+
+AlertModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onSubmit: PropTypes.func.isRequired,
+    searchParams: PropTypes.object,
 };
 
 export default AlertModal;

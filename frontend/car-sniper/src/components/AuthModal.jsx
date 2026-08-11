@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
@@ -121,6 +122,12 @@ const AuthModal = ({ isOpen, onClose, onLoginSuccess }) => {
             </div>
         </div>
     );
+};
+
+AuthModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
+    onLoginSuccess: PropTypes.func.isRequired,
 };
 
 export default AuthModal;

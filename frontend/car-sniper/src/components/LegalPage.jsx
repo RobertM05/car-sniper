@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 import { Helmet } from 'react-helmet-async';
 
@@ -29,6 +30,10 @@ const LegalPage = ({ type }) => {
             
         </div>
     );
+};
+
+LegalPage.propTypes = {
+    type: PropTypes.string.isRequired,
 };
 
 export default LegalPage;

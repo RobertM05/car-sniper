@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { useLanguage } from '../LanguageContext';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
@@ -128,6 +129,11 @@ const ContactModal = ({ isOpen, onClose }) => {
             </div>
         </div>
     );
+};
+
+ContactModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired,
+    onClose: PropTypes.func.isRequired,
 };
 
 export default ContactModal;
