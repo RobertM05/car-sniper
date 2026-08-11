@@ -1940,9 +1940,7 @@ class CarDatabaseOptimizer:
             cursor.execute("SELECT make, model FROM alerts WHERE id = %s", (alert_id,))
             row = cursor.fetchone()
 
-            cursor.execute(
-                "DELETE FROM alerts WHERE id = %s", (alert_id,)
-            )
+            cursor.execute("DELETE FROM alerts WHERE id = %s", (alert_id,))
             conn.commit()
 
             if row:

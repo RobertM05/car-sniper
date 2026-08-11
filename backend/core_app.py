@@ -698,7 +698,9 @@ def api_create_dealer_listing(request: Request, email: str, req: DealerListingRe
 
 @app.put("/api/dealer/listings/{listing_id}")
 @limiter.limit("30/minute")
-def api_update_dealer_listing(request: Request, listing_id: int, email: str, req: DealerListingRequest):
+def api_update_dealer_listing(
+    request: Request, listing_id: int, email: str, req: DealerListingRequest
+):
     """Update a dealer listing."""
     profile = car_db_optimizer.get_dealer_profile(email)
     if not profile:
@@ -850,8 +852,10 @@ def api_delete_alert(alert_id: int, email: str):
     car_db_optimizer.delete_alert(alert_id)
     return {"status": "deleted"}
 
+
 class ToggleAlertRequest(BaseModel):
     active: bool
+
 
 @app.put("/api/alerts/{alert_id}/toggle")
 def api_toggle_alert(alert_id: int, request: ToggleAlertRequest, email: str):
