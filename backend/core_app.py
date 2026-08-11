@@ -381,7 +381,9 @@ async def api_search(
     if make and model:
         s_model = model.lower().replace(" ", "-")
         stats = await run_in_threadpool(car_db_optimizer.get_model_stats, make, s_model)
-        peer_pool = await run_in_threadpool(car_db_optimizer.get_active_ads_for_make_model, make, norm_model)
+        peer_pool = await run_in_threadpool(
+            car_db_optimizer.get_active_ads_for_make_model, make, norm_model
+        )
         results = calculate_deal_scores(results, stats, peer_pool=peer_pool)
 
     # Run the background verifier to clean up any dead links asynchronously.
@@ -501,6 +503,7 @@ async def get_dashboard_stats(request: Request):
     """
     Returns real statistics for the Partner Dashboard.
     """
+
     def _fetch_stats():
         with car_db_optimizer.get_connection() as conn:
             cursor = conn.cursor()
